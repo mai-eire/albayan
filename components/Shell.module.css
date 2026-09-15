@@ -1,0 +1,28 @@
+.main {
+  background: var(--app-ground);
+}
+
+.navLink {
+  border-radius: var(--mantine-radius-md);
+}
+
+.tabs {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  height: 100%;
+}
+
+.tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 500;
+  color: var(--mantine-color-dimmed);
+
+  &[data-active] {
+    color: var(--mantine-primary-color-filled);
+  }
+}

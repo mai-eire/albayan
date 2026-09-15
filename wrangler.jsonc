@@ -1,0 +1,16 @@
+// https://developers.cloudflare.com/workers/wrangler/configuration/
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "albayan",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-09-15",
+  "compatibility_flags": ["global_fetch_strictly_public"],
+  "assets": { "binding": "ASSETS", "directory": ".open-next/assets" },
+  "images": { "binding": "IMAGES" },
+  "services": [
+    // Self-reference used by OpenNext's cache layer; the service name must match "name".
+    { "binding": "WORKER_SELF_REFERENCE", "service": "albayan" },
+  ],
+  "observability": { "enabled": true },
+  "upload_source_maps": true,
+}

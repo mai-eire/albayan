@@ -8,10 +8,10 @@ Definition of done for the phase: a new contributor can `git clone && pnpm insta
 
 ## Tasks
 
-- [ ] **1. Scaffold** — Next.js 15 + TypeScript via `npm create cloudflare@latest -- --framework=next` (OpenNext adapter), pnpm, ESLint + Prettier, `pnpm check`. `.gitignore` covers `.wrangler/`, `.open-next/`, `.dev/`, `.env*`.
+- [x] **1. Scaffold** — Next.js 16 + TypeScript via `npm create cloudflare@latest -- --framework=next` (OpenNext adapter), pnpm, ESLint + Prettier, `pnpm check`. `.gitignore` covers `.wrangler/`, `.open-next/`, `.dev/`, `.env*`.
   DoD: `pnpm dev` serves a page offline; `pnpm build && wrangler dev` serves the same page.
 
-- [ ] **2. UI base** — Mantine 8 implementing `docs/DESIGN.md` §2–3: `lib/theme.ts` (colour tuples, type scale, radius, component defaults), fonts via `next/font`, PostCSS preset, `ColorSchemeScript` + scheme toggle, `AppShell` per §3.1 (sidebar + top bar, drawer on mobile, bottom tabs for the student area), and the first shared components: `PageHeader`, `StatTile`, `StatusBadge`, `SubjectBadge`, `EmptyState`. Both colour schemes checked.
+- [x] **2. UI base** — Mantine 9 implementing `docs/DESIGN.md` §2–3: `lib/theme.ts` (colour tuples, type scale, radius, component defaults), fonts via `next/font`, PostCSS preset, `ColorSchemeScript` + scheme toggle, `AppShell` per §3.1 (sidebar + top bar, drawer on mobile, bottom tabs for the student area), and the first shared components: `PageHeader`, `StatTile`, `StatusBadge`, `SubjectBadge`, `EmptyState`. Both colour schemes checked.
   DoD: placeholder pages at `/admin`, `/teach`, `/family`, `/student` render inside the shell.
 
 - [ ] **3. Drizzle + local D1** — `lib/db/schema/*.ts`, `drizzle.config.ts`, `pnpm db:generate` (drizzle-kit → SQL migrations), `pnpm db:migrate:local` (`wrangler d1 migrations apply --local`), typed `db()` accessor from the OpenNext binding.
@@ -54,6 +54,13 @@ Definition of done for the phase: a new contributor can `git clone && pnpm insta
 - [ ] **15. OpenNext checkpoint** — write a short note in this file: what (if anything) hurt (build times, unsupported features, dev-binding quirks). Decide: stay on Next.js or move to React Router v7 before any feature code. Record the decision in PLAN §1.
 
 ## Decisions to make during Phase 0 (small, record them here)
+
+- **Next.js 16, not 15** (2026-09-15). The OpenNext C3 template ships Next 16.3; it is the line the adapter targets, so pinning 15 would mean fighting the tooling. App Router, server actions and route groups are unchanged for our purposes. Next 16 differs from older docs — check `node_modules/next/dist/docs/` before using an API from memory.
+- **Mantine 9, not 8** (2026-09-16). 9.6 was current when task 2 started; the 8→9 changes are small (a few prop renames, `defaultRadius` now `md` as DESIGN.md wants, built-in Zod resolver in `@mantine/form`). Requires React ≥ 19.2, which Next 16 ships.
+- **Server → client boundaries.** `MantineProvider` takes a function (`cssVariablesResolver`), so it lives in the client `components/Providers.tsx`; Server Components can't pass `component={Link}` to Mantine, so navigation buttons use `components/LinkButton.tsx`.
+- `@playwright/test` was added in task 2 (ahead of task 13) to screenshot pages in both colour schemes and at phone width against the installed Chrome (`channel: "chrome"`, no browser download).
+- **vinext is on the checkpoint list.** `create-cloudflare` now offers two Next.js paths: `vinext` (Cloudflare's Vite-based Next runtime, marked "recommended") and the OpenNext adapter. We scaffolded with `--variant=opennext` as planned; task 15 compares against vinext as well as React Router v7.
+- Tooling: pnpm 10 via corepack (`packageManager` pinned); `pnpm check` = ESLint (flat configs from `eslint-config-next`) + `tsc` + Prettier (Markdown excluded so docs aren't reflowed); `cloudflare-env.d.ts` is committed and generated env-only (`--include-runtime=false`) with runtime types from `@cloudflare/workers-types`; `agentRules: false` in `next.config.ts` because `next dev` otherwise appends a block to `CLAUDE.md`.
 
 - i18n approach: recommendation is `next-intl` with a single `en` locale from day one (cheap now, painful to retrofit), `Intl` for dates/numbers, no Arabic strings yet. Hijri date via `Intl.DateTimeFormat('en-u-ca-islamic-umalqura')` as in the prototype.
 - Better Auth id strategy: use `advanced.database.useNumberId` so `users.id` is an integer like every other table.

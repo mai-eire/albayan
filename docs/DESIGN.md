@@ -37,7 +37,7 @@ Ten-shade Mantine tuples; shade 6 is the "filled" shade, 0–1 are tints for lig
 | `plum` | `#7b4b94` | Subject: Islamic Studies | As above | Semantic meaning |
 | `gray` (Mantine) | — | Neutral | Borders, dimmed text, disabled, "excused", break periods | — |
 
-Fixed neutrals (light theme): ink `#14282c` (text, `theme.black`), ground `#f4f8f6` (page), surface `#ffffff` (cards, header, sidebar), line = `gray.3`. Dark theme uses Mantine's `dark` tuple; components must reference `var(--mantine-color-body)`, `var(--mantine-color-default-border)` etc., never the light hex.
+Fixed neutrals (light theme): ink `#14282c` (text, `theme.black`), ground `#f4f8f6` (page), surface `#ffffff` (cards, header, sidebar), line = `gray.3`. Dark theme uses Mantine's `dark` tuple; components must reference `var(--mantine-color-body)`, `var(--mantine-color-default-border)` etc., never the light hex. Surface is Mantine's body colour; the ground is our one extra variable, `var(--app-ground)` (dark: `dark.8`), set in `lib/theme.ts` and used by the shell's main area and `EntityList` rows.
 
 Subject colours are assigned once, in `lib/subjects.ts` (`subjectColor(subjectId)`), with a fallback rotation for subjects added later. A subject's colour is the same on every screen.
 
@@ -66,7 +66,7 @@ Scale (Mantine `headings.sizes` / `fontSizes`):
 | h2 | 1.5rem / 800 | Section within a page |
 | h3 | 1.2rem / 700 | Card title |
 | h4 | 1rem / 700 | Sub-group inside a card |
-| stat | 2.25rem / 800, display face | Big numbers in stat tiles |
+| stat | 2.25rem / 800, display face (`var(--app-font-size-stat)`) | Big numbers in stat tiles |
 | md | 1rem | Body |
 | sm | 0.875rem | Secondary text, table cells |
 | xs | 0.75rem | Hints, badges, eyebrow labels (uppercase, `letter-spacing: 0.04em`) |
@@ -142,11 +142,11 @@ Use Mantine components with the variants below. Shared, opinionated wrappers liv
 | Inline / quiet | `subtle` | Inside cards and table rows |
 | Destructive | `filled` or `light` with `color="clay"` | Always behind a confirm modal |
 
-Buttons say what happens: "Publish homework", "Submit register", "Record payment" — never "OK", "Submit", "Yes". Loading state via `loading` prop, never a separate spinner. Icons in buttons are `leftSection`, size 16.
+Buttons say what happens: "Publish homework", "Submit register", "Record payment" — never "OK", "Submit", "Yes". Loading state via `loading` prop, never a separate spinner. Icons in buttons are `leftSection`, size 16. A button that navigates is `LinkButton` (a client wrapper, because Server Components cannot pass `component={Link}` to Mantine).
 
 ### 4.2 Badges and status
 
-`Badge` `variant="light"` for status and tags, `variant="filled"` only for the "Now" marker and subject chips on dark backgrounds, `variant="outline"` for neutral context ("Saturday session"). Always via `StatusBadge` or `SubjectBadge` — never a hand-coloured badge. Text is a word, not just a colour.
+`Badge` `variant="light"` for status and tags, `variant="filled"` only for the "Now" marker and subject chips on dark backgrounds, `variant="outline"` for neutral context ("Saturday session"). Always via `StatusBadge` or `SubjectBadge` — never a hand-coloured badge. Text is a word in sentence case (the theme turns off Mantine's uppercase), not just a colour.
 
 ### 4.3 Cards
 
@@ -205,7 +205,7 @@ Initials on `tile.0`/`tile.8` for people; `gray` when the person is inactive or 
 - WCAG AA contrast for text on every token pairing used; light-variant badges use shade 8 text on shade 0 background.
 - Visible focus ring (Mantine default), keyboard-operable everything, `aria-label` on icon-only buttons.
 - Colour never carries meaning alone; a word or icon accompanies it.
-- Dark theme: every component reads colours from theme tokens or Mantine CSS variables; test both themes on any new component. Colour scheme follows the OS by default with a toggle in account settings.
+- Dark theme: every component reads colours from theme tokens or Mantine CSS variables; test both themes on any new component — add it to the `/dev/ui` gallery (dev only) and check it there in light and dark, desktop and phone width. Colour scheme follows the OS by default with a toggle in the account menu.
 - RTL readiness: only logical properties and Mantine's `ps/pe/ms/me` props; no `left`/`right` in CSS or `pl`/`pr` props; `DirectionalIcon` for arrows. The Arabic phase adds `DirectionProvider`, translations and Arabic fonts — no layout rewrites.
 - Reduced motion respected.
 
@@ -234,4 +234,4 @@ Before building anything not covered here:
 
 A pull request that adds a hex value, a bare `style={{ fontSize }}`, a new colour meaning or a one-off component without touching this document is incomplete.
 
-Shared component inventory (created as needed, listed here when they exist): `PageHeader`, `StatTile`, `StatusBadge`, `SubjectBadge`, `EntityList`, `EmptyState`, `ChildSwitcher`, `DirectionalIcon`, `MoneyText`, `DateText`, `SensitiveSection`.
+Shared component inventory (created as needed, listed here when they exist). Existing: `Shell` (app shell with the four navigation sets, role switcher, colour-scheme toggle), `PageHeader`, `StatTile`, `StatusBadge`, `SubjectBadge`, `EmptyState`, `LinkButton`. Planned: `EntityList`, `ChildSwitcher`, `DirectionalIcon`, `MoneyText`, `DateText`, `SensitiveSection`, `CardTitle`.

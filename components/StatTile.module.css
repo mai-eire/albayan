@@ -1,0 +1,8 @@
+.value {
+  font-family: var(--mantine-font-family-headings);
+  font-size: var(--app-font-size-stat);
+  font-weight: 800;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}

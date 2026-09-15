@@ -1,0 +1,4 @@
+# workerd and esbuild need post-install scripts (platform binaries); pnpm blocks them unless approved.
+allowBuilds:
+  esbuild: true
+  workerd: true

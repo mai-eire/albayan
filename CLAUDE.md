@@ -27,18 +27,19 @@ Guiding principle: **build the simplest system that makes the school's common wo
 
 ## Stack
 
-Next.js 15 App Router on Cloudflare Workers via `@opennextjs/cloudflare` · Drizzle + D1 · Better Auth · Mantine 8 (+ `@mantine/dates`, `@mantine/charts`, Tabler icons) · Zod · Resend (prod) · Vitest + Playwright · pnpm. No Tailwind.
+Next.js 16 App Router on Cloudflare Workers via `@opennextjs/cloudflare` · Drizzle + D1 · Better Auth · Mantine 9 (+ `@mantine/dates`, `@mantine/charts`, Tabler icons) · Zod · Resend (prod) · Vitest + Playwright · pnpm. No Tailwind.
 
 ## Commands
 
 (Filled in as Phase 0 lands.)
 
 - `pnpm dev` — app with local bindings, offline
+- `pnpm preview` — OpenNext build served by the Workers runtime, still local
 - `pnpm db:generate` / `pnpm db:migrate:local` / `pnpm db:seed`
 - `pnpm test` — unit + integration (local SQLite, no network)
 - `pnpm test:e2e` — Playwright against the local app
 - `pnpm bootstrap-admin` — create the first admin
-- `pnpm check` — lint + typecheck
+- `pnpm check` — lint + typecheck + format check (`pnpm format` to fix)
 
 ## Git
 

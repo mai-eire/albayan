@@ -4,16 +4,19 @@ The single source of truth for how the application looks, feels and speaks. Ever
 
 Audience: anyone building UI here (people and AI). Keep it concrete; when a rule needs an example, the example is the rule.
 
+The library prototypes (git `a635784`) settled the *library and tokens* only. Their layout was too dense — stat tiles, a timeline, a register, a homework list and quick actions on one screen — and is **not** the reference for page design. The reference is §3 below.
+
 ---
 
 ## 1. Principles
 
 1. **Calm, warm, clear.** A community school, not a corporate dashboard and not a children's game. Colour and roundness give warmth; whitespace and hierarchy give calm.
-2. **One thing to do.** Every page has one obvious primary action. Parents and students should never wonder where to click.
-3. **State is visible.** Attendance, fees, homework due — encode state in colour *and* words, in the same place every time.
-4. **Same object, same shape.** A student, a lesson, a subject, a fee looks the same wherever it appears.
-5. **Phone first for families and students, desktop first for staff.** Both work everywhere, but each role's primary device drives its layout.
-6. **Nothing decorative that isn't informative.** No gradients, no illustration for its own sake, no animation without purpose.
+2. **Less on the page.** A page answers one question. If a second question needs answering, that's a second page, a tab, or a tap away — not another card. Whitespace is a feature; a half-empty screen is fine, a full one is a smell.
+3. **One thing to do.** Every page has one obvious primary action. Parents and students should never wonder where to click.
+4. **State is visible.** Attendance, fees, homework due — encode state in colour *and* words, in the same place every time.
+5. **Same object, same shape.** A student, a lesson, a subject, a fee looks the same wherever it appears.
+6. **Phone first for families and students, desktop first for staff.** Both work everywhere, but each role's primary device drives its layout.
+7. **Nothing decorative that isn't informative.** No gradients, no illustration for its own sake, no animation without purpose.
 
 ---
 
@@ -107,9 +110,19 @@ Every page uses `components/PageHeader.tsx`:
 ```
 One primary (`filled`) action per page, at most two secondary (`light`). Anything else goes in a `Menu` "More" button.
 
-Content column `maw={1180} mx="auto"`. Two-column layouts are `2fr 1fr` on `md+` (`SimpleGrid cols={{ base: 1, md: 3 }}` with the main column spanning 2) and stack on smaller screens. Stat tiles: 3 across on `sm+`, 1 on phones. Never more than 4 stat tiles.
+Content column `maw={960} mx="auto"` — narrower than a typical dashboard on purpose; wide tables (admin lists) may use `maw={1180}`. **Single column is the default.** A side column is allowed only on staff *detail* pages where the side content is about the same entity (a student profile with guardians beside it), never for a grab-bag of widgets.
 
-### 3.3 Density
+### 3.3 Page budget
+
+- At most **three content blocks** on a page (a block = a card, a table, a list, or a form). Need more? Split into tabs or pages.
+- A block holds **one kind of thing**. A card with lessons does not also hold homework.
+- Stat tiles appear only on the admin dashboard, at most three, and only for numbers the admin acts on (registers missing, applications pending, fees overdue). Nowhere else.
+- No "quick actions" panels. Actions live where their object is: "Take register" on the lesson, "Add homework" on the class, "Record payment" on the fee. A page's primary action sits in the `PageHeader`.
+- Above the fold on a phone: the page title and the first block. Nothing else.
+
+Worked example — teacher Today page: eyebrow with the date, "Good morning, Maryam", then **one** block: today's lessons as a timeline, each lesson row carrying its own inline actions (Take register · Add homework). Homework due today is a single line under the lessons, linking to the homework page. That's the whole page.
+
+### 3.4 Density
 
 Staff screens (admin, teacher) may use tables and `size="sm"` controls. Family and student screens use lists and cards, `size="md"` controls, and 44px minimum touch targets on primary actions.
 
@@ -137,11 +150,11 @@ Buttons say what happens: "Publish homework", "Submit register", "Record payment
 
 ### 4.3 Cards
 
-`Card withBorder radius="lg" padding="lg"` (theme default). A card has a `CardTitle` (h3) with optional right-side context (badge or subtle button). Cards are for grouping, not decoration: a page with one thing on it doesn't wrap it in a card.
+`Card withBorder radius="lg" padding="lg"` (theme default). A card has a `CardTitle` (h3) with optional right-side context (badge or subtle button). Cards are for grouping, not decoration: a page with one thing on it doesn't wrap it in a card — the content sits directly on the ground.
 
 ### 4.4 Stat tiles
 
-`components/StatTile.tsx`: label (sm, dimmed) · value (display face, stat size, tabular) · hint (xs, dimmed). Optional colour accent only when the number itself is a status (e.g. "3 registers missing" in saffron).
+`components/StatTile.tsx`: label (sm, dimmed) · value (display face, stat size, tabular) · hint (xs, dimmed). Optional colour accent only when the number itself is a status (e.g. "3 registers missing" in saffron). Admin dashboard only (§3.3).
 
 ### 4.5 Tables (staff only)
 
@@ -181,8 +194,8 @@ Initials on `tile.0`/`tile.8` for people; `gray` when the person is inactive or 
 ## 5. Patterns by role
 
 - **Admin:** dense, tables, filters at the top of lists, bulk actions in a bar that appears on selection. Sensitive information sits in a visually separate card titled "Sensitive information" with a lock icon.
-- **Teacher:** the *Today* page is the home; four quick-action tiles (register, homework, note, resource) appear on Today and on every class page in the same order with the same colours (tile, lapis, plum, saffron).
-- **Family:** `ChildSwitcher` pills under the header on every page, hidden with one child; each child's overview is a grid of small cards that each link to one tab. Never show internal vocabulary (enrolment, session id).
+- **Teacher:** the *Today* page is the home and shows only today's lessons with their inline actions (§3.3 example). Class pages are tabbed — Students · Attendance · Homework · Resources — one block per tab. Notes and resources are added from the student or class they belong to, not from a global launcher.
+- **Family:** `ChildSwitcher` pills under the header on every page, hidden with one child. The child's overview is a short vertical list of "what's next" items (next lesson, homework due, unread note, balance) — a list, not a grid of cards — each linking to its tab. Never show internal vocabulary (enrolment, session id).
 - **Student:** at most five navigation items, one column, big type, `size="md"` or `lg` controls, greetings by first name, due dates in relative words ("tomorrow", "in 3 days").
 
 ---
@@ -221,4 +234,4 @@ Before building anything not covered here:
 
 A pull request that adds a hex value, a bare `style={{ fontSize }}`, a new colour meaning or a one-off component without touching this document is incomplete.
 
-Shared component inventory (created as needed, listed here when they exist): `PageHeader`, `StatTile`, `StatusBadge`, `SubjectBadge`, `EntityList`, `EmptyState`, `ChildSwitcher`, `DirectionalIcon`, `MoneyText`, `DateText`, `SensitiveSection`, `QuickActions`.
+Shared component inventory (created as needed, listed here when they exist): `PageHeader`, `StatTile`, `StatusBadge`, `SubjectBadge`, `EntityList`, `EmptyState`, `ChildSwitcher`, `DirectionalIcon`, `MoneyText`, `DateText`, `SensitiveSection`.

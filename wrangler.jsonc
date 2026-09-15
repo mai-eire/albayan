@@ -11,6 +11,16 @@
     // Self-reference used by OpenNext's cache layer; the service name must match "name".
     { "binding": "WORKER_SELF_REFERENCE", "service": "albayan" },
   ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "albayan",
+      // Placeholder until the Cloudflare resources exist (Phase 0 task 14); local dev ignores it.
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "drizzle",
+    },
+  ],
+  "r2_buckets": [{ "binding": "BUCKET", "bucket_name": "albayan-files" }],
   "observability": { "enabled": true },
   "upload_source_maps": true,
 }

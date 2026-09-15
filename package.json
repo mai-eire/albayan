@@ -12,6 +12,9 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check": "pnpm lint && pnpm typecheck && pnpm format:check",
+    "test": "vitest run",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate:local": "wrangler d1 migrations apply albayan --local",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
@@ -22,6 +25,8 @@
     "@mantine/hooks": "^9.6.1",
     "@opennextjs/cloudflare": "^1.20.3",
     "@tabler/icons-react": "^3.46.0",
+    "better-auth": "^1.7.5",
+    "drizzle-orm": "^0.45.2",
     "next": "16.3.4",
     "react": "^19.1.7",
     "react-dom": "^19.1.7"
@@ -32,6 +37,7 @@
     "@types/node": "^20",
     "@types/react": "^19.1.7",
     "@types/react-dom": "^19.1.7",
+    "drizzle-kit": "^0.31.10",
     "eslint": "^9",
     "eslint-config-next": "16.3.4",
     "eslint-config-prettier": "^10",
@@ -40,6 +46,7 @@
     "postcss-simple-vars": "^7.0.1",
     "prettier": "^3",
     "typescript": "^5.7.4",
+    "vitest": "^5.0.1",
     "wrangler": "^4.132.0"
   }
 }

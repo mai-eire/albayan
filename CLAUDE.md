@@ -36,7 +36,7 @@ Next.js 16 App Router on Cloudflare Workers via `@opennextjs/cloudflare` · Driz
 - `pnpm dev` — app with local bindings, offline
 - `pnpm preview` — OpenNext build served by the Workers runtime, still local
 - `pnpm db:generate` / `pnpm db:migrate:local` / `pnpm db:seed`
-- `pnpm test` — unit + integration (local SQLite, no network)
+- `pnpm test` — unit + integration (Vitest; integration tests get a throwaway local D1 from `test/db.ts`, no network)
 - `pnpm test:e2e` — Playwright against the local app
 - `pnpm bootstrap-admin` — create the first admin
 - `pnpm check` — lint + typecheck + format check (`pnpm format` to fix)

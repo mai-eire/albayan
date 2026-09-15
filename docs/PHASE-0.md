@@ -11,7 +11,7 @@ Definition of done for the phase: a new contributor can `git clone && pnpm insta
 - [ ] **1. Scaffold** — Next.js 15 + TypeScript via `npm create cloudflare@latest -- --framework=next` (OpenNext adapter), pnpm, ESLint + Prettier, `pnpm check`. `.gitignore` covers `.wrangler/`, `.open-next/`, `.dev/`, `.env*`.
   DoD: `pnpm dev` serves a page offline; `pnpm build && wrangler dev` serves the same page.
 
-- [ ] **2. UI base** — Mantine 8 with the theme from `docs/PLAN.md` §1 (`lib/theme.ts`, colour tuples, Bricolage Grotesque + Figtree via `next/font`), PostCSS preset, `ColorSchemeScript`, `AppShell` (sidebar + top bar, collapsing on mobile), logical-property convention.
+- [ ] **2. UI base** — Mantine 8 implementing `docs/DESIGN.md` §2–3: `lib/theme.ts` (colour tuples, type scale, radius, component defaults), fonts via `next/font`, PostCSS preset, `ColorSchemeScript` + scheme toggle, `AppShell` per §3.1 (sidebar + top bar, drawer on mobile, bottom tabs for the student area), and the first shared components: `PageHeader`, `StatTile`, `StatusBadge`, `SubjectBadge`, `EmptyState`. Both colour schemes checked.
   DoD: placeholder pages at `/admin`, `/teach`, `/family`, `/student` render inside the shell.
 
 - [ ] **3. Drizzle + local D1** — `lib/db/schema/*.ts`, `drizzle.config.ts`, `pnpm db:generate` (drizzle-kit → SQL migrations), `pnpm db:migrate:local` (`wrangler d1 migrations apply --local`), typed `db()` accessor from the OpenNext binding.

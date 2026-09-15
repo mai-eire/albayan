@@ -72,12 +72,9 @@ If the OpenNext adapter causes friction in Phase 0 (it should not; it supports A
 
 Alternatives considered and rejected: Django/Rails (fine choices, but not a Cloudflare-native fit and less "SaaS-feel"); separate SPA + API (two codebases); Supabase/Firebase (RLS policies for this role model become the hardest part). UI: MUI (fights its Material identity, `sx` everywhere, custom colours need TS augmentation) and Tailwind + shadcn (cleanest result but the whole component layer and its character are code we'd own and maintain).
 
-### Design tokens (from the prototype)
+### Design language
 
-- **Palette:** ink `#14282c` (text), ground `#f4f8f6` (page), surface white; primary "tile" green `#146c60` (tint `#dcefe9`); subject colours — Quran lapis `#2b4fb4`, Arabic tile green, Islamic Studies plum `#7b4b94`; accent saffron `#d99a2b` (used sparingly: the "now" marker, notification dots); clay `#c44536` for absent/critical. Each is a 10-shade Mantine tuple in `theme.ts`.
-- **Type:** Bricolage Grotesque for headings and big numbers, Figtree for body, tabular numerals in tables. Arabic counterparts chosen in the RTL phase.
-- **Shape:** `defaultRadius: md`, cards `lg`, bordered rather than shadowed.
-- **Dark theme:** supported through Mantine's colour scheme from Phase 0 (the prototype forced light for comparison).
+Everything visual — tokens, layout, component rules, patterns per role, copy — is specified in **`docs/DESIGN.md`**, which is the source of truth and is extended before any new visual decision is implemented. Summary: tile green primary, saffron accent, clay critical, lapis/plum as subject colours; Bricolage Grotesque headings, Figtree body; bordered cards on a tinted ground; light and dark from Phase 0; logical properties throughout for the RTL phase.
 
 ---
 

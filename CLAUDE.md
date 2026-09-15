@@ -1,6 +1,6 @@
 # Al-Bayan — weekend Islamic school platform
 
-Read `docs/PLAN.md` before doing anything non-trivial. It is the source of truth for the domain model, schema, roles and phases. `docs/PHASE-0.md` is the current task list.
+Read `docs/PLAN.md` before doing anything non-trivial. It is the source of truth for the domain model, schema, roles and phases. `docs/DESIGN.md` is the design language — the source of truth for everything visual. `docs/PHASE-0.md` is the current task list.
 
 Guiding principle: **build the simplest system that makes the school's common workflows genuinely easy.** This is an application, not a framework. When two designs work, pick the one with fewer concepts.
 
@@ -43,6 +43,8 @@ Next.js 15 App Router on Cloudflare Workers via `@opennextjs/cloudflare` · Driz
 - TypeScript strict. Prefer plain functions and modules over classes.
 - Server Components for reads; client components only where interaction needs them.
 - UI copy is plain English aimed at parents and children; never expose internal terms (enrolment, session id, academic year id) to guardians or students.
-- Style with Mantine props and theme tokens (`c="dimmed"`, `color="saffron"`), CSS modules for anything custom. Use logical properties (`margin-inline-start`, `padding-inline`, `text-align: start`) and Mantine's `ps`/`ms` props, never `left`/`right`, so RTL can be switched on later with `DirectionProvider`.
-- Design tokens (palette, fonts, radius) are in `docs/PLAN.md` §1 and live in `lib/theme.ts`; don't invent new colours per screen.
+- **All UI follows `docs/DESIGN.md`.** Read it before writing any component or page. Use its tokens (via `lib/theme.ts`), its component rules (button hierarchy, `StatusBadge`/`SubjectBadge`, `PageHeader`, `EmptyState`…) and its copy rules. No raw hex, no ad-hoc font sizes, no new colour meanings, no one-off components inside pages.
+- **When the design language doesn't cover what you need, extend `docs/DESIGN.md` first** (a token, a status mapping, a shared component, a pattern), implement it in `lib/theme.ts` or `components/`, then use it from the page. A change that adds a visual decision without touching `docs/DESIGN.md` is incomplete.
+- Style with Mantine props and theme tokens (`c="dimmed"`, `color="saffron"`), CSS modules for anything custom. Logical properties and `ps`/`ms`/`pe`/`me` only — never `left`/`right` or `pl`/`pr` — so RTL is a switch later.
+- Test every new component in both light and dark colour schemes.
 - Match the surrounding code's density; no comment banners, no speculative TODOs.

@@ -6,7 +6,7 @@ Guiding principle: **build the simplest system that makes the school's common wo
 
 ## Non-negotiables
 
-- **No generic abstractions.** No entity systems, workflow engines, form builders, plugin/module systems, permission tables, event buses, microservices. If you find yourself writing something "configurable", stop and write the specific thing instead.
+- **Abstractions and config must earn their place.** Shared helpers, adapters and settings (school name, logo, timezone, bank details in `school_settings`) are fine; each new abstraction or config option needs a one-line justification in the commit or PR. What we do not build: generic entity systems, workflow engines, form builders, plugin/module systems, role/permission tables, event buses, microservices. When in doubt, write the specific thing.
 - **Privacy is structural.** Data reads go through per-viewer query functions in `lib/db/queries/` (`getStudentForTeacher`, `getStudentForGuardian`, …). A teacher-facing query never selects ethnicity, languages, registration reasons, address or guardian contact details. It *does* select allergies/medical notes and emergency contacts. Never pass an admin-shaped object to a teacher/family/student component.
 - **All writes are server actions** shaped as: Zod parse → access check (`lib/access.ts`) → write → audit (if sensitive) → notify. No API routes for writes except file upload.
 - **Authorisation lives only in `lib/access.ts`.** Roles are derived: `users.isAdmin` plus the existence of a `guardians` / `teachers` / `students` row for the user. A user can hold several roles. Do not add role/permission tables.
@@ -15,13 +15,13 @@ Guiding principle: **build the simplest system that makes the school's common wo
 
 ## Data conventions (D1 = SQLite)
 
-- Ids are text ULIDs, except `academic_years.id` which is the natural key `"2026-27"`.
+- Ids are autoincrement integers, except natural keys: `academic_years.id = "2026-27"`, `subjects.id = code` (`quran`). `students.studentId` (`ALB-26-0042`) is the human-facing identifier, separate from the row id. Every read is access-checked, so guessable ids are fine.
 - No arrays or enums in SQLite: lists are JSON text columns; enums are text with a CHECK constraint and a TypeScript union.
-- Timestamps are UTC ISO strings; the school timezone (`Europe/London`) is a constant used for display and "today" calculations.
-- Money is integer pence.
+- Timestamps are UTC ISO strings; the school timezone comes from `school_settings` and is used for display and "today" calculations via `lib/time.ts`.
+- Money is stored as integer euro cents (`…Cents` columns) because SQLite has no decimal type; it is shown and entered only in euros, converted in `lib/money.ts`. Never do arithmetic on euro floats.
 - Age is computed from `dateOfBirth`, never stored.
 - The timetable is derived (session periods + teaching assignments), not stored per class.
-- Payments are append-only; corrections are new rows.
+- Payments are editable/deletable by admin; every change is audited with before/after values.
 
 ## Stack
 

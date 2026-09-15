@@ -55,7 +55,8 @@ Guiding principle: **build the simplest system that makes the school's common wo
 D1 is the right call for "one dependency" and this scale, but it is SQLite, which shapes the schema:
 
 - No array or enum columns: `spokenLanguages`, `registrationReasons` are stored as JSON text; enums are text columns with `CHECK` constraints (Drizzle enforces at the type level too).
-- No timezone-aware timestamps: everything stored as UTC ISO strings / integers; the app renders in the school's timezone (Europe/London, a config constant).
+- No timezone-aware timestamps: everything stored as UTC ISO strings / integers; the app renders in the school's timezone (a `school_settings` value; **to confirm — Europe/Dublin?**).
+- No decimal type: money is stored as integer cents (`feeCents`, `amountCents`) because SQLite would otherwise store `250.10` as a float and sums drift. The UI, forms and emails only ever show and accept euros (`250` or `250.50`); the conversion lives in one `lib/money.ts`.
 - Single-writer, ~10 GB limit, no concurrent-transaction complexity: fine for a school; irrelevant at this scale.
 - Reporting queries (group by ethnicity, etc.) are trivial in SQLite.
 
@@ -137,7 +138,7 @@ Rules: no code path may call a network service in dev unless `NODE_ENV=productio
 | Homework | `Homework` on (class, subject). |
 | Teacher Note | `StudentNote` with visibility. |
 | Resource | `Resource` attached to exactly one of: school-wide, (class, subject), homework, student. |
-| Fee / Payment | Fee = `Enrolment.feePence`. `Payment` rows against the enrolment. Balance derived. |
+| Fee / Payment | Fee = `Enrolment.feeCents`. `Payment` rows against the enrolment. Balance derived. |
 | Event / Activity | `Event` with type, optional class/session targeting, `EventParticipant` for registration & consent. |
 | Calendar | Not a table: union of terms, session schedules (weekly) and events. |
 | Parent-Teacher Meeting | `Event` of that type. Slots later. |
@@ -157,7 +158,7 @@ Rules: no code path may call a network service in dev unless `NODE_ENV=productio
 
 ## 4. Database schema (D1 / SQLite via Drizzle)
 
-Shorthand; `id` is a text ULID except where a natural key is noted (academic year). All tables have `createdAt`/`updatedAt` (ISO UTC). JSON columns noted. Amounts in pence.
+Shorthand. `id` is an **autoincrement integer** except where a natural key is noted: `academic_years.id = "2026-27"`, `subjects.id = code` (e.g. `quran`). Students additionally carry the business identifier `studentId` (`ALB-26-0042`), assigned on approval. All tables have `createdAt`/`updatedAt` (ISO UTC). JSON columns noted. Money is stored as integer euro cents (`…Cents` columns) and only ever shown/entered in euros.
 
 ### Identity
 
@@ -174,7 +175,7 @@ users
 ```
 guardians
   id, userId UNIQUE,
-  addressLine1?, addressLine2?, city?, postcode?, postcodeArea? (derived, e.g. "M14"),
+  addressLine1?, addressLine2?, city?, postalCode? (Eircode), area? (derived from Eircode routing key, e.g. "D15"),
   emergencyContactName?, emergencyContactPhone?, emergencyContactRelationship?,
   spokenLanguages JSON [], ethnicity?,                          -- sensitive
   registrationReasons JSON [] (arabic|quran|religion|mosque|community|other),
@@ -204,19 +205,19 @@ teachers
 
 ```
 academic_years    id ("2026-27" — the name is the key; URL-safe, never changes), startDate, endDate,
-                  isCurrent bool, standardFeePence
+                  isCurrent bool, standardFeeCents
 terms             id, academicYearId, name, startDate, endDate
 school_sessions   id, academicYearId, name ("Saturday"), dayOfWeek (0–6), startTime, isActive
 session_periods   id, sessionId, sortOrder, subjectId? | title? ("Break", "Assembly"), durationMinutes
                   -- exactly one of subjectId / title is set; end time of the session = start + Σ durations
-subjects          id, name, code, isActive
+subjects          id (code, e.g. "quran" — natural key), name, isActive
 classes           id, academicYearId, sessionId, name ("Level 2"), classTeacherId?, room?, capacity?
 teaching_assignments
                   id, classId, subjectId, teacherId              UNIQUE (classId, subjectId)
                   -- one row per subject in the session's schedule; a co-teacher later = drop the
                   -- unique constraint and add a role column, nothing else changes
 enrolments        id, studentId, classId, startDate, endDate?, status (active|left),
-                  feePence, feeNote?
+                  feeCents, feeNote?
                   UNIQUE partial: one active enrolment per student
 ```
 
@@ -243,13 +244,13 @@ resources         id, title, description?, kind (file|link), storageKey?, mimeTy
 ### Fees
 
 ```
-payments          id, enrolmentId, amountPence, paidOn, method (cash|bank_transfer|card),
+payments          id, enrolmentId, amountCents, paidOn, method (cash|bank_transfer|card),
                   reference?, paidByGuardianId?, recordedByUserId, providerRef? (Stripe later), note?
 ```
-- Fee is **annual**: `enrolments.feePence`, set at approval from `academic_years.standardFeePence`, editable by admin at any time with a free-text `feeNote`. Discount rules change year on year and are not modelled; the admin simply edits the amount.
-- Balance = `feePence − Σ payments`. Status (unpaid / part-paid / paid / waived-when-fee-is-0) is derived, not stored.
+- Fee is **annual**: `enrolments.feeCents`, set at approval from `academic_years.standardFeeCents`, editable by admin at any time with a free-text `feeNote`. Discount rules change year on year and are not modelled; the admin simply edits the amount.
+- Balance = `feeCents − Σ payments`. Status (unpaid / part-paid / paid / waived-when-fee-is-0) is derived, not stored.
 - Per-student list: payments on the student's enrolments. Per-guardian list: payments where `paidByGuardianId` = guardian, plus a "family" view summing all their children's balances.
-- Payments are append-only; corrections are negative or additional rows with a note.
+- Payments are ordinary editable rows: a mis-entered amount is corrected in place, a mistaken payment is deleted. Both are admin-only and written to the audit log with before/after values. No ledger semantics.
 - The approval and student screens show how many siblings are already enrolled, so the admin can apply whatever discount is current without the system knowing the rule.
 - Extra charges (trips, books) are **not** fees in v1; trip fees arrive with event registration in a later phase.
 
@@ -259,7 +260,7 @@ payments          id, enrolmentId, amountPence, paidOn, method (cash|bank_transf
 events            id, title, description?, type
                   (trip|camp|summer_school|club|sports_day|community|parent_teacher_meeting|holiday|closure|other),
                   startAt, endAt, location?, isPublished bool,
-                  requiresRegistration bool, requiresConsent bool, feePence?,
+                  requiresRegistration bool, requiresConsent bool, feeCents?,
                   audience (whole_school|selected_sessions|selected_classes), createdByUserId
 event_targets     eventId, sessionId? | classId?        -- only when audience is selected_*
 event_participants id, eventId, studentId, status (registered|withdrawn),
@@ -344,7 +345,7 @@ Field policy: ethnicity (guardian and student), spoken languages and registratio
 /admin/fees               Outstanding balances, record payment, payment history
 /admin/events             Events & calendar
 /admin/resources          School-wide resources
-/admin/reports            Diversity & demographics: ethnicity, languages, postcode area,
+/admin/reports            Diversity & demographics: ethnicity, languages, postal area,
                           gender, age band, session, Arabic proficiency, registration reasons
 /admin/audit              Audit log
 /admin/settings           School details, timezone, ID prefix, bank details
@@ -399,7 +400,7 @@ Home · Timetable · Homework · Resources · Calendar. Attendance and notes are
 - **Schedule editor** (per session): set the start time, then an ordered list of periods — pick a subject or type a title (Break), set duration in minutes, drag to reorder. A live preview shows the computed timeline (10:00 Quran · 10:50 Arabic · 11:40 Break · 11:55 Islamic Studies). No times are typed.
 - **Class teachers** (per class): a table with one row per subject in the session's schedule and a teacher dropdown on each row, plus the class teacher. The class timetable renders underneath. A teacher assigned to the same subject in two classes of the same session is shown as a warning (they'd be in two rooms at once), not blocked.
 - **Fees**: outstanding balances by session/class; record payment (choose child's enrolment, amount, method, who paid); payment history per student and per guardian; export CSV.
-- **Reports**: bar/pie charts of active students by ethnicity, spoken language, postcode area, gender, age band, session, Arabic proficiency, registration reasons; filter by academic year. Counts only; CSV export. Headline versions (two or three charts) on the dashboard.
+- **Reports**: bar/pie charts of active students by ethnicity, spoken language, postal area, gender, age band, session, Arabic proficiency, registration reasons; filter by academic year. Counts only; CSV export. Headline versions (two or three charts) on the dashboard.
 - **Attendance**: by date → sessions → classes → submitted/missing; drill in and edit (audited).
 - **Year rollover** (end of year, Phase 3): create the next academic year, copy sessions/schedules/classes, then a roll-over screen listing every active student with a proposed next class (default: same level name, admin adjusts) → creates next year's enrolments at the new standard fee and marks the old ones ended. Guardians get a "confirm your child's place for 2027-28" notification. Students who don't return are marked `inactive`. This is the only annual workflow beyond setup, and the first one isn't needed until the end of year one.
 
@@ -428,9 +429,9 @@ The suggested top-level set is a good *admin* IA but wrong for the other roles. 
 ## 14. Audit / history
 
 - `audit_log` written explicitly by server actions for: auth events; edits/deletes of sensitive, medical or emergency-contact data; attendance edits after the day; note deletions; fee changes and payments; approvals/declines; role changes.
-- Natural history: enrolments (class history), append-only payments, soft-deleted notes.
+- Natural history: enrolments (class history), audited payment edits, soft-deleted notes.
 - No temporal tables.
-- **Data protection (UK GDPR):** the school is a data controller. The app needs three admin actions and nothing more: export a family's data (JSON/CSV), delete a declined/withdrawn application outright, and anonymise a student who has left (keeps attendance/payment history for the school's records, strips name, DOB, medical and demographic fields). A short privacy notice is linked from the registration form. Retention (e.g. anonymise N years after leaving) is a manual admin decision, not a scheduled job, in v1.
+- **Data protection (GDPR):** the school is a data controller. The app needs three admin actions and nothing more: export a family's data (JSON/CSV), delete a declined/withdrawn application outright, and anonymise a student who has left (keeps attendance/payment history for the school's records, strips name, DOB, medical and demographic fields). A short privacy notice is linked from the registration form. Retention (e.g. anonymise N years after leaving) is a manual admin decision, not a scheduled job, in v1.
 
 ## 15. Testing strategy
 

@@ -56,8 +56,9 @@ Definition of done for the phase: a new contributor can `git clone && pnpm insta
 ## Decisions to make during Phase 0 (small, record them here)
 
 - i18n approach: recommendation is `next-intl` with a single `en` locale from day one (cheap now, painful to retrofit), `Intl` for dates/numbers, no Arabic strings yet.
-- ULID library and id helper location.
-- Timezone helper: single `lib/time.ts` with `todayInSchoolTz()`, `formatDate()`, used everywhere instead of ad-hoc `Date` math.
+- Better Auth id strategy: use `advanced.database.useNumberId` so `users.id` is an integer like every other table.
+- Timezone helper: single `lib/time.ts` with `todayInSchoolTz()`, `formatDate()`, used everywhere instead of ad-hoc `Date` math. School timezone to confirm (Europe/Dublin?).
+- `lib/money.ts`: `eurosToCents(input: string | number)`, `formatEuros(cents)`; forms accept `250` or `250.50`.
 
 ## Explicitly not in Phase 0
 

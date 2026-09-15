@@ -1,6 +1,8 @@
 # Al-Bayan — weekend Islamic school platform
 
-Read `docs/PLAN.md` before doing anything non-trivial. It is the source of truth for the domain model, schema, roles and phases. `docs/DESIGN.md` is the design language — the source of truth for everything visual. `docs/PHASE-0.md` is the current task list.
+Start every session with `docs/ROADMAP.md` (where we are, what's next, what's blocked — short by design). Then, before doing anything non-trivial, `docs/PLAN.md` (domain model, schema, roles, phase rationale) and `docs/DESIGN.md` (the design language, source of truth for everything visual). The current phase's checklist (`docs/PHASE-N.md`) has the task-level detail.
+
+**Keep the roadmap live.** At the end of every work session — in the same commit as the work — tick completed tasks in the phase checklist, update ROADMAP.md's status table, "Now", "Blocked" and "Recently done", and bump its date. When a phase completes, create the next `PHASE-N.md` from PLAN §17 before starting it.
 
 Guiding principle: **build the simplest system that makes the school's common workflows genuinely easy.** This is an application, not a framework. When two designs work, pick the one with fewer concepts.
 

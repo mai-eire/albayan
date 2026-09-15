@@ -455,6 +455,8 @@ The suggested top-level set is a good *admin* IA but wrong for the other roles. 
 
 ## 17. Development phases
 
+**Live status lives in [`ROADMAP.md`](ROADMAP.md); this section is the original scope and rationale and is not updated with progress.** Each phase ends with something a real user can log into.
+
 **Phase 0 — Foundation (≈1 week)**
 Next.js + OpenNext with local D1/R2 bindings working offline first, then the Cloudflare project (Worker, D1, R2, staging env), Drizzle schema for identity/people/academics, Better Auth (first admin created by a one-off `pnpm bootstrap-admin` script / seed, never a public signup), role derivation + switcher, four route groups with guards, `lib/access.ts` with tests, seed, CI + deploy. *Checkpoint: OpenNext friction? If yes, swap to React Router v7 now.*
 

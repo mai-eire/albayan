@@ -25,7 +25,7 @@ Guiding principle: **build the simplest system that makes the school's common wo
 
 ## Stack
 
-Next.js 15 App Router on Cloudflare Workers via `@opennextjs/cloudflare` · Drizzle + D1 · Better Auth · Tailwind + shadcn/ui · Zod · Resend (prod) · Vitest + Playwright · pnpm.
+Next.js 15 App Router on Cloudflare Workers via `@opennextjs/cloudflare` · Drizzle + D1 · Better Auth · Mantine 8 (+ `@mantine/dates`, `@mantine/charts`, Tabler icons) · Zod · Resend (prod) · Vitest + Playwright · pnpm. No Tailwind.
 
 ## Commands
 
@@ -43,5 +43,6 @@ Next.js 15 App Router on Cloudflare Workers via `@opennextjs/cloudflare` · Driz
 - TypeScript strict. Prefer plain functions and modules over classes.
 - Server Components for reads; client components only where interaction needs them.
 - UI copy is plain English aimed at parents and children; never expose internal terms (enrolment, session id, academic year id) to guardians or students.
-- Use Tailwind logical properties (`ps-`, `ms-`, `text-start`) so RTL can be added later.
+- Style with Mantine props and theme tokens (`c="dimmed"`, `color="saffron"`), CSS modules for anything custom. Use logical properties (`margin-inline-start`, `padding-inline`, `text-align: start`) and Mantine's `ps`/`ms` props, never `left`/`right`, so RTL can be switched on later with `DirectionProvider`.
+- Design tokens (palette, fonts, radius) are in `docs/PLAN.md` §1 and live in `lib/theme.ts`; don't invent new colours per screen.
 - Match the surrounding code's density; no comment banners, no speculative TODOs.

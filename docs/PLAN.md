@@ -41,8 +41,8 @@ Guiding principle: **build the simplest system that makes the school's common wo
 | Database | **Cloudflare D1** (SQLite) | Single vendor, free tier covers this scale, zero ops. Trade-offs below. |
 | ORM / migrations | **Drizzle ORM** | First-class D1 support, runs in Workers, typed schema in TypeScript, SQL migrations via `drizzle-kit` applied with `wrangler d1 migrations apply`. Prisma on Workers is possible but needs driver adapters and is heavier — not worth it. |
 | Auth | **Better Auth** (email/password + username plugin, Drizzle adapter) | Works in Workers; student ID acts as username. |
-| UI | **Tailwind CSS + shadcn/ui** | Owned components, quick to make good forms/tables. |
-| Charts | **Recharts** (admin reports only) | Small, React-native, sufficient for bar/pie breakdowns. |
+| UI | **Mantine 8** (`@mantine/core`, `@mantine/dates`, `@mantine/hooks`) + Tabler icons | Chosen after a three-way prototype (Mantine / MUI / Tailwind+shadcn, see git history `a635784`). Broadest coverage with the least code — dates, forms, tables, modals, notifications, timeline all built in; colourful and rounded by default; first-class RTL via `DirectionProvider` for the Arabic phase; no Tailwind. |
+| Charts | **`@mantine/charts`** (Recharts underneath; admin reports only) | Same theme tokens as the rest of the UI. |
 | Validation | **Zod** | Shared between forms and server actions. |
 | Email | **Resend** | Cloudflare does not send transactional email (Email Workers only receive/route), so one external email provider is unavoidable. |
 | Files | **Cloudflare R2** via the Worker binding | Private bucket. Uploads and downloads stream through the Worker (no presigned URLs), so the same code runs against the local emulator. |
@@ -70,7 +70,14 @@ Netlify hosts Next.js well but provides neither a database nor object storage, s
 
 If the OpenNext adapter causes friction in Phase 0 (it should not; it supports App Router, server actions, middleware, ISR), the alternative is **React Router v7 (framework mode)**, which has a native Cloudflare Workers template. Decide at the end of Phase 0, before feature code exists.
 
-Alternatives considered and rejected: Django/Rails (fine choices, but not a Cloudflare-native fit and less "SaaS-feel"); separate SPA + API (two codebases); Supabase/Firebase (RLS policies for this role model become the hardest part).
+Alternatives considered and rejected: Django/Rails (fine choices, but not a Cloudflare-native fit and less "SaaS-feel"); separate SPA + API (two codebases); Supabase/Firebase (RLS policies for this role model become the hardest part). UI: MUI (fights its Material identity, `sx` everywhere, custom colours need TS augmentation) and Tailwind + shadcn (cleanest result but the whole component layer and its character are code we'd own and maintain).
+
+### Design tokens (from the prototype)
+
+- **Palette:** ink `#14282c` (text), ground `#f4f8f6` (page), surface white; primary "tile" green `#146c60` (tint `#dcefe9`); subject colours — Quran lapis `#2b4fb4`, Arabic tile green, Islamic Studies plum `#7b4b94`; accent saffron `#d99a2b` (used sparingly: the "now" marker, notification dots); clay `#c44536` for absent/critical. Each is a 10-shade Mantine tuple in `theme.ts`.
+- **Type:** Bricolage Grotesque for headings and big numbers, Figtree for body, tabular numerals in tables. Arabic counterparts chosen in the RTL phase.
+- **Shape:** `defaultRadius: md`, cards `lg`, bordered rather than shadowed.
+- **Dark theme:** supported through Mantine's colour scheme from Phase 0 (the prototype forced light for comparison).
 
 ---
 

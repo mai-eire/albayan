@@ -11,7 +11,7 @@ Definition of done for the phase: a new contributor can `git clone && pnpm insta
 - [ ] **1. Scaffold** — Next.js 15 + TypeScript via `npm create cloudflare@latest -- --framework=next` (OpenNext adapter), pnpm, ESLint + Prettier, `pnpm check`. `.gitignore` covers `.wrangler/`, `.open-next/`, `.dev/`, `.env*`.
   DoD: `pnpm dev` serves a page offline; `pnpm build && wrangler dev` serves the same page.
 
-- [ ] **2. UI base** — Tailwind, shadcn/ui init, app shell (sidebar + top bar, responsive), theme tokens, logical-property convention.
+- [ ] **2. UI base** — Mantine 8 with the theme from `docs/PLAN.md` §1 (`lib/theme.ts`, colour tuples, Bricolage Grotesque + Figtree via `next/font`), PostCSS preset, `ColorSchemeScript`, `AppShell` (sidebar + top bar, collapsing on mobile), logical-property convention.
   DoD: placeholder pages at `/admin`, `/teach`, `/family`, `/student` render inside the shell.
 
 - [ ] **3. Drizzle + local D1** — `lib/db/schema/*.ts`, `drizzle.config.ts`, `pnpm db:generate` (drizzle-kit → SQL migrations), `pnpm db:migrate:local` (`wrangler d1 migrations apply --local`), typed `db()` accessor from the OpenNext binding.
@@ -55,7 +55,7 @@ Definition of done for the phase: a new contributor can `git clone && pnpm insta
 
 ## Decisions to make during Phase 0 (small, record them here)
 
-- i18n approach: recommendation is `next-intl` with a single `en` locale from day one (cheap now, painful to retrofit), `Intl` for dates/numbers, no Arabic strings yet.
+- i18n approach: recommendation is `next-intl` with a single `en` locale from day one (cheap now, painful to retrofit), `Intl` for dates/numbers, no Arabic strings yet. Hijri date via `Intl.DateTimeFormat('en-u-ca-islamic-umalqura')` as in the prototype.
 - Better Auth id strategy: use `advanced.database.useNumberId` so `users.id` is an integer like every other table.
 - Timezone helper: single `lib/time.ts` with `todayInSchoolTz()`, `formatDate()`, used everywhere instead of ad-hoc `Date` math. School timezone to confirm (Europe/Dublin?).
 - `lib/money.ts`: `eurosToCents(input: string | number)`, `formatEuros(cents)`; forms accept `250` or `250.50`.

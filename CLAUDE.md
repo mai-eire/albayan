@@ -40,6 +40,11 @@ Next.js 15 App Router on Cloudflare Workers via `@opennextjs/cloudflare` · Driz
 - `pnpm bootstrap-admin` — create the first admin
 - `pnpm check` — lint + typecheck
 
+## Git
+
+- Commits are authored by the person running the session. No `Co-Authored-By: Claude`, no "Generated with Claude Code", no attribution lines of any kind in commit messages or PR descriptions.
+- Never force-push, rewrite history or push at all unless asked.
+
 ## Style
 
 - TypeScript strict. Prefer plain functions and modules over classes.

@@ -41,7 +41,7 @@ Guiding principle: **build the simplest system that makes the school's common wo
 | Database | **Cloudflare D1** (SQLite) | Single vendor, free tier covers this scale, zero ops. Trade-offs below. |
 | ORM / migrations | **Drizzle ORM** | First-class D1 support, runs in Workers, typed schema in TypeScript, SQL migrations via `drizzle-kit` applied with `wrangler d1 migrations apply`. Prisma on Workers is possible but needs driver adapters and is heavier — not worth it. |
 | Auth | **Better Auth** (email/password + username plugin, Drizzle adapter) | Works in Workers; student ID acts as username. |
-| UI | **Mantine 8** (`@mantine/core`, `@mantine/dates`, `@mantine/hooks`) + Tabler icons | Chosen after a three-way prototype (Mantine / MUI / Tailwind+shadcn, see git history `a635784`). Broadest coverage with the least code — dates, forms, tables, modals, notifications, timeline all built in; colourful and rounded by default; first-class RTL via `DirectionProvider` for the Arabic phase; no Tailwind. |
+| UI | **Mantine 8** (`@mantine/core`, `@mantine/dates`, `@mantine/hooks`) + Tabler icons | Chosen after a three-way prototype (Mantine / MUI / Tailwind+shadcn, see git history `4b6f3f8`). Broadest coverage with the least code — dates, forms, tables, modals, notifications, timeline all built in; colourful and rounded by default; first-class RTL via `DirectionProvider` for the Arabic phase; no Tailwind. |
 | Charts | **`@mantine/charts`** (Recharts underneath; admin reports only) | Same theme tokens as the rest of the UI. |
 | Validation | **Zod** | Shared between forms and server actions. |
 | Email | **Resend** | Cloudflare does not send transactional email (Email Workers only receive/route), so one external email provider is unavoidable. |

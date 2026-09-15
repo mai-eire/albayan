@@ -4,7 +4,7 @@ The single source of truth for how the application looks, feels and speaks. Ever
 
 Audience: anyone building UI here (people and AI). Keep it concrete; when a rule needs an example, the example is the rule.
 
-The library prototypes (git `a635784`) settled the *library and tokens* only. Their layout was too dense — stat tiles, a timeline, a register, a homework list and quick actions on one screen — and is **not** the reference for page design. The reference is §3 below.
+The library prototypes (git `4b6f3f8`) settled the *library and tokens* only. Their layout was too dense — stat tiles, a timeline, a register, a homework list and quick actions on one screen — and is **not** the reference for page design. The reference is §3 below.
 
 ---
 

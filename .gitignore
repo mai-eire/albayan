@@ -1,0 +1,14 @@
+node_modules/
+.next/
+.open-next/
+.wrangler/
+.dev/
+.env
+.env.*
+!.env.example
+dist/
+coverage/
+playwright-report/
+test-results/
+.DS_Store
+*.log

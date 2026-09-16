@@ -6,7 +6,9 @@ import { PageHeader } from "@/components/PageHeader";
 import { canViewStudent, loadStudentFacts, requireArea } from "@/lib/access";
 import { ageOn } from "@/lib/age";
 import { getSchoolSettings } from "@/lib/db/queries/settings";
+import { listNotesForStaff } from "@/lib/db/queries/notes";
 import { getStudentForTeacher } from "@/lib/db/queries/teach";
+import { NotesCard } from "@/components/NotesCard";
 import { proficiencyLabels, relationshipLabels } from "@/lib/demographics";
 import { todayIn } from "@/lib/time";
 
@@ -17,9 +19,10 @@ export default async function TeacherStudentPage({ params }: Props) {
   const id = Number((await params).id);
   const [user, facts] = await Promise.all([requireArea("teach"), loadStudentFacts(id)]);
   if (!facts || !canViewStudent(user, facts)) notFound();
-  const [student, { timezone }] = await Promise.all([
+  const [student, { timezone }, notes] = await Promise.all([
     getStudentForTeacher(id),
     getSchoolSettings(),
+    listNotesForStaff(id),
   ]);
   if (!student) notFound();
   return (
@@ -70,6 +73,13 @@ export default async function TeacherStudentPage({ params }: Props) {
           ))}
         </SimpleGrid>
       </Card>
+      <NotesCard
+        studentId={student.id}
+        firstName={student.firstName}
+        notes={notes}
+        currentUserId={user.id}
+        isAdmin={user.isAdmin}
+      />
     </Stack>
   );
 }

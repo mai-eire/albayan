@@ -10,6 +10,7 @@ const tabs = [
   { value: "guardians", label: "Guardians" },
   { value: "sensitive", label: "Sensitive" },
   { value: "enrolment", label: "Enrolment" },
+  { value: "notes", label: "Notes" },
 ];
 
 export default async function StudentLayout({

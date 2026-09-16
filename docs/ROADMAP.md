@@ -10,7 +10,7 @@ Live document. Updated at the end of every work session, in the same commit as t
 |---|---|---|---|
 | Planning | Requirements, architecture, stack, UI library, design language | ✅ Done | — |
 | 0 — Foundation | Offline dev loop, schema v1, auth, roles, access layer, seed, CI, Cloudflare staging | ✅ Done (deploy deferred) | [PHASE-0.md](PHASE-0.md) |
-| 1 — Registration & setup | Guardian signup, applications, approvals, academics setup, timetable, staff invites | 🔄 In progress (9/14) | [PHASE-1.md](PHASE-1.md) |
+| 1 — Registration & setup | Guardian signup, applications, approvals, academics setup, timetable, staff invites | 🔄 In progress (10/14) | [PHASE-1.md](PHASE-1.md) |
 | 2 — Daily workflows | Teacher Today, registers, homework, notes, resources, family/student views, notifications | ⬜ | — |
 | 3 — Fees, events, reports | Fees & payments, events with consent, reports, audit viewer, year rollover, GDPR actions | ⬜ | — |
 | Later | Stripe, PTM slots, Arabic/RTL, SMS, co-teachers, per-class schedules | — | — |
@@ -21,8 +21,8 @@ Phase scope and rationale: [PLAN.md §17](PLAN.md). Definition of done for the c
 
 Phase 1, in order:
 
-1. Task 10 — admin people lists and profiles (`getStudentForAdmin`).
-2. Task 11–12 — teacher views, family/student views with the timetable.
+1. Task 11 — teacher views (`getStudentForTeacher` with the hidden-columns test).
+2. Task 12 — family and student views with the timetable.
 3. Task 13–14 — notifications helper, end-to-end flow, Phase 2 checklist.
 
 ## Blocked / undecided
@@ -33,6 +33,7 @@ Phase 1, in order:
 
 ## Recently done
 
+- 2026-09-16 — Phase 1 task 10: `/admin/students` (search, status/day/class filters in the URL) → profile with Details · Guardians · Sensitive · Enrolment tabs as routes (`LinkTabs`), edit cards for details, health and ethnicity (audited field diffs); `/admin/guardians` list and profile with children and the sensitive card; `getStudentForAdmin` and friends in `lib/db/queries/students.ts`; `Field` component.
 - 2026-09-16 — Phase 1 task 9: `/admin/applications` inbox (age, year, Arabic, preference, guardian, siblings attending) with a detail drawer; approve → per-year gap-free student ID, student sign-in with a temporary password, enrolment with fee, email to the guardian; decline with a reason (new `declinedReason` column, migration 0001) and email; both audited and tested end to end, including the student's first sign-in.
 - 2026-09-16 — Phase 1 task 8: `/family/register-child` wizard (you · child · family · review) on `Stepper`, per-step validation from the same Zod schemas the action uses, guardian details pre-filled, optional diversity questions with the standard sentence, "Register another child"; `/family` lists children with their status; `lib/demographics.ts` option lists; action tests.
 - 2026-09-16 — Phase 1 task 7: `/register` for guardians (name, email, phone, password) → guardian row, verification email, signed in; `/family` shows a saffron notice with resend until confirmed and hides "Register a child"; Better Auth gets its base URL from the request in dev; e2e register → confirm → verified.

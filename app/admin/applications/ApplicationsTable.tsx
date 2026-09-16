@@ -19,6 +19,7 @@ import { useForm } from "@mantine/form";
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Field } from "@/components/Field";
 import { FormError } from "@/components/FormError";
 import { toast } from "@/components/toast";
 import { ageOn } from "@/lib/age";
@@ -106,24 +107,28 @@ export function ApplicationsTable({ applications, placements, standardFeeCents, 
                 </Badge>
               )}
             </Group>
-            <Details
-              rows={[
+            <SimpleGrid cols={2} spacing="xs" verticalSpacing="xs">
+              {(
                 [
-                  "Age",
-                  `${ageOn(open.dateOfBirth, today)} (${dayjs(open.dateOfBirth).format("D MMM YYYY")})`,
-                ],
-                ["Gender", open.gender === "male" ? "Boy" : "Girl"],
-                ["School year", open.schoolYearGroup],
-                ["Arabic", proficiencyLabels[open.arabicProficiency]],
-                [
-                  "Prefers",
-                  open.preferredSessionName
-                    ? `${open.preferredSessionName}${open.preferredClassName ? ` · ${open.preferredClassName}` : ""}`
-                    : null,
-                ],
-                ["Applied", dayjs(open.appliedAt).format("D MMM YYYY")],
-              ]}
-            />
+                  [
+                    "Age",
+                    `${ageOn(open.dateOfBirth, today)} (${dayjs(open.dateOfBirth).format("D MMM YYYY")})`,
+                  ],
+                  ["Gender", open.gender === "male" ? "Boy" : "Girl"],
+                  ["School year", open.schoolYearGroup],
+                  ["Arabic", proficiencyLabels[open.arabicProficiency]],
+                  [
+                    "Prefers",
+                    open.preferredSessionName
+                      ? `${open.preferredSessionName}${open.preferredClassName ? ` · ${open.preferredClassName}` : ""}`
+                      : null,
+                  ],
+                  ["Applied", dayjs(open.appliedAt).format("D MMM YYYY")],
+                ] as [string, string | null | undefined][]
+              ).map(([label, value]) => (
+                <Field key={label} label={label} value={value} />
+              ))}
+            </SimpleGrid>
             <Stack gap={4}>
               <Title order={4}>Health</Title>
               <Text size="sm">Allergies: {open.allergies || "none"}</Text>
@@ -191,21 +196,6 @@ export function ApplicationsTable({ applications, placements, standardFeeCents, 
         )}
       </Modal>
     </>
-  );
-}
-
-function Details({ rows }: { rows: [string, string | null | undefined][] }) {
-  return (
-    <SimpleGrid cols={2} spacing="xs" verticalSpacing="xs">
-      {rows.map(([label, value]) => (
-        <div key={label}>
-          <Text size="xs" c="dimmed">
-            {label}
-          </Text>
-          <Text size="sm">{value || "—"}</Text>
-        </div>
-      ))}
-    </SimpleGrid>
   );
 }
 

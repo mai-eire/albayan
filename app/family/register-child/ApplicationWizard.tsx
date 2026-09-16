@@ -23,6 +23,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { z } from "zod";
 import { DateField } from "@/components/DateField";
+import { Field } from "@/components/Field";
 import { FormError } from "@/components/FormError";
 import { LinkButton } from "@/components/LinkButton";
 import { sensitiveExplanation } from "@/components/SensitiveSection";
@@ -268,7 +269,7 @@ export function ApplicationWizard({
                 {...form.getInputProps("gender")}
               />
             </Group>
-            <Group grow>
+            <Group grow align="flex-start">
               <Select
                 label="School year"
                 description="At their weekday school"
@@ -303,7 +304,7 @@ export function ApplicationWizard({
               minRows={2}
               {...form.getInputProps("applicationNotes")}
             />
-            <Group grow>
+            <Group grow align="flex-start">
               <Select
                 label="Preferred day"
                 data={days.map((d) => ({ value: String(d.id), label: d.label }))}
@@ -468,12 +469,7 @@ function Review({ title, rows }: { title: string; rows: [string, string | null |
       </Title>
       <SimpleGrid cols={{ base: 1, xs: 2 }} spacing="xs" verticalSpacing="xs">
         {rows.map(([label, value]) => (
-          <div key={label}>
-            <Text size="xs" c="dimmed">
-              {label}
-            </Text>
-            <Text size="sm">{value || "—"}</Text>
-          </div>
+          <Field key={label} label={label} value={value} />
         ))}
       </SimpleGrid>
     </Card>

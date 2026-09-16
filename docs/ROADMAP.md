@@ -10,7 +10,7 @@ Live document. Updated at the end of every work session, in the same commit as t
 |---|---|---|---|
 | Planning | Requirements, architecture, stack, UI library, design language | ✅ Done | — |
 | 0 — Foundation | Offline dev loop, schema v1, auth, roles, access layer, seed, CI, Cloudflare staging | ✅ Done (deploy deferred) | [PHASE-0.md](PHASE-0.md) |
-| 1 — Registration & setup | Guardian signup, applications, approvals, academics setup, timetable, staff invites | 🔄 In progress (0/14) | [PHASE-1.md](PHASE-1.md) |
+| 1 — Registration & setup | Guardian signup, applications, approvals, academics setup, timetable, staff invites | 🔄 In progress (1/14) | [PHASE-1.md](PHASE-1.md) |
 | 2 — Daily workflows | Teacher Today, registers, homework, notes, resources, family/student views, notifications | ⬜ | — |
 | 3 — Fees, events, reports | Fees & payments, events with consent, reports, audit viewer, year rollover, GDPR actions | ⬜ | — |
 | Later | Stripe, PTM slots, Arabic/RTL, SMS, co-teachers, per-class schedules | — | — |
@@ -21,9 +21,9 @@ Phase scope and rationale: [PLAN.md §17](PLAN.md). Definition of done for the c
 
 Phase 1, in order:
 
-1. Task 1 — shared components (`EntityList`, `CardTitle`, `DateText`, `MoneyText`, `SensitiveSection`…), `lib/money.ts`, `lib/age.ts`.
-2. Task 2–5 — academics setup: years & terms, subjects, sessions + schedule editor, classes + teachers per subject.
-3. Task 6 — staff invites.
+1. Task 2–5 — academics setup: years & terms, subjects, sessions + schedule editor, classes + teachers per subject.
+2. Task 6 — staff invites.
+3. Task 7–9 — guardian registration, application wizard, applications inbox.
 
 ## Blocked / undecided
 
@@ -33,6 +33,7 @@ Phase 1, in order:
 
 ## Recently done
 
+- 2026-09-16 — Phase 1 task 1: `EntityList`, `CardTitle`, `DateText`, `MoneyText`, `SensitiveSection`, `DirectionalIcon`, `ChildSwitcher`; `lib/money.ts`, `lib/age.ts` with tests; gallery updated.
 - 2026-09-16 — Phase 0 closed (deploy deferred). OpenNext checkpoint: stay on Next.js + OpenNext (PLAN §1). PHASE-1.md written.
 - 2026-09-16 — Task 14 (half): GitHub Actions CI (check + unit/integration + e2e) and Deploy (staging → approved production) workflows; staging/production Wrangler envs. Task 15 note written, awaiting decision.
 - 2026-09-16 — Task 13: `pnpm test` = 49 Vitest unit + integration tests; `pnpm test:e2e` = 4 Playwright flows on an isolated seeded DB (20 s).

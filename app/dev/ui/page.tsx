@@ -1,7 +1,12 @@
 import { Button, Card, Group, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 import { IconInbox, IconPlus } from "@tabler/icons-react";
 import { notFound } from "next/navigation";
+import { CardTitle } from "@/components/CardTitle";
+import { ChildSwitcher } from "@/components/ChildSwitcher";
 import { EmptyState } from "@/components/EmptyState";
+import { EntityList } from "@/components/EntityList";
+import { MoneyText } from "@/components/MoneyText";
+import { SensitiveSection } from "@/components/SensitiveSection";
 import { PageHeader } from "@/components/PageHeader";
 import { Shell } from "@/components/Shell";
 import { StatTile } from "@/components/StatTile";
@@ -100,6 +105,51 @@ export default function UiGallery() {
               Secondary text at sm, dimmed.
             </Text>
           </Card>
+        </Section>
+
+        <Section title="Entity list (family & student)">
+          <Card>
+            <CardTitle context={<StatusBadge domain="fee" value="part_paid" />}>Yusuf</CardTitle>
+            <EntityList
+              items={[
+                {
+                  key: 1,
+                  title: "Quran",
+                  detail: "Saturday · 10:00",
+                  badge: <SubjectBadge subjectId="quran" name="Quran" />,
+                  href: "#",
+                },
+                {
+                  key: 2,
+                  title: "Surah Al-Fil, verses 1–5",
+                  detail: "Due tomorrow",
+                  badge: <StatusBadge domain="homework" value="due_soon" />,
+                  href: "#",
+                },
+                { key: 3, title: "Fee for 2026–27", detail: "€150 of €250 paid" },
+              ]}
+            />
+          </Card>
+        </Section>
+
+        <Section title="Child switcher, money">
+          <ChildSwitcher
+            kids={[
+              { id: 1, firstName: "Yusuf" },
+              { id: 2, firstName: "Amira" },
+              { id: 3, firstName: "Zayd" },
+            ]}
+          />
+          <Text>
+            Balance: <MoneyText cents={25050} fw={600} /> · Paid:{" "}
+            <MoneyText cents={10000} c="tile" />
+          </Text>
+        </Section>
+
+        <Section title="Sensitive section (admin only)">
+          <SensitiveSection>
+            <Text size="sm">Ethnicity: Prefer not to say · Languages: Arabic, English</Text>
+          </SensitiveSection>
         </Section>
 
         <Section title="Empty state">

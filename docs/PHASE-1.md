@@ -8,7 +8,7 @@ Definition of done: on a seeded DB, an admin can create a new session, edit its 
 
 ## Tasks
 
-- [ ] **1. Shared components** — `EntityList`, `CardTitle`, `DateText`, `MoneyText`, `SensitiveSection`, `DirectionalIcon`, `ChildSwitcher`, plus `lib/money.ts` (`eurosToCents`, `formatEuros`) and `lib/age.ts` (`ageOn(dateOfBirth, date)`). Added to `/dev/ui`. DoD: unit tests for money and age; components checked in both schemes.
+- [x] **1. Shared components** — `EntityList`, `CardTitle`, `DateText`, `MoneyText`, `SensitiveSection`, `DirectionalIcon`, `ChildSwitcher`, plus `lib/money.ts` (`eurosToCents`, `formatEuros`) and `lib/age.ts` (`ageOn(dateOfBirth, date)`). Added to `/dev/ui`. DoD: unit tests for money and age; components checked in both schemes.
 
 - [ ] **2. Academic years & terms** — `/admin/academics`: years list, create/edit year (dates, standard fee, mark current), terms per year. Actions audited. DoD: admin creates 2027-28 with three terms; "current" moves; validation on overlapping dates.
 

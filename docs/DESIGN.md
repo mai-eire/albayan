@@ -238,4 +238,4 @@ Before building anything not covered here:
 
 A pull request that adds a hex value, a bare `style={{ fontSize }}`, a new colour meaning or a one-off component without touching this document is incomplete.
 
-Shared component inventory (created as needed, listed here when they exist). Existing: `Shell` (app shell with the four navigation sets, role switcher, colour-scheme toggle), `PageHeader`, `StatTile`, `StatusBadge`, `SubjectBadge`, `EmptyState`, `LinkButton`. Planned: `EntityList`, `ChildSwitcher`, `DirectionalIcon`, `MoneyText`, `DateText`, `SensitiveSection`, `CardTitle`.
+Shared component inventory (created as needed, listed here when they exist). Existing: `Shell` (app shell with the four navigation sets, role switcher, colour-scheme toggle), `AuthPage`, `PageHeader`, `CardTitle`, `StatTile`, `StatusBadge`, `SubjectBadge`, `EmptyState`, `EntityList`, `ChildSwitcher`, `DirectionalIcon`, `MoneyText` (`lib/money.ts`), `DateText` (server-only; reads the school timezone), `SensitiveSection` (carries the standard sentence), `FormError`, `LinkButton`, `toast`.

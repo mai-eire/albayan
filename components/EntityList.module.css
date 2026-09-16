@@ -1,0 +1,17 @@
+.row {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: var(--mantine-spacing-sm);
+  border-radius: var(--mantine-radius-md);
+  background: var(--app-ground);
+  color: inherit;
+
+  &:is(a, button):hover {
+    background: var(--mantine-color-default-hover);
+  }
+}
+
+.text {
+  min-width: 0;
+}

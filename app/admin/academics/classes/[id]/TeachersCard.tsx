@@ -1,16 +1,15 @@
 "use client";
 
-import { Alert, Button, Card, Group, Select, Stack, Table, Text, Timeline } from "@mantine/core";
+import { Alert, Button, Card, Group, Select, Stack, Table, Text } from "@mantine/core";
 import { IconAlertTriangle } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { CardTitle } from "@/components/CardTitle";
+import { ClassTimetable } from "@/components/ClassTimetable";
 import { FormError } from "@/components/FormError";
 import { SubjectBadge } from "@/components/SubjectBadge";
 import { toast } from "@/components/toast";
 import type { ClassDetail, TeacherOption } from "@/lib/db/queries/academics";
-import { subjectColor } from "@/lib/subjects";
-import { timePeriods } from "@/lib/timetable";
 import { assignTeachers } from "../actions";
 
 // One row per subject in the session's schedule with a teacher select; the class
@@ -56,8 +55,6 @@ export function TeachersCard({ cls, teachers }: { cls: ClassDetail; teachers: Te
     setDirty(false);
     router.refresh();
   };
-
-  const timed = timePeriods(cls.session.startTime, cls.periods);
 
   return (
     <Card>
@@ -115,30 +112,13 @@ export function TeachersCard({ cls, teachers }: { cls: ClassDetail; teachers: Te
             </Button>
           </Group>
           <CardTitle>Timetable</CardTitle>
-          <Timeline bulletSize={26} lineWidth={2} active={timed.length - 1}>
-            {timed.map((p, i) => (
-              <Timeline.Item
-                key={i}
-                color={p.subjectId ? subjectColor(p.subjectId) : "gray"}
-                title={
-                  <Group gap="xs">
-                    <Text fw={600}>{p.startTime}</Text>
-                    {p.subjectId ? (
-                      <SubjectBadge subjectId={p.subjectId} name={p.subjectName ?? p.subjectId} />
-                    ) : (
-                      <Text>{p.title}</Text>
-                    )}
-                  </Group>
-                }
-              >
-                <Text size="sm" c="dimmed">
-                  {p.subjectId
-                    ? (teacherName(chosen[p.subjectId] ?? null) ?? "No teacher yet")
-                    : `until ${p.endTime}`}
-                </Text>
-              </Timeline.Item>
-            ))}
-          </Timeline>
+          <ClassTimetable
+            startTime={cls.session.startTime}
+            periods={cls.periods.map((p) => ({
+              ...p,
+              detail: p.subjectId ? teacherName(chosen[p.subjectId] ?? null) : null,
+            }))}
+          />
         </Stack>
       )}
     </Card>

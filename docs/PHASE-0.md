@@ -33,7 +33,7 @@ Definition of done for the phase: a new contributor can `git clone && pnpm insta
 - [x] **8. Role derivation + routing** — `getCurrentUser()` loads user + optional guardian/teacher/student rows once per request; `/` redirects to the user's (first) area; route-group layouts guard `/admin`, `/teach`, `/family`, `/student`; role switcher in the top bar for multi-role users.
   DoD: a teacher hitting `/admin` is redirected; a teacher-parent sees the switcher and both areas.
 
-- [ ] **9. `lib/access.ts`** — `requireAdmin/Teacher/Guardian/Student`, `canViewStudent`, `teachesClass`, `teachesSubjectIn`, `isGuardianOf`. Pure functions over loaded data where possible; DB lookups isolated.
+- [x] **9. `lib/access.ts`** — `requireAdmin/Teacher/Guardian/Student`, `canViewStudent`, `teachesClass`, `teachesSubjectIn`, `isGuardianOf`. Pure functions over loaded data where possible; DB lookups isolated.
   DoD: unit tests cover every rule × every role, including self, none, class-teacher-without-subject, and ended enrolments.
 
 - [ ] **10. Server action convention** — `lib/actions.ts` helper: `action(schema, handler)` doing Zod parse → handler with `{ user, db }` → typed `{ ok } | { error }` result; `audit()` helper; one example action (update school settings) used as the reference implementation.

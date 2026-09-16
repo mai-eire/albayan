@@ -1,36 +1,22 @@
 import { Card, SimpleGrid, Stack, Text } from "@mantine/core";
-import { notFound } from "next/navigation";
 import { CardTitle } from "@/components/CardTitle";
 import { Field } from "@/components/Field";
-import { PageHeader } from "@/components/PageHeader";
-import { canViewStudent, loadStudentFacts, requireArea } from "@/lib/access";
 import { ageOn } from "@/lib/age";
 import { getSchoolSettings } from "@/lib/db/queries/settings";
-import { listNotesForStaff } from "@/lib/db/queries/notes";
-import { getStudentForTeacher } from "@/lib/db/queries/teach";
-import { NotesCard } from "@/components/NotesCard";
 import { proficiencyLabels, relationshipLabels } from "@/lib/demographics";
 import { todayIn } from "@/lib/time";
+import { loadTeacherStudent } from "./load";
 
 type Props = { params: Promise<{ id: string }> };
 
 // What a teacher sees of a student: enough to teach and to keep them safe, nothing else.
 export default async function TeacherStudentPage({ params }: Props) {
-  const id = Number((await params).id);
-  const [user, facts] = await Promise.all([requireArea("teach"), loadStudentFacts(id)]);
-  if (!facts || !canViewStudent(user, facts)) notFound();
-  const [student, { timezone }, notes] = await Promise.all([
-    getStudentForTeacher(id),
+  const [{ student }, { timezone }] = await Promise.all([
+    loadTeacherStudent(params),
     getSchoolSettings(),
-    listNotesForStaff(id),
   ]);
-  if (!student) notFound();
   return (
-    <Stack gap="lg" maw={860} mx="auto">
-      <PageHeader
-        eyebrow={[student.className, student.sessionName].filter(Boolean).join(" · ")}
-        title={`${student.firstName} ${student.lastName}`}
-      />
+    <Stack gap="lg">
       <Card>
         <CardTitle>About</CardTitle>
         <SimpleGrid cols={{ base: 2, xs: 4 }} spacing="md">
@@ -73,13 +59,6 @@ export default async function TeacherStudentPage({ params }: Props) {
           ))}
         </SimpleGrid>
       </Card>
-      <NotesCard
-        studentId={student.id}
-        firstName={student.firstName}
-        notes={notes}
-        currentUserId={user.id}
-        isAdmin={user.isAdmin}
-      />
     </Stack>
   );
 }

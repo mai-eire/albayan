@@ -101,6 +101,7 @@ export type ClassForTeacher = {
   id: number;
   name: string;
   room: string | null;
+  academicYearId: string;
   session: { name: string; startTime: string };
   classTeacherName: string | null;
   periods: {
@@ -123,6 +124,7 @@ export async function getClassForTeacher(classId: number): Promise<ClassForTeach
       id: classes.id,
       name: classes.name,
       room: classes.room,
+      academicYearId: classes.academicYearId,
       sessionId: classes.sessionId,
       sessionName: schoolSessions.name,
       startTime: schoolSessions.startTime,
@@ -172,6 +174,7 @@ export async function getClassForTeacher(classId: number): Promise<ClassForTeach
     id: cls.id,
     name: cls.name,
     room: cls.room,
+    academicYearId: cls.academicYearId,
     session: { name: cls.sessionName, startTime: cls.startTime },
     classTeacherName: cls.classTeacherName,
     periods: periods.map((p) => ({

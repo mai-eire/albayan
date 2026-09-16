@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, inArray, ne, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, inArray, lte, ne, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/sqlite-core";
 import { db } from "@/lib/db";
 import {
@@ -200,4 +200,24 @@ export async function getClass(id: number): Promise<ClassDetail | null> {
     ),
     studentCount,
   };
+}
+
+// The term containing `date`, or the whole year when it falls outside every term.
+export async function currentPeriod(
+  date: string,
+): Promise<{ label: string; from: string; to: string } | null> {
+  const year = await getCurrentYear();
+  if (!year) return null;
+  const term = await (
+    await db()
+  ).query.terms.findFirst({
+    where: and(
+      eq(terms.academicYearId, year.id),
+      lte(terms.startDate, date),
+      gte(terms.endDate, date),
+    ),
+  });
+  return term
+    ? { label: term.name, from: term.startDate, to: term.endDate }
+    : { label: year.id, from: year.startDate, to: year.endDate };
 }

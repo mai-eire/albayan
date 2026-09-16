@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, lte } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
   attendance,
@@ -134,4 +134,55 @@ export async function listRegistersForDate(
     recordedCount: recorded.filter((a) => a.classId === r.classId).length,
     absentCount: recorded.filter((a) => a.classId === r.classId && a.status === "absent").length,
   }));
+}
+
+export type AttendanceSummary = {
+  studentId: number;
+  present: number;
+  late: number;
+  absent: number;
+  excused: number;
+};
+
+// Per-student counts over a date range (a term, usually) for one class.
+export async function summariseAttendance(
+  classId: number,
+  from: string,
+  to: string,
+): Promise<AttendanceSummary[]> {
+  const d = await db();
+  const rows = await d
+    .select({ studentId: attendance.studentId, status: attendance.status })
+    .from(attendance)
+    .where(
+      and(eq(attendance.classId, classId), gte(attendance.date, from), lte(attendance.date, to)),
+    );
+  const byStudent = new Map<number, AttendanceSummary>();
+  for (const row of rows) {
+    const s = byStudent.get(row.studentId) ?? {
+      studentId: row.studentId,
+      present: 0,
+      late: 0,
+      absent: 0,
+      excused: 0,
+    };
+    s[row.status] += 1;
+    byStudent.set(row.studentId, s);
+  }
+  return [...byStudent.values()];
+}
+
+export type AttendanceEntry = { date: string; status: AttendanceStatus; note: string | null };
+
+// One student's recent attendance, newest first.
+export async function listAttendanceForStudent(
+  studentId: number,
+  limit = 12,
+): Promise<AttendanceEntry[]> {
+  return (await db())
+    .select({ date: attendance.date, status: attendance.status, note: attendance.note })
+    .from(attendance)
+    .where(eq(attendance.studentId, studentId))
+    .orderBy(desc(attendance.date))
+    .limit(limit);
 }

@@ -84,6 +84,18 @@ export async function getHomework(id: number): Promise<HomeworkRow | null> {
   return row ?? null;
 }
 
+// Every homework on a class, drafts included, for the class page's Homework tab.
+export async function listHomeworkForClass(classId: number): Promise<HomeworkRow[]> {
+  return (await db())
+    .select(shape)
+    .from(homework)
+    .innerJoin(classes, eq(classes.id, homework.classId))
+    .innerJoin(subjects, eq(subjects.id, homework.subjectId))
+    .innerJoin(users, eq(users.id, homework.createdByUserId))
+    .where(eq(homework.classId, classId))
+    .orderBy(desc(homework.dueDate), desc(homework.id));
+}
+
 // Published homework for a class, newest due first. Family and student pages use it
 // through their own student queries.
 export async function listPublishedHomeworkForClass(classId: number): Promise<HomeworkRow[]> {

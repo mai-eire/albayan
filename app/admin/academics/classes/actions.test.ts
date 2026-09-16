@@ -65,28 +65,24 @@ beforeAll(async () => {
     { id: 2, academicYearId: "2026-27", sessionId: 1, name: "Level 2" },
     { id: 3, academicYearId: "2027-28", sessionId: 2, name: "Next year" },
   ]);
-  await db
-    .insert(students)
-    .values({
-      id: 1,
-      firstName: "Amira",
-      lastName: "A",
-      gender: "female",
-      dateOfBirth: "2018-01-01",
-      status: "active",
-      appliedAt: "2026-08-01T00:00:00Z",
-      createdByGuardianId: 1,
-    });
-  await db
-    .insert(enrolments)
-    .values({
-      id: 10,
-      studentId: 1,
-      classId: 1,
-      startDate: "2026-09-05",
-      feeCents: 20000,
-      feeNote: "Sibling discount",
-    });
+  await db.insert(students).values({
+    id: 1,
+    firstName: "Amira",
+    lastName: "A",
+    gender: "female",
+    dateOfBirth: "2018-01-01",
+    status: "active",
+    appliedAt: "2026-08-01T00:00:00Z",
+    createdByGuardianId: 1,
+  });
+  await db.insert(enrolments).values({
+    id: 10,
+    studentId: 1,
+    classId: 1,
+    startDate: "2026-09-05",
+    feeCents: 20000,
+    feeNote: "Sibling discount",
+  });
 });
 afterAll(() => dispose());
 

@@ -15,3 +15,8 @@
 .text {
   min-width: 0;
 }
+
+/* The text truncates; the badge and chevron keep their size. */
+.end {
+  flex: none;
+}

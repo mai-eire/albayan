@@ -34,7 +34,7 @@ export function EntityList({ items }: { items: EntityListItem[] }) {
                 </Text>
               )}
             </div>
-            <Group gap="xs" wrap="nowrap">
+            <Group gap="xs" wrap="nowrap" className={classes.end}>
               {item.badge}
               {item.href && (
                 <DirectionalIcon

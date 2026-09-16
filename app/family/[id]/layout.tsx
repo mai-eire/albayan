@@ -10,8 +10,12 @@ import { listChildrenForGuardian } from "@/lib/db/queries/students";
 
 const tabs = [
   { value: baseTab, label: "Overview" },
-  { value: "details", label: "Details" },
   { value: "timetable", label: "Timetable" },
+  { value: "attendance", label: "Attendance" },
+  { value: "homework", label: "Homework" },
+  { value: "notes", label: "Notes" },
+  { value: "resources", label: "Resources" },
+  { value: "details", label: "Details" },
 ];
 
 export default async function ChildLayout({ params, children }: LayoutProps<"/family/[id]">) {

@@ -125,3 +125,28 @@ export async function getResourceFactsByKey(
     uploadedByUserId: row.uploadedByUserId,
   };
 }
+
+// What one child's family (or the child) may open: school-wide, their class's (including
+// homework attachments) and anything shared with them alone, filtered by audience.
+export async function listResourcesForChild(
+  studentId: number,
+  classId: number | null,
+  viewer: "guardian" | "student",
+): Promise<ResourceRow[]> {
+  const d = await db();
+  const audiences =
+    viewer === "guardian"
+      ? (["students_and_guardians", "guardians_only"] as const)
+      : (["students_and_guardians"] as const);
+  const targets = [eq(resources.isSchoolWide, true), eq(resources.studentId, studentId)];
+  if (classId !== null) {
+    targets.push(
+      eq(resources.classId, classId),
+      inArray(
+        resources.homeworkId,
+        d.select({ id: homework.id }).from(homework).where(eq(homework.classId, classId)),
+      ),
+    );
+  }
+  return base(d).where(and(inArray(resources.audience, [...audiences]), or(...targets)));
+}

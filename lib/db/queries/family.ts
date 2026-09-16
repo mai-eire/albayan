@@ -18,6 +18,7 @@ import {
 // columns (those are the guardian's own, on /family/account) or any other family.
 
 export type Place = {
+  classId: number;
   className: string;
   room: string | null;
   sessionName: string;
@@ -85,6 +86,7 @@ async function loadPlace(
     feeCents: row.feeCents,
     feeNote: row.feeNote,
     place: {
+      classId: row.classId,
       className: row.className,
       room: row.room,
       sessionName: row.sessionName,

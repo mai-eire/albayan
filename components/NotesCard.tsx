@@ -27,27 +27,8 @@ import {
   type NoteCategory,
   type NoteVisibility,
 } from "@/lib/db/schema";
+import { categoryColors, categoryLabels, visibilityLabels } from "@/lib/note-labels";
 import { addNote, deleteNote } from "@/lib/notes";
-
-export const categoryLabels: Record<NoteCategory, string> = {
-  general: "General",
-  praise: "Praise",
-  concern: "Concern",
-  behaviour: "Behaviour",
-};
-
-const categoryColors: Record<NoteCategory, string> = {
-  general: "gray",
-  praise: "tile",
-  concern: "saffron",
-  behaviour: "clay",
-};
-
-export const visibilityLabels: Record<NoteVisibility, string> = {
-  staff: "Staff only",
-  guardians: "Family",
-  guardians_and_student: "Family and student",
-};
 
 // Notes on a student for staff: the list with who wrote each and who can see it, and a
 // short form to add one. Family and student pages render notes read-only (§5).

@@ -6,7 +6,9 @@ import { seed } from "@/lib/db/seed";
 // pnpm db:seed — fills the local database with the demo school (resets first).
 process.env.BETTER_AUTH_URL ??= "http://localhost:3000";
 const started = Date.now();
-const proxy = await getPlatformProxy<CloudflareEnv>();
+const proxy = await getPlatformProxy<CloudflareEnv>({
+  persist: process.env.WRANGLER_STATE ? { path: process.env.WRANGLER_STATE } : undefined,
+});
 const db = dbFor(proxy.env.DB);
 await seed(db, createAuth(db, { schoolName: async () => "Al-Bayan" }));
 console.log(

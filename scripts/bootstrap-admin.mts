@@ -32,7 +32,9 @@ if (values.remote) {
 
 process.env.BETTER_AUTH_URL ??= "http://localhost:3000";
 
-const proxy = await getPlatformProxy<CloudflareEnv>();
+const proxy = await getPlatformProxy<CloudflareEnv>({
+  persist: process.env.WRANGLER_STATE ? { path: process.env.WRANGLER_STATE } : undefined,
+});
 const db = dbFor(proxy.env.DB);
 const auth = createAuth(db, { schoolName: async () => "Al-Bayan" });
 

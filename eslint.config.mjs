@@ -6,6 +6,7 @@ import prettier from "eslint-config-prettier";
 export default defineConfig([
   globalIgnores([
     ".next/**",
+    ".next-e2e/**",
     ".open-next/**",
     ".wrangler/**",
     "cloudflare-env.d.ts",

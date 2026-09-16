@@ -32,7 +32,7 @@ Definition of done: on a seeded DB, an admin can create a new session, edit its 
 
 - [x] **12. Family & student views** — `/family`: `ChildSwitcher`, child overview list (place, next lesson, application status), `/family/[studentId]/details` and `/timetable`; `/family/account` (own details, emergency contact, sensitive info, email preference); `/student` home (next lesson) and `/student/timetable`. Timetable derived by `lib/timetable.ts` from session periods + assignments. DoD: `getStudentForGuardian` and `getStudentForStudent` tested; timetable renders per DESIGN §4.10.
 
-- [ ] **13. Notifications helper** — `lib/notify.ts`: `notify(db, { userId, type, title, body, href })` writes the row and, if the user's email preference allows, sends the matching email via `waitUntil`. Used by approve/decline and invites. Bell shows the unread count; the list UI is Phase 2. DoD: unit test for the preference gate.
+- [x] **13. Notifications helper** — `lib/notify.ts`: `notify(db, { userId, type, title, body, href })` writes the row and, if the user's email preference allows, sends the matching email via `waitUntil`. Used by approve/decline and invites. Bell shows the unread count; the list UI is Phase 2. DoD: unit test for the preference gate.
 
 - [ ] **14. E2E + roadmap** — Playwright flow: register → verify → apply → admin approves → student logs in with the emailed password → timetable visible; teacher blocked from a student outside their classes. Roadmap and PLAN kept current; PHASE-2.md created at the end.
 

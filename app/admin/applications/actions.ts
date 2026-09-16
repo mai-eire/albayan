@@ -21,6 +21,7 @@ import {
 } from "@/lib/db/schema";
 import { sendApproved, sendDeclined } from "@/lib/email";
 import { eurosField } from "@/lib/money";
+import { notify } from "@/lib/notify";
 import { createStudentAccount } from "@/lib/student-accounts";
 import { nextStudentId } from "@/lib/student-ids";
 import { todayIn } from "@/lib/time";
@@ -31,7 +32,7 @@ async function pendingApplication(db: Db, id: number) {
   });
   if (!student) throw new ActionError("That application has already been dealt with.");
   const [contact] = await db
-    .select({ name: users.name, email: users.email })
+    .select({ userId: users.id, name: users.name, email: users.email })
     .from(studentGuardians)
     .innerJoin(guardians, eq(guardians.id, studentGuardians.guardianId))
     .innerJoin(users, eq(users.id, guardians.userId))
@@ -94,17 +95,26 @@ export const approveApplication = action(
         enrolmentId: [null, enrolment.id],
       },
     });
-    await sendApproved(
-      contact,
-      {
-        childName: student.firstName,
-        studentId,
-        password,
-        placement: `${placement.cls.name} on ${placement.session.name}`,
-        loginUrl: await appUrl("/login"),
-      },
-      settings.name,
-    );
+    const loginUrl = await appUrl("/login");
+    await notify(db, {
+      userId: contact.userId,
+      type: "application.approved",
+      title: `${student.firstName} has a place in ${placement.cls.name}`,
+      body: `Student ID ${studentId}. The first password is in the email we sent you.`,
+      href: `/family/${student.id}`,
+      email: () =>
+        sendApproved(
+          contact,
+          {
+            childName: student.firstName,
+            studentId,
+            password,
+            placement: `${placement.cls.name} on ${placement.session.name}`,
+            loginUrl,
+          },
+          settings.name,
+        ),
+    });
     revalidatePath("/admin");
     revalidatePath("/family");
     return { studentId };
@@ -130,11 +140,16 @@ export const declineApplication = action(
       entityId: student.id,
       changes: { status: ["applied", "declined"], reason: [null, input.reason] },
     });
-    await sendDeclined(
-      contact,
-      { childName: student.firstName, reason: input.reason },
-      (await getSchoolSettings()).name,
-    );
+    const { name: schoolName } = await getSchoolSettings();
+    await notify(db, {
+      userId: contact.userId,
+      type: "application.declined",
+      title: `About ${student.firstName}'s application`,
+      body: input.reason,
+      href: `/family/${student.id}`,
+      email: () =>
+        sendDeclined(contact, { childName: student.firstName, reason: input.reason }, schoolName),
+    });
     revalidatePath("/admin");
     revalidatePath("/family");
   },

@@ -10,7 +10,7 @@ Live document. Updated at the end of every work session, in the same commit as t
 |---|---|---|---|
 | Planning | Requirements, architecture, stack, UI library, design language | ✅ Done | — |
 | 0 — Foundation | Offline dev loop, schema v1, auth, roles, access layer, seed, CI, Cloudflare staging | ✅ Done (deploy deferred) | [PHASE-0.md](PHASE-0.md) |
-| 1 — Registration & setup | Guardian signup, applications, approvals, academics setup, timetable, staff invites | 🔄 In progress (12/14) | [PHASE-1.md](PHASE-1.md) |
+| 1 — Registration & setup | Guardian signup, applications, approvals, academics setup, timetable, staff invites | 🔄 In progress (13/14) | [PHASE-1.md](PHASE-1.md) |
 | 2 — Daily workflows | Teacher Today, registers, homework, notes, resources, family/student views, notifications | ⬜ | — |
 | 3 — Fees, events, reports | Fees & payments, events with consent, reports, audit viewer, year rollover, GDPR actions | ⬜ | — |
 | Later | Stripe, PTM slots, Arabic/RTL, SMS, co-teachers, per-class schedules | — | — |
@@ -21,8 +21,7 @@ Phase scope and rationale: [PLAN.md §17](PLAN.md). Definition of done for the c
 
 Phase 1, in order:
 
-1. Task 13 — `lib/notify.ts` and the bell count.
-2. Task 14 — end-to-end flow, Phase 2 checklist.
+1. Task 14 — end-to-end flow (register → apply → approve → student signs in; teacher blocked), then PHASE-2.md.
 
 ## Blocked / undecided
 
@@ -32,6 +31,7 @@ Phase 1, in order:
 
 ## Recently done
 
+- 2026-09-16 — Phase 1 task 13: `lib/notify.ts` — every notification is an in-app row, the email runs after the response (`after()` → waitUntil) only if the person's email preference allows; approve/decline use it; the bell shows the unread count in every area; preference gate tested.
 - 2026-09-16 — Phase 1 task 12: `/family` children list → `/family/[id]` with `ChildSwitcher` and Overview (next class, application status, fee) · Details · Timetable; `/family/account` (details, emergency contact, sensitive info, email toggle — `users.emailNotifications`, migration 0002); `/student` home with the next class and `/student/timetable`; `getStudentForGuardian`/`getStudentForStudent` tested; `nextDateOn`/`relativeDay` in `lib/time.ts`.
 - 2026-09-16 — Phase 1 task 11: `/teach/classes` (my classes with day, what I teach, count) → class page with roster (age, Arabic, allergy/medical flags) and the class timetable; `/teach/students/[id]` limited profile; `lib/db/queries/teach.ts` with a test that logs the SQL and fails if any sensitive column is ever selected; `canViewStudent`/`teachesClass` enforced with 404s; `ClassTimetable` component.
 - 2026-09-16 — Phase 1 task 10: `/admin/students` (search, status/day/class filters in the URL) → profile with Details · Guardians · Sensitive · Enrolment tabs as routes (`LinkTabs`), edit cards for details, health and ethnicity (audited field diffs); `/admin/guardians` list and profile with children and the sensitive card; `getStudentForAdmin` and friends in `lib/db/queries/students.ts`; `Field` component.

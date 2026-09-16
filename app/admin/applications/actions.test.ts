@@ -6,7 +6,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { auth } from "@/lib/auth";
 import type { CurrentUser } from "@/lib/current-user";
 import type { Db } from "@/lib/db";
-import { auditLog, enrolments, students } from "@/lib/db/schema";
+import { auditLog, enrolments, notifications, students } from "@/lib/db/schema";
 import { seed } from "@/lib/db/seed";
 import { nextStudentId } from "@/lib/student-ids";
 import { testDb } from "@/test/db";
@@ -126,6 +126,14 @@ describe("approveApplication", () => {
     });
     const entries = await db.select().from(auditLog).where(eq(auditLog.action, "student.approve"));
     expect(entries).toHaveLength(2);
+    expect(await db.select().from(notifications)).toEqual([
+      expect.objectContaining({
+        type: "application.approved",
+        href: `/family/${first.id}`,
+        readAt: null,
+      }),
+      expect.objectContaining({ type: "application.approved" }),
+    ]);
   });
 
   it("refuses non-admins and validates the fee", async () => {

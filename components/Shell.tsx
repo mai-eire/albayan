@@ -101,10 +101,11 @@ type Props = {
   user: { name: string };
   // Areas this user can switch between; the switcher shows only when there are several.
   roles: Area[];
+  unread?: number;
   children: React.ReactNode;
 };
 
-export function Shell({ area, schoolName, user, roles, children }: Props) {
+export function Shell({ area, schoolName, user, roles, unread = 0, children }: Props) {
   const pathname = usePathname();
   const [opened, { toggle, close }] = useDisclosure();
   const items = nav[area];
@@ -142,8 +143,19 @@ export function Shell({ area, schoolName, user, roles, children }: Props) {
           </Group>
           <Group gap="sm" wrap="nowrap">
             {roles.length > 1 && <RoleSwitcher current={area} roles={roles} />}
-            <Indicator color="saffron" size={8} offset={4} disabled>
-              <ActionIcon variant="subtle" color="gray" size="lg" aria-label="Notifications">
+            <Indicator
+              color="saffron"
+              size={16}
+              offset={4}
+              label={unread > 9 ? "9+" : unread}
+              disabled={unread === 0}
+            >
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                size="lg"
+                aria-label={unread ? `${unread} unread notifications` : "Notifications"}
+              >
                 <IconBell size={20} stroke={1.75} />
               </ActionIcon>
             </Indicator>

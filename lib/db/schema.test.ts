@@ -243,3 +243,56 @@ describe("schema v2 constraints", () => {
     );
   });
 });
+
+describe("schema v3 constraints", () => {
+  it("payments need a positive amount and a known method", async () => {
+    const [active] = await db
+      .select({ id: s.enrolments.id })
+      .from(s.enrolments)
+      .where(eq(s.enrolments.status, "active"));
+    const payment = {
+      enrolmentId: active.id,
+      amountCents: 10000,
+      paidOn: "2026-09-10",
+      method: "cash" as const,
+      recordedByUserId: 2,
+    };
+    await db.insert(s.payments).values(payment);
+    await fails(db.insert(s.payments).values({ ...payment, amountCents: 0 }), /payments_amount/);
+    await fails(
+      db.insert(s.payments).values({ ...payment, method: "cheque" as "cash" }),
+      /payments_method/,
+    );
+  });
+
+  it("events check their type, audience, dates and fee; targets name one thing; one row per child", async () => {
+    const event = {
+      title: "Trip",
+      type: "trip" as const,
+      startAt: "2026-10-10T09:00:00Z",
+      endAt: "2026-10-10T15:00:00Z",
+      createdByUserId: 2,
+    };
+    const [{ id }] = await db.insert(s.events).values(event).returning({ id: s.events.id });
+    await fails(db.insert(s.events).values({ ...event, type: "party" as "trip" }), /events_type/);
+    await fails(
+      db.insert(s.events).values({ ...event, endAt: "2026-10-09T09:00:00Z" }),
+      /events_dates/,
+    );
+    await fails(db.insert(s.events).values({ ...event, feeCents: -1 }), /events_fee/);
+    await db.insert(s.eventTargets).values({ eventId: id, sessionId: 1 });
+    await fails(db.insert(s.eventTargets).values({ eventId: id }), /event_targets_one/);
+    await fails(
+      db.insert(s.eventTargets).values({ eventId: id, sessionId: 1, classId: 1 }),
+      /event_targets_one/,
+    );
+    await db.insert(s.eventParticipants).values({ eventId: id, studentId: 1 });
+    await fails(db.insert(s.eventParticipants).values({ eventId: id, studentId: 1 }), /UNIQUE/);
+    await fails(
+      db
+        .insert(s.eventParticipants)
+        .values({ eventId: id, studentId: 1, status: "maybe" as "registered" }),
+      /UNIQUE|event_participants_status/,
+    );
+  });
+});

@@ -322,6 +322,10 @@ async function reset(db: Db) {
   const order = [
     t.auditLog,
     t.notifications,
+    t.eventParticipants,
+    t.eventTargets,
+    t.events,
+    t.payments,
     t.resources,
     t.studentNotes,
     t.homework,

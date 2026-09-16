@@ -3,8 +3,13 @@ import type { Db } from "@/lib/db";
 import { notifications, users } from "@/lib/db/schema";
 import { testDb } from "@/test/db";
 import { countUnread, notify } from "./notify";
+import { listNotifications } from "./db/queries/notifications";
 
 // No request scope in tests: after() throws and notify falls back to running the email.
+vi.mock("@/lib/db", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/db")>()),
+  db: async () => db,
+}));
 vi.mock("next/server", () => ({
   after: () => {
     throw new Error("after() called outside a request");
@@ -44,7 +49,8 @@ describe("notify", () => {
     expect(await countUnread(db, 2)).toBe(1);
   });
 
-  it("counts only unread rows", async () => {
+  it("counts only unread rows and lists newest first", async () => {
+    expect((await listNotifications(1)).map((n) => n.title)).toEqual(["Hello"]);
     await db.update(notifications).set({ readAt: new Date().toISOString() });
     expect(await countUnread(db, 1)).toBe(0);
   });

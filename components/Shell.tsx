@@ -152,6 +152,8 @@ export function Shell({ area, schoolName, user, roles, unread = 0, children }: P
               disabled={unread === 0}
             >
               <ActionIcon
+                component={Link}
+                href={`/${area}/notifications`}
                 variant="subtle"
                 color="gray"
                 size="lg"

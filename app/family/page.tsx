@@ -54,6 +54,7 @@ export default async function FamilyOverview() {
                 ? `${detail[kid.status]} · ${kid.preferredSessionName}`
                 : detail[kid.status],
               badge: <StatusBadge domain="application" value={kid.status} />,
+              href: `/family/${kid.id}`,
             }))}
           />
         </Card>

@@ -37,7 +37,9 @@ const { inviteStaff, setAdmin } = await import("./actions");
 const base = {
   name: "X",
   email: "x@example.com",
+  phone: null,
   emailVerified: true,
+  emailNotifications: true,
   mustChangePassword: false,
   guardian: null,
   teacher: null,

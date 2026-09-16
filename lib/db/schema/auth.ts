@@ -21,6 +21,8 @@ export const users = sqliteTable(
     isAdmin: bool().notNull().default(false),
     status: text({ enum: userStatuses }).notNull().default("active"),
     mustChangePassword: bool().notNull().default(false),
+    // Off = in-app notifications only; the notify() helper checks it before emailing.
+    emailNotifications: bool().notNull().default(true),
     lastLoginAt: text(),
     createdAt: isoDate().notNull().default(nowIso),
     updatedAt: isoDate().notNull().default(nowIso),

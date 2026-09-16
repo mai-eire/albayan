@@ -41,7 +41,9 @@ const base = {
 const verified: CurrentUser = {
   ...base,
   id: 1,
+  phone: null,
   emailVerified: true,
+  emailNotifications: true,
   guardian: { id: 1 },
   areas: ["family"],
 };

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dayOfWeekIn, formatDate, formatHijri, todayIn } from "./time";
+import { dayOfWeekIn, formatDate, formatHijri, nextDateOn, relativeDay, todayIn } from "./time";
 
 const tz = "Europe/Dublin";
 
@@ -19,5 +19,20 @@ describe("time", () => {
 
   it("gives a Hijri date", () => {
     expect(formatHijri(new Date("2026-09-19T12:00:00Z"), tz)).toMatch(/\d+ .+ 14\d\d$/);
+  });
+});
+
+describe("nextDateOn / relativeDay", () => {
+  it("finds the next Saturday, counting today", () => {
+    expect(nextDateOn(6, "2026-09-16")).toBe("2026-09-19");
+    expect(nextDateOn(6, "2026-09-19")).toBe("2026-09-19");
+    expect(nextDateOn(0, "2026-09-19")).toBe("2026-09-20");
+  });
+  it("says today, tomorrow, or the date", () => {
+    expect(relativeDay("2026-09-16", "2026-09-16", "Europe/Dublin")).toBe("today");
+    expect(relativeDay("2026-09-17", "2026-09-16", "Europe/Dublin")).toBe("tomorrow");
+    expect(relativeDay("2026-09-19", "2026-09-16", "Europe/Dublin")).toBe(
+      "on Saturday 19 September",
+    );
   });
 });

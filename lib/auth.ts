@@ -26,6 +26,7 @@ export function createAuth(db: Db, { schoolName, baseURL }: Options) {
         isAdmin: { type: "boolean", required: false, defaultValue: false, input: false },
         status: { type: "string", required: false, defaultValue: "active", input: false },
         mustChangePassword: { type: "boolean", required: false, defaultValue: false, input: false },
+        emailNotifications: { type: "boolean", required: false, defaultValue: true, input: false },
         lastLoginAt: { type: "string", required: false, input: false },
       },
     },

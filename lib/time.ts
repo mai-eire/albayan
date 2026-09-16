@@ -37,3 +37,22 @@ export function dayOfWeekIn(timezone: string, now = new Date()): number {
   );
   return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(name);
 }
+
+// The next date (YYYY-MM-DD) that falls on `dayOfWeek`, counting today if it is that day.
+export function nextDateOn(dayOfWeek: number, today: string): string {
+  const date = new Date(`${today}T12:00:00Z`);
+  const ahead = (dayOfWeek - date.getUTCDay() + 7) % 7;
+  date.setUTCDate(date.getUTCDate() + ahead);
+  return date.toISOString().slice(0, 10);
+}
+
+// "today", "tomorrow", "on Saturday 19 September" — for families and students (§5).
+// `short` keeps it to the weekday ("on Saturday") where a title has to fit on a phone.
+export function relativeDay(date: string, today: string, timezone: string, short = false): string {
+  const diff = Math.round(
+    (Date.parse(`${date}T12:00:00Z`) - Date.parse(`${today}T12:00:00Z`)) / 86_400_000,
+  );
+  if (diff === 0) return "today";
+  if (diff === 1) return "tomorrow";
+  return `on ${short ? formatDate(date, timezone).split(" ")[0] : formatDate(date, timezone)}`;
+}

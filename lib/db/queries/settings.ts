@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { db } from "@/lib/db";
 import { schoolSettings } from "@/lib/db/schema";
 
@@ -16,8 +17,8 @@ const defaults: SchoolSettings = {
   updatedAt: "",
 };
 
-// The single settings row, with defaults until the school is set up.
-export async function getSchoolSettings(): Promise<SchoolSettings> {
+// The single settings row, with defaults until the school is set up. Once per request.
+export const getSchoolSettings = cache(async (): Promise<SchoolSettings> => {
   const row = await (await db()).query.schoolSettings.findFirst();
   return row ?? defaults;
-}
+});

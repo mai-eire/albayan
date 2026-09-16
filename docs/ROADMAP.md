@@ -2,14 +2,14 @@
 
 Live document. Updated at the end of every work session, in the same commit as the work. Keep it under ~50 lines; detail belongs in the phase checklists.
 
-**Last updated:** 2026-09-16 · **Current phase:** 0 — Foundation (tasks 1–8 of 15 done)
+**Last updated:** 2026-09-16 · **Current phase:** 0 — Foundation (tasks 1–10 of 15 done)
 
 ## Phases
 
 | Phase | Scope | Status | Checklist |
 |---|---|---|---|
 | Planning | Requirements, architecture, stack, UI library, design language | ✅ Done | — |
-| 0 — Foundation | Offline dev loop, schema v1, auth, roles, access layer, seed, CI, Cloudflare staging | 🔄 In progress (8/15) | [PHASE-0.md](PHASE-0.md) |
+| 0 — Foundation | Offline dev loop, schema v1, auth, roles, access layer, seed, CI, Cloudflare staging | 🔄 In progress (10/15) | [PHASE-0.md](PHASE-0.md) |
 | 1 — Registration & setup | Guardian signup, applications, approvals, academics setup, timetable, staff invites | ⬜ | PHASE-1.md (when Phase 0 ends) |
 | 2 — Daily workflows | Teacher Today, registers, homework, notes, resources, family/student views, notifications | ⬜ | — |
 | 3 — Fees, events, reports | Fees & payments, events with consent, reports, audit viewer, year rollover, GDPR actions | ⬜ | — |
@@ -21,17 +21,18 @@ Phase scope and rationale: [PLAN.md §17](PLAN.md). Definition of done for the c
 
 Phase 0, in order:
 
-1. Task 9–10 — `lib/access.ts`, server action convention.
-2. Task 11–12 — storage adapter, seed.
-3. Task 13–14 — tests wiring (Playwright smoke), CI + Cloudflare (needs the account).
+1. Task 11–12 — storage adapter, seed.
+2. Task 13 — Playwright smoke flow wired into `pnpm test:e2e`.
+3. Task 14–15 — CI + Cloudflare (needs the account), OpenNext checkpoint.
 
 ## Blocked / undecided
 
-- School timezone (plan assumes `Europe/Dublin`) — needed by task 12 (seed) at the latest.
+- School timezone: defaulted to `Europe/Dublin` in Settings (editable) — confirm with the school, no longer blocking.
 - Eircode confirmed as the postal code format? — affects the postal-area report only.
 
 ## Recently done
 
+- 2026-09-16 — Tasks 9–10: `lib/access.ts` rules with exhaustive tests; `action()` + `audit()` helpers; `/admin/settings` as the reference action (validation, denial and audit covered by tests, checked in a browser); `lib/time.ts`; shell and pages read the school name and timezone from settings.
 - 2026-09-16 — Task 8: `getCurrentUser()` (session + role rows, once per request), derived areas, `requireUser`/`requireArea` guards in `lib/access.ts`, `/` lands on the first area, login honours `?next=`, role switcher for multi-role users; all checked in a browser.
 - 2026-09-16 — Tasks 5–7: email transport (file/Resend) + React Email templates; Better Auth with username = student ID, login/logout/forgot/reset/invite/change-password pages, all driven end-to-end in a browser; `pnpm bootstrap-admin`.
 - 2026-09-16 — Tasks 3–4: Drizzle + local D1 (`pnpm db:generate`, `pnpm db:migrate:local`, `db()` from the OpenNext binding), schema v1 (19 tables incl. Better Auth's), 13 constraint tests on a throwaway D1 (`pnpm test`), first real query on the admin dashboard.

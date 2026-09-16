@@ -97,13 +97,14 @@ const areaLabel: Record<Area, string> = {
 
 type Props = {
   area: Area;
+  schoolName: string;
   user: { name: string };
   // Areas this user can switch between; the switcher shows only when there are several.
   roles: Area[];
   children: React.ReactNode;
 };
 
-export function Shell({ area, user, roles, children }: Props) {
+export function Shell({ area, schoolName, user, roles, children }: Props) {
   const pathname = usePathname();
   const [opened, { toggle, close }] = useDisclosure();
   const items = nav[area];
@@ -136,7 +137,7 @@ export function Shell({ area, user, roles, children }: Props) {
               <IconSchool size={20} stroke={1.75} />
             </ThemeIcon>
             <Title order={4} visibleFrom="xs">
-              Al-Bayan
+              {schoolName}
             </Title>
           </Group>
           <Group gap="sm" wrap="nowrap">

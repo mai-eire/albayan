@@ -26,6 +26,7 @@
     "@mantine/core": "^9.6.1",
     "@mantine/form": "^9.6.1",
     "@mantine/hooks": "^9.6.1",
+    "@mantine/notifications": "^9.6.1",
     "@opennextjs/cloudflare": "^1.20.3",
     "@react-email/components": "^1.0.12",
     "@tabler/icons-react": "^3.46.0",

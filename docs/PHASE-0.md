@@ -36,7 +36,7 @@ Definition of done for the phase: a new contributor can `git clone && pnpm insta
 - [x] **9. `lib/access.ts`** — `requireAdmin/Teacher/Guardian/Student`, `canViewStudent`, `teachesClass`, `teachesSubjectIn`, `isGuardianOf`. Pure functions over loaded data where possible; DB lookups isolated.
   DoD: unit tests cover every rule × every role, including self, none, class-teacher-without-subject, and ended enrolments.
 
-- [ ] **10. Server action convention** — `lib/actions.ts` helper: `action(schema, handler)` doing Zod parse → handler with `{ user, db }` → typed `{ ok } | { error }` result; `audit()` helper; one example action (update school settings) used as the reference implementation.
+- [x] **10. Server action convention** — `lib/actions.ts` helper: `action(schema, handler)` doing Zod parse → handler with `{ user, db }` → typed `{ ok } | { error }` result; `audit()` helper; one example action (update school settings) used as the reference implementation.
   DoD: example action wired to a form on `/admin/settings`; audit row written; test covers validation failure and access denial.
 
 - [ ] **11. Storage adapter** — `lib/storage/bucket.ts` over the R2 binding (works against local emulation); `POST /api/files` and `GET /api/files/[key]` route handlers streaming through the Worker, with the auth hook stubbed to admin-only until `resources` exists in Phase 2.
@@ -64,12 +64,13 @@ Definition of done for the phase: a new contributor can `git clone && pnpm insta
 - **Better Auth needs an email on every user.** Students who have none get a synthetic unique address, `<studentid>@students.invalid`, set on approval (Phase 1); it is never shown or emailed. Student ID doubles as the Better Auth username (case-insensitive, hyphens allowed).
 - **Invites** are our own tokens in Better Auth's `verifications` table (`lib/invites.ts`), seven-day expiry, single use; accepting sets the password through Better Auth's internal adapter and signs the user in. Temporary passwords (`lib/passwords.ts`) set `users.mustChangePassword`; `/change-password` clears it. Task 8 enforces the redirect globally.
 - `"type": "module"` in package.json so `tsx` scripts (`pnpm bootstrap-admin`) see the schema's `export *` re-exports.
+- **Server actions**: `action(schema, handler)` in `lib/actions.ts` returns `{ ok, data } | { ok: false, error, fieldErrors }`; handlers call `require*` from `lib/access.ts` themselves (so the access check is visible in each action), then write, `audit()`, notify. Forms pass `fieldErrors` to `form.setErrors`. Native HTML `required` is avoided (it blocks submit before the server validates) — use `withAsterisk`.
 - **vinext is on the checkpoint list.** `create-cloudflare` now offers two Next.js paths: `vinext` (Cloudflare's Vite-based Next runtime, marked "recommended") and the OpenNext adapter. We scaffolded with `--variant=opennext` as planned; task 15 compares against vinext as well as React Router v7.
 - Tooling: pnpm 10 via corepack (`packageManager` pinned); `pnpm check` = ESLint (flat configs from `eslint-config-next`) + `tsc` + Prettier (Markdown excluded so docs aren't reflowed); `cloudflare-env.d.ts` is committed and generated env-only (`--include-runtime=false`) with runtime types from `@cloudflare/workers-types`; `agentRules: false` in `next.config.ts` because `next dev` otherwise appends a block to `CLAUDE.md`.
 
 - i18n approach: recommendation is `next-intl` with a single `en` locale from day one (cheap now, painful to retrofit), `Intl` for dates/numbers, no Arabic strings yet. Hijri date via `Intl.DateTimeFormat('en-u-ca-islamic-umalqura')` as in the prototype.
 - Better Auth id strategy: use `advanced.database.useNumberId` so `users.id` is an integer like every other table.
-- Timezone helper: single `lib/time.ts` with `todayInSchoolTz()`, `formatDate()`, used everywhere instead of ad-hoc `Date` math. School timezone to confirm (Europe/Dublin?).
+- Timezone helper: `lib/time.ts` — `todayIn(tz)`, `dayOfWeekIn(tz)`, `formatDate()`, `formatHijri()` — used everywhere instead of ad-hoc `Date` math. School timezone lives in `school_settings.timezone`, default `Europe/Dublin`, editable on `/admin/settings` (done 2026-09-16; still worth a nod from the school).
 - `lib/money.ts`: `eurosToCents(input: string | number)`, `formatEuros(cents)`; forms accept `250` or `250.50`.
 
 ## Explicitly not in Phase 0

@@ -180,7 +180,7 @@ Sensitive fields (ethnicity, languages, reasons) are grouped under their own hea
 
 ### 4.9 Feedback
 
-- Success/error toasts: `@mantine/notifications`, top-end, 4s, tile for success, clay for errors, saffron for warnings. Message states what happened: "Register submitted", "Payment recorded".
+- Success/error toasts: `@mantine/notifications` via `components/toast.ts` (`toast.success/error/warning`), top-end (Mantine only knows `top-right`; the RTL phase flips it), 4s, tile for success, clay for errors, saffron for warnings. Message states what happened: "Register submitted", "Payment recorded".
 - Inline errors for form validation; toasts for server failures.
 - Loading: `Skeleton` for page-level loads; `loading` on the button for actions. Never block the whole screen with an overlay.
 - Empty states: `components/EmptyState.tsx` — Tabler icon in a light `ThemeIcon`, one sentence, one action. ("No homework due. Enjoy the weekend.")

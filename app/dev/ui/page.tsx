@@ -15,7 +15,12 @@ export default function UiGallery() {
   if (process.env.NODE_ENV === "production") notFound();
 
   return (
-    <Shell area="admin" user={{ name: "Amina Khan" }} roles={["admin", "teach"]}>
+    <Shell
+      area="admin"
+      schoolName="Al-Bayan"
+      user={{ name: "Amina Khan" }}
+      roles={["admin", "teach"]}
+    >
       <Stack gap="xl" maw={960} mx="auto">
         <PageHeader
           eyebrow="Eyebrow · context line"

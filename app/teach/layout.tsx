@@ -1,10 +1,11 @@
 import { Shell } from "@/components/Shell";
 import { requireArea } from "@/lib/access";
+import { getSchoolSettings } from "@/lib/db/queries/settings";
 
 export default async function Layout({ children }: { children: React.ReactNode }) {
-  const user = await requireArea("teach");
+  const [user, { name }] = await Promise.all([requireArea("teach"), getSchoolSettings()]);
   return (
-    <Shell area="teach" user={{ name: user.name }} roles={user.areas}>
+    <Shell area="teach" schoolName={name} user={{ name: user.name }} roles={user.areas}>
       {children}
     </Shell>
   );

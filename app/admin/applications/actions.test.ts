@@ -60,7 +60,7 @@ beforeAll(async () => {
   process.env.EMAIL_DIR = mailDir;
   ({ db, dispose } = await testDb());
   await seed(db, await auth());
-}, 30_000);
+});
 afterAll(async () => {
   await dispose();
   rmSync(mailDir, { recursive: true, force: true });

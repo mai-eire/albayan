@@ -6,5 +6,8 @@ export default defineConfig({
   test: {
     include: ["{lib,app,test}/**/*.test.{ts,tsx}"],
     testTimeout: 20_000,
+    // Each integration file boots its own local D1 (workerd); with many files in parallel
+    // that setup can take a while.
+    hookTimeout: 60_000,
   },
 });

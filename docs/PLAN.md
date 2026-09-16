@@ -70,6 +70,8 @@ Netlify hosts Next.js well but provides neither a database nor object storage, s
 
 If the OpenNext adapter causes friction in Phase 0 (it should not; it supports App Router, server actions, middleware, ISR), the alternative is **React Router v7 (framework mode)**, which has a native Cloudflare Workers template. Decide at the end of Phase 0, before feature code exists.
 
+**Decided 2026-09-16: stay on Next.js + OpenNext.** Nothing adapter-specific hurt in Phase 0 (note in PHASE-0.md, task 15). vinext (Cloudflare's Vite-based Next runtime) is the fallback to look at first if a real deploy misbehaves.
+
 Alternatives considered and rejected: Django/Rails (fine choices, but not a Cloudflare-native fit and less "SaaS-feel"); separate SPA + API (two codebases); Supabase/Firebase (RLS policies for this role model become the hardest part). UI: MUI (fights its Material identity, `sx` everywhere, custom colours need TS augmentation) and Tailwind + shadcn (cleanest result but the whole component layer and its character are code we'd own and maintain).
 
 ### Design language

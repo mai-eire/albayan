@@ -2,15 +2,15 @@
 
 Live document. Updated at the end of every work session, in the same commit as the work. Keep it under ~50 lines; detail belongs in the phase checklists.
 
-**Last updated:** 2026-09-16 · **Current phase:** 0 — Foundation (tasks 1–13 done; 14 half done; 15 awaiting decision)
+**Last updated:** 2026-09-16 · **Current phase:** 1 — Registration & setup (starting)
 
 ## Phases
 
 | Phase | Scope | Status | Checklist |
 |---|---|---|---|
 | Planning | Requirements, architecture, stack, UI library, design language | ✅ Done | — |
-| 0 — Foundation | Offline dev loop, schema v1, auth, roles, access layer, seed, CI, Cloudflare staging | 🔄 In progress (13½/15) | [PHASE-0.md](PHASE-0.md) |
-| 1 — Registration & setup | Guardian signup, applications, approvals, academics setup, timetable, staff invites | ⬜ | PHASE-1.md (when Phase 0 ends) |
+| 0 — Foundation | Offline dev loop, schema v1, auth, roles, access layer, seed, CI, Cloudflare staging | ✅ Done (deploy deferred) | [PHASE-0.md](PHASE-0.md) |
+| 1 — Registration & setup | Guardian signup, applications, approvals, academics setup, timetable, staff invites | 🔄 In progress (0/14) | [PHASE-1.md](PHASE-1.md) |
 | 2 — Daily workflows | Teacher Today, registers, homework, notes, resources, family/student views, notifications | ⬜ | — |
 | 3 — Fees, events, reports | Fees & payments, events with consent, reports, audit viewer, year rollover, GDPR actions | ⬜ | — |
 | Later | Stripe, PTM slots, Arabic/RTL, SMS, co-teachers, per-class schedules | — | — |
@@ -19,21 +19,21 @@ Phase scope and rationale: [PLAN.md §17](PLAN.md). Definition of done for the c
 
 ## Now
 
-Phase 0, in order:
+Phase 1, in order:
 
-1. Task 14, second half — create the Cloudflare resources (Worker ×2, D1 ×2, R2 ×2), set secrets, first staging deploy (needs the account — see Blocked).
-2. Task 15 — decide on the checkpoint note in PHASE-0.md (recommendation: stay on Next.js + OpenNext), record it in PLAN §1.
-3. Then: create PHASE-1.md from PLAN §17 and start Phase 1.
+1. Task 1 — shared components (`EntityList`, `CardTitle`, `DateText`, `MoneyText`, `SensitiveSection`…), `lib/money.ts`, `lib/age.ts`.
+2. Task 2–5 — academics setup: years & terms, subjects, sessions + schedule editor, classes + teachers per subject.
+3. Task 6 — staff invites.
 
 ## Blocked / undecided
 
-- **Cloudflare account access** — `wrangler login` (or an API token) is needed to create the D1/R2 resources, set `BETTER_AUTH_SECRET`/`RESEND_API_KEY` and deploy staging. CI also needs `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID` repository secrets on `mai-eire/albayan`.
-- **Resend** — sending domain and API key for production email.
+- **Deploy deferred by decision (2026-09-16)** — when ready: `wrangler login`, create D1/R2 (prod + staging), set `BETTER_AUTH_SECRET`/`RESEND_API_KEY`, fill in database ids, first staging deploy; GitHub secrets `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID`; Resend sending domain.
 - School timezone: defaulted to `Europe/Dublin` in Settings (editable) — confirm with the school, no longer blocking.
 - Eircode confirmed as the postal code format? — affects the postal-area report only.
 
 ## Recently done
 
+- 2026-09-16 — Phase 0 closed (deploy deferred). OpenNext checkpoint: stay on Next.js + OpenNext (PLAN §1). PHASE-1.md written.
 - 2026-09-16 — Task 14 (half): GitHub Actions CI (check + unit/integration + e2e) and Deploy (staging → approved production) workflows; staging/production Wrangler envs. Task 15 note written, awaiting decision.
 - 2026-09-16 — Task 13: `pnpm test` = 49 Vitest unit + integration tests; `pnpm test:e2e` = 4 Playwright flows on an isolated seeded DB (20 s).
 - 2026-09-16 — Task 12: deterministic seed (`pnpm db:seed`, 3.4 s): settings, year + 3 terms, Sat/Sun sessions with schedules, 8 classes, 8 teachers (one a parent), 40 families / 60 students (6 pending applications), assignments, enrolments with fees; every role logs in.

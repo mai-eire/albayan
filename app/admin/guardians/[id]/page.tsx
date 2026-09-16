@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { CardTitle } from "@/components/CardTitle";
 import { Field } from "@/components/Field";
 import { EntityList } from "@/components/EntityList";
-import { PageHeader } from "@/components/PageHeader";
 import { SensitiveSection } from "@/components/SensitiveSection";
 import { StatusBadge } from "@/components/StatusBadge";
 import { getGuardianForAdmin } from "@/lib/db/queries/students";
@@ -16,11 +15,7 @@ export default async function GuardianPage({ params }: Props) {
   if (!guardian) notFound();
   const s = guardian.sensitive;
   return (
-    <Stack gap="lg" maw={860}>
-      <PageHeader
-        eyebrow={guardian.emailVerified ? "Guardian" : "Guardian · email not confirmed"}
-        title={guardian.name}
-      />
+    <Stack gap="lg">
       <Card>
         <CardTitle>Contact</CardTitle>
         <SimpleGrid cols={{ base: 1, xs: 3 }} spacing="md">

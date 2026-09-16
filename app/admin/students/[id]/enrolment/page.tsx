@@ -3,6 +3,8 @@ import { CardTitle } from "@/components/CardTitle";
 import { Field } from "@/components/Field";
 import { DateText } from "@/components/DateText";
 import { MoneyText } from "@/components/MoneyText";
+import { countEnrolledSiblings } from "@/lib/db/queries/students";
+import { EditFeeButton } from "./EditFeeButton";
 import { loadStudent } from "../load";
 
 type Props = { params: Promise<{ id: string }> };
@@ -10,10 +12,24 @@ type Props = { params: Promise<{ id: string }> };
 export default async function StudentEnrolmentPage({ params }: Props) {
   const student = await loadStudent(params);
   const e = student.enrolment;
+  const siblings = e ? await countEnrolledSiblings(student.id) : 0;
   return (
     <Stack gap="lg">
       <Card>
-        <CardTitle>{e ? `Place for ${e.academicYearId}` : "No place yet"}</CardTitle>
+        <CardTitle
+          context={
+            e && (
+              <EditFeeButton
+                enrolmentId={e.id}
+                feeCents={e.feeCents}
+                feeNote={e.feeNote}
+                siblings={siblings}
+              />
+            )
+          }
+        >
+          {e ? `Place for ${e.academicYearId}` : "No place yet"}
+        </CardTitle>
         {e ? (
           <SimpleGrid cols={{ base: 2, xs: 4 }} spacing="md">
             <Field label="Class" value={e.className} />

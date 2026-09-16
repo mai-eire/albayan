@@ -337,3 +337,23 @@ export async function getGuardianForAdmin(id: number): Promise<GuardianProfile |
     },
   };
 }
+
+// Other attending children who share a guardian with this student — the admin applies
+// whatever sibling discount is current by hand, so they need the number, not a rule.
+export async function countEnrolledSiblings(studentId: number): Promise<number> {
+  const d = await db();
+  const sibling = alias(studentGuardians, "sibling");
+  const rows = await d
+    .selectDistinct({ id: sibling.studentId })
+    .from(studentGuardians)
+    .innerJoin(sibling, eq(sibling.guardianId, studentGuardians.guardianId))
+    .innerJoin(students, eq(students.id, sibling.studentId))
+    .where(
+      and(
+        eq(studentGuardians.studentId, studentId),
+        sql`${sibling.studentId} <> ${studentId}`,
+        eq(students.status, "active"),
+      ),
+    );
+  return rows.length;
+}

@@ -60,7 +60,6 @@ export default function UiGallery() {
             <StatusBadge domain="fee" value="paid" />
             <StatusBadge domain="fee" value="part_paid" />
             <StatusBadge domain="fee" value="unpaid" />
-            <StatusBadge domain="fee" value="overdue" />
             <StatusBadge domain="fee" value="waived" />
           </Group>
           <Group>

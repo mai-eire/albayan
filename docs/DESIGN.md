@@ -32,7 +32,7 @@ Ten-shade Mantine tuples; shade 6 is the "filled" shade, 0–1 are tints for lig
 |---|---|---|---|---|
 | `tile` (primary) | `#146c60` | Brand / primary action / positive | Primary buttons, active nav, links, "present", "paid", success | Subject colour of anything but Arabic |
 | `saffron` | `#d99a2b` | Attention | "Now" marker, "late", "part-paid", unread dots, warnings | Large filled areas, body text |
-| `clay` | `#c44536` | Critical | "absent", "overdue", destructive actions, errors, allergy flags | Anything not a problem |
+| `clay` | `#c44536` | Critical | "absent", "unpaid", destructive actions, errors, allergy flags | Anything not a problem |
 | `lapis` | `#2b4fb4` | Subject: Quran | Quran badges, timetable blocks, homework tags | Semantic meaning |
 | `plum` | `#7b4b94` | Subject: Islamic Studies | As above | Semantic meaning |
 | `gray` (Mantine) | — | Neutral | Borders, dimmed text, disabled, "excused", break periods | — |
@@ -46,7 +46,7 @@ Status colours are assigned once, in `components/StatusBadge.tsx`:
 | Domain | Value → colour |
 |---|---|
 | Attendance | present → tile · late → saffron · absent → clay · excused → gray |
-| Fee balance | paid → tile · part-paid → saffron · unpaid/overdue → clay · waived → gray |
+| Fee balance | paid → tile · part-paid → saffron · unpaid → clay · waived (fee is €0) → gray. There is no "overdue": a fee is outstanding or it is not. |
 | Application | applied → saffron · active → tile · declined → clay · inactive → gray |
 | Homework | due later → gray · due today/tomorrow → saffron · overdue → clay |
 | Record | active → tile · inactive → gray (subjects, teachers, sessions) |
@@ -119,7 +119,7 @@ Content column `maw={960} mx="auto"` — narrower than a typical dashboard on pu
 
 - At most **three content blocks** on a page (a block = a card, a table, a list, or a form). Need more? Split into tabs or pages.
 - A block holds **one kind of thing**. A card with lessons does not also hold homework.
-- Stat tiles appear only on the admin dashboard, at most three, and only for numbers the admin acts on (registers missing, applications pending, fees overdue). Nowhere else.
+- Stat tiles appear only on the admin dashboard, at most three, and only for numbers the admin acts on (registers missing, applications pending, fees outstanding). Nowhere else.
 - No "quick actions" panels. Actions live where their object is: "Take register" on the lesson, "Add homework" on the class, "Record payment" on the fee. A page's primary action sits in the `PageHeader`.
 - Above the fold on a phone: the page title and the first block. Nothing else.
 

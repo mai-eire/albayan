@@ -12,7 +12,6 @@ const statuses = {
     paid: ["tile", "Paid"],
     part_paid: ["saffron", "Part paid"],
     unpaid: ["clay", "Unpaid"],
-    overdue: ["clay", "Overdue"],
     waived: ["gray", "Waived"],
   },
   application: {

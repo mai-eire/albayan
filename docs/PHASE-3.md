@@ -9,7 +9,7 @@ Definition of done: on a seeded DB, admin records a €100 cash payment against 
 ## Tasks
 
 - [x] **0. Schema v3** — `payments`, `events`, `event_targets`, `event_participants` from PLAN §5 as one migration with CHECK constraints (payment method, event type, audience, participant status); constraint tests. DoD: `pnpm test` covers them.
-- [ ] **1. Fees (admin)** — `/admin/fees`: outstanding balances by session/class with totals; record payment (child's enrolment, amount in euros, method, paid on, who paid, reference, note); edit and delete payments (audited before/after); per-student and per-guardian history on their profiles; CSV export. `lib/fees.ts` derives balance and status (unpaid / part-paid / paid / waived when the fee is 0) with tests. Edit a student's fee and note from the enrolment tab (audited). No "overdue": there is only what is outstanding. DoD: the dashboard tile becomes "Fees outstanding" (total and number of families) and is real.
+- [x] **1. Fees (admin)** — `/admin/fees`: outstanding balances by session/class with totals; record payment (child's enrolment, amount in euros, method, paid on, who paid, reference, note); edit and delete payments (audited before/after); per-student and per-guardian history on their profiles; CSV export. `lib/fees.ts` derives balance and status (unpaid / part-paid / paid / waived when the fee is 0) with tests. Edit a student's fee and note from the enrolment tab (audited). No "overdue": there is only what is outstanding. DoD: the dashboard tile becomes "Fees outstanding" (total and number of families) and is real.
 - [ ] **2. Fees (family)** — `/family/[id]/fees`: fee for the year, payments, balance; family total on the overview; "How to pay" box with the bank details from `school_settings`. Payment recorded notifies the guardian. A family with an outstanding balance from a previous year sees it flagged plainly at the top of the application wizard, and the applications inbox flags it to the admin on that child's row and drawer. DoD: `getStudentForGuardian` carries the balance; never shows another child's payments; the wizard and inbox flags tested.
 - [ ] **3. Events (admin)** — `/admin/events`: create/edit/publish events (type, dates, location, description, audience: whole school / sessions / classes, registration and consent flags, optional fee); participants list with consent timestamps; CSV. Holidays and closures are events too and appear on calendars. Publishing notifies the targeted families. DoD: targeting tested (a Saturday-only trip never notifies Sunday families).
 - [ ] **4. Events (family, student, teacher)** — calendar gets events as its third source; `/family/events` (or per child) lists upcoming events with one-tap register / consent recorded with name and timestamp; students and teachers see events read-only. DoD: registration confirmation notification; withdrawing works.
@@ -27,6 +27,10 @@ Definition of done: on a seeded DB, admin records a €100 cash payment against 
 - No "overdue" concept: a fee is either outstanding or not. What matters is that an outstanding balance from a previous year is flagged to the family when they apply again and to the admin reviewing the application.
 - Events with a fee show the amount; the money is collected outside the app.
 - Reports break age down per year of age, not bands — a school's numbers are small enough.
+
+## Decisions made during Phase 3
+
+- 2026-09-16 (task 1) — A student's fee for a year is the fee on their current place; their payments are every payment against any of their places that year, so a class move never double-counts or loses money. A guardian's Payments tab lists the family's payments (all their children), with "Paid by" as a column, rather than only payments recorded against that guardian — the office asks "what has this family paid?", not "which parent handed over the cash?".
 
 ## Explicitly not in Phase 3
 

@@ -296,6 +296,32 @@ export async function seed(db: Db, auth: Auth) {
   await bulk(db, t.students, students);
   await bulk(db, t.studentGuardians, studentGuardians);
   await bulk(db, t.enrolments, enrolments);
+  // Most families have paid in full, some half, a few nothing yet — so the fees page and
+  // the dashboard tile have something to show.
+  const placed = await db
+    .select({
+      id: t.enrolments.id,
+      studentId: t.enrolments.studentId,
+      feeCents: t.enrolments.feeCents,
+    })
+    .from(t.enrolments);
+  const payments: (typeof t.payments.$inferInsert)[] = [];
+  for (const e of placed) {
+    const link = studentGuardians.find((sg) => sg.studentId === e.studentId)!;
+    const roll = random();
+    if (roll < 0.15 || e.feeCents === 0) continue;
+    const full = roll < 0.75;
+    payments.push({
+      enrolmentId: e.id,
+      amountCents: full ? e.feeCents : e.feeCents / 2,
+      paidOn: `2026-09-${pad(5 + Math.floor(random() * 10), 2)}`,
+      method: pick(["cash", "bank_transfer", "bank_transfer", "card"] as const),
+      reference: random() < 0.5 ? `ALB ${pad(Math.floor(random() * 9000) + 1000, 4)}` : null,
+      paidByGuardianId: link.guardianId,
+      recordedByUserId: adminUserId,
+    });
+  }
+  await bulk(db, t.payments, payments);
   await bulk(db, t.auditLog, [
     {
       actorUserId: adminUserId,

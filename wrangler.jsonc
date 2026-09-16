@@ -1,4 +1,6 @@
 // https://developers.cloudflare.com/workers/wrangler/configuration/
+// Top level = production; "staging" is a separate Worker with its own D1 and R2.
+// database_ids are placeholders until the resources exist (Phase 0 task 14).
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "albayan",
@@ -15,12 +17,38 @@
     {
       "binding": "DB",
       "database_name": "albayan",
-      // Placeholder until the Cloudflare resources exist (Phase 0 task 14); local dev ignores it.
       "database_id": "00000000-0000-0000-0000-000000000000",
       "migrations_dir": "drizzle",
     },
   ],
   "r2_buckets": [{ "binding": "BUCKET", "bucket_name": "albayan-files" }],
+  "vars": {
+    "EMAIL_TRANSPORT": "resend",
+    "EMAIL_FROM": "Al-Bayan <noreply@example.com>",
+    "BETTER_AUTH_URL": "https://albayan.example.com",
+  },
+  // Secrets, set with `wrangler secret put <NAME> [--env staging]`:
+  //   BETTER_AUTH_SECRET  RESEND_API_KEY
   "observability": { "enabled": true },
   "upload_source_maps": true,
+  "env": {
+    "staging": {
+      "name": "albayan-staging",
+      "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "albayan-staging" }],
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "albayan-staging",
+          "database_id": "00000000-0000-0000-0000-000000000001",
+          "migrations_dir": "drizzle",
+        },
+      ],
+      "r2_buckets": [{ "binding": "BUCKET", "bucket_name": "albayan-files-staging" }],
+      "vars": {
+        "EMAIL_TRANSPORT": "resend",
+        "EMAIL_FROM": "Al-Bayan staging <noreply@example.com>",
+        "BETTER_AUTH_URL": "https://albayan-staging.<account>.workers.dev",
+      },
+    },
+  },
 }

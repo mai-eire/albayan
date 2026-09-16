@@ -30,6 +30,7 @@ export const childStepSchema = z.object({
   arabicProficiency: z.enum(arabicProficiencies),
   allergies: optionalText(500),
   medicalNotes: optionalText(1000),
+  applicationNotes: optionalText(1000),
   preferredSessionId: z.number({ error: "Choose a day" }).int(),
   preferredClassId: z.number().int().nullable(),
 });

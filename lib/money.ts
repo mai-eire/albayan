@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 // Money is integer euro cents in the database and euros everywhere people see it.
 
 // Accepts "250", "250.50", "€1,250.00", 250 → cents. Throws on anything else.
@@ -18,3 +20,18 @@ export function formatEuros(cents: number): string {
   const amount = rest ? `€${euros}.${String(rest).padStart(2, "0")}` : `€${euros}`;
   return cents < 0 ? `−${amount}` : amount;
 }
+
+// Form field for an amount typed in euros; parses to non-negative cents.
+export const eurosField = z
+  .string()
+  .trim()
+  .transform((v, ctx) => {
+    try {
+      const cents = eurosToCents(v || "0");
+      if (cents < 0) throw new Error();
+      return cents;
+    } catch {
+      ctx.addIssue({ code: "custom", message: "Enter an amount like 250 or 250.50" });
+      return z.NEVER;
+    }
+  });

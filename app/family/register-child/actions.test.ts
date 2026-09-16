@@ -64,6 +64,7 @@ const valid = {
   arabicProficiency: "beginner",
   allergies: "Peanuts",
   medicalNotes: "",
+  applicationNotes: "With her cousin please",
   preferredSessionId: 1,
   preferredClassId: 1,
   childEthnicity: "Arab",
@@ -153,6 +154,7 @@ describe("submitApplication", () => {
       preferredClassId: 1,
       ethnicity: "Arab",
       medicalNotes: null,
+      applicationNotes: "With her cousin please",
       createdByGuardianId: 1,
     });
     expect(await db.select().from(studentGuardians)).toEqual([

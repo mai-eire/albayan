@@ -56,6 +56,7 @@ export const students = sqliteTable(
     preferredSessionId: integer().references(() => schoolSessions.id),
     preferredClassId: integer().references(() => classes.id),
     applicationNotes: text(),
+    declinedReason: text(),
     appliedAt: text().notNull(),
     approvedAt: text(),
     createdByGuardianId: integer()

@@ -1,4 +1,6 @@
 import { sendEmail } from "./send";
+import { ApprovedEmail } from "./templates/Approved";
+import { DeclinedEmail } from "./templates/Declined";
 import { InviteEmail } from "./templates/Invite";
 import { PasswordResetEmail } from "./templates/PasswordReset";
 import { VerifyEmail } from "./templates/VerifyEmail";
@@ -39,5 +41,35 @@ export function sendVerifyEmail(
     to: to.email,
     subject: "Confirm your email address",
     body: <VerifyEmail schoolName={schoolName} name={to.name} url={url} />,
+  });
+}
+
+export function sendApproved(
+  to: { email: string; name: string },
+  details: {
+    childName: string;
+    studentId: string;
+    password: string;
+    placement: string;
+    loginUrl: string;
+  },
+  schoolName: string,
+) {
+  return sendEmail({
+    to: to.email,
+    subject: `${details.childName} has a place at ${schoolName}`,
+    body: <ApprovedEmail schoolName={schoolName} name={to.name} {...details} />,
+  });
+}
+
+export function sendDeclined(
+  to: { email: string; name: string },
+  details: { childName: string; reason: string },
+  schoolName: string,
+) {
+  return sendEmail({
+    to: to.email,
+    subject: `About ${details.childName}'s application`,
+    body: <DeclinedEmail schoolName={schoolName} name={to.name} {...details} />,
   });
 }

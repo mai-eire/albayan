@@ -62,6 +62,7 @@ type Values = {
   arabicProficiency: string;
   allergies: string;
   medicalNotes: string;
+  applicationNotes: string;
   preferredSessionId: number | null;
   preferredClassId: number | null;
   childEthnicity: string | null;
@@ -80,6 +81,7 @@ const emptyChild = {
   arabicProficiency: "none",
   allergies: "",
   medicalNotes: "",
+  applicationNotes: "",
   preferredSessionId: null,
   preferredClassId: null,
   childEthnicity: null,
@@ -294,6 +296,13 @@ export function ApplicationWizard({
               minRows={2}
               {...form.getInputProps("medicalNotes")}
             />
+            <Textarea
+              label="Anything else you'd like the school to know?"
+              placeholder="Would prefer to be with their cousin if possible."
+              autosize
+              minRows={2}
+              {...form.getInputProps("applicationNotes")}
+            />
             <Group grow>
               <Select
                 label="Preferred day"
@@ -388,6 +397,7 @@ export function ApplicationWizard({
                 ],
                 ["Allergies", form.values.allergies || "None"],
                 ["Medical", form.values.medicalNotes || "None"],
+                ["Notes", form.values.applicationNotes || "None"],
                 ["Preferred day", day?.label],
                 [
                   "Preferred class",

@@ -9,26 +9,12 @@ import { action, ActionError } from "@/lib/actions";
 import { audit, diff } from "@/lib/audit";
 import type { Db } from "@/lib/db";
 import { academicYears, terms } from "@/lib/db/schema";
-import { eurosToCents } from "@/lib/money";
+import { eurosField } from "@/lib/money";
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Choose a date");
 
-const euros = z
-  .string()
-  .trim()
-  .transform((v, ctx) => {
-    try {
-      const cents = eurosToCents(v || "0");
-      if (cents < 0) throw new Error();
-      return cents;
-    } catch {
-      ctx.addIssue({ code: "custom", message: "Enter an amount like 250 or 250.50" });
-      return z.NEVER;
-    }
-  });
-
 const yearSchema = z
-  .object({ startDate: isoDate, endDate: isoDate, standardFee: euros, isCurrent: z.boolean() })
+  .object({ startDate: isoDate, endDate: isoDate, standardFee: eurosField, isCurrent: z.boolean() })
   .refine((v) => v.endDate > v.startDate, {
     path: ["endDate"],
     message: "The end date must be after the start",

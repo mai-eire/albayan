@@ -1,0 +1,1 @@
+ALTER TABLE `students` ADD `declined_reason` text;

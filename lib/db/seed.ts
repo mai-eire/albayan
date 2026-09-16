@@ -1,4 +1,4 @@
-import { ethnicities as demographicEthnicities } from "@/lib/demographics";
+import { ethnicities as demographicEthnicities, yearGroups } from "@/lib/demographics";
 import { getTableColumns, sql, type Table } from "drizzle-orm";
 import type { Auth } from "@/lib/auth";
 import type { Db } from "@/lib/db";
@@ -220,7 +220,8 @@ export async function seed(db: Db, auth: Auth) {
         gender: isFemale ? "female" : "male",
         dateOfBirth: `${birthYear}-${pad(1 + Math.floor(random() * 12), 2)}-${pad(1 + Math.floor(random() * 28), 2)}`,
         ethnicity: pick(ethnicities),
-        schoolYearGroup: `${Math.max(1, 2026 - birthYear - 4)}${pick(["st", "nd", "rd", "th"])} class`,
+        schoolYearGroup:
+          yearGroups[Math.min(yearGroups.length - 1, Math.max(1, 2026 - birthYear - 4))],
         arabicProficiency: pick(t.arabicProficiencies),
         allergies: pick(allergies),
         status: pending ? "applied" : "active",

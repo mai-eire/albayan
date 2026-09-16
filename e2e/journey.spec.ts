@@ -73,7 +73,7 @@ test("register → apply → approve → student signs in; teacher kept out", as
   // The parent sees the place and the notification.
   await signIn(page, "samira@example.com", "a fine password");
   await expect(page).toHaveURL(/\/family$/);
-  await expect(page.getByRole("button", { name: "1 unread notifications" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "1 unread notifications" })).toBeVisible();
   const childHref = await page
     .locator("main a[href^='/family/']:not([href*=register])")
     .first()

@@ -20,13 +20,20 @@ Definition of done: on a seeded DB, a teacher's *Today* lists this morning's les
 - [x] **9. Calendar** — `/teach/calendar`, `/student/calendar`, family calendar: terms, weekly lesson days and events (events land in Phase 3; the union is built now so adding them is one more source). Hijri date shown as secondary. DoD: `lib/calendar.ts` builds a month from terms + sessions with tests.
 - [x] **10. Notifications list** — bell → `/{area}/notifications`: list, mark read (single and all), unread count already on the bell; `notify()` gains the Phase 2 triggers (homework, note, resource, absence). DoD: marking read updates the bell without a full reload.
 - [x] **11. Admin class page** — `/admin/academics/classes/[id]` gains roster and attendance summary; enrolments can be moved between classes of the same year (audited). DoD: moving a student keeps history (old enrolment `left`, new `active`).
-- [ ] **12. E2E + roadmap** — Playwright: teacher takes a register → guardian sees the absence → admin edits it; teacher publishes homework with a file → student opens it. Roadmap and PLAN kept current; PHASE-3.md created at the end.
+- [x] **12. E2E + roadmap** — Playwright: teacher takes a register → guardian sees the absence → admin edits it; teacher publishes homework with a file → student opens it. Roadmap and PLAN kept current; PHASE-3.md created at the end.
 
 ## Decisions to make during Phase 2
 
-- Register default: everyone present (PLAN §10). Whether "late" needs a time — recommendation: no, a note is enough.
-- Homework description: markdown rendered with a small allow-list, or plain text with line breaks. Recommendation: plain text first; add markdown when a teacher asks.
-- Whether teachers can see other teachers' notes on their students (PLAN §5 says read). Recommendation: yes, staff-visible notes are shared.
+All settled 2026-09-16:
+
+- Register default: everyone present; tap cycles present → late → absent → excused; "late" has no time, a note is enough.
+- Homework descriptions are plain text; markdown when a teacher asks.
+- Staff-visible notes are shared between all staff who can see the student.
+- Notification emails for homework, notes and resources use one generic `NoticeEmail` (title, body, link); absence has its own.
+- School-wide resources don't notify (reference material); class and homework shares notify the class; a file shared with one family goes quietly.
+- A file's download is gated by the resource that owns its key; a key with no resource yet is admin-only.
+- The teacher's student page and class page are tabbed to stay within the three-block budget.
+- Vitest caps workers at four and Playwright runs one worker: each integration file boots a workerd and the specs share one dev server.
 
 ## Explicitly not in Phase 2
 

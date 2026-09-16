@@ -1,0 +1,33 @@
+# Phase 3 — Fees, events, reports, hardening
+
+Goal: the office runs the money and the calendar through the app and can answer the questions it gets asked. Fees sit on enrolments, payments are recorded and corrected in the open, families see their balance and how to pay; events reach the right families and collect registrations and consent; the reports page draws the demographic and attendance pictures; the audit log is readable; the three data-protection actions exist; the year can roll over. Then an accessibility and phone pass and the full E2E suite, and the app is ready for a first school.
+
+Estimated ≈2 weeks. Scope and rationale: PLAN §17; tables in PLAN §5 "Fees", "Events & calendar" (not in the schema yet — each lands with its task as a migration).
+
+Definition of done: on a seeded DB, admin records a €100 cash payment against a child, edits it to €120 and deletes another — each audited with before/after and the family's fees tab shows the right balance and the "How to pay" box; admin publishes a trip for Saturday classes with consent, the family registers and consents in one tap and the event page lists who is coming; the reports page shows the eight charts for the current year and exports CSV; the audit page filters by action and person; admin exports one family's data, deletes a declined application and anonymises a student who left; the rollover screen creates next year's enrolments from proposed classes. `pnpm test` covers balance derivation, event targeting, report counts and anonymisation; `pnpm test:e2e` runs record payment → family balance and consent to a trip; the accessibility pass leaves no axe violations on the main pages.
+
+## Tasks
+
+- [ ] **0. Schema v3** — `payments`, `events`, `event_targets`, `event_participants` from PLAN §5 as one migration with CHECK constraints (payment method, event type, audience, participant status); constraint tests. DoD: `pnpm test` covers them.
+- [ ] **1. Fees (admin)** — `/admin/fees`: outstanding balances by session/class with totals; record payment (child's enrolment, amount in euros, method, paid on, who paid, reference, note); edit and delete payments (audited before/after); per-student and per-guardian history on their profiles; CSV export. `lib/fees.ts` derives balance and status (unpaid / part-paid / paid / waived when the fee is 0) with tests. Edit a student's fee and note from the enrolment tab (audited). DoD: dashboard "Fees overdue" tile is real (overdue = unpaid after the year's first term ends; confirm with the school).
+- [ ] **2. Fees (family)** — `/family/[id]/fees`: fee for the year, payments, balance; family total on the overview; "How to pay" box with the bank details from `school_settings`. Payment recorded notifies the guardian. DoD: `getStudentForGuardian` carries the balance; never shows another child's payments.
+- [ ] **3. Events (admin)** — `/admin/events`: create/edit/publish events (type, dates, location, description, audience: whole school / sessions / classes, registration and consent flags, optional fee); participants list with consent timestamps; CSV. Holidays and closures are events too and appear on calendars. Publishing notifies the targeted families. DoD: targeting tested (a Saturday-only trip never notifies Sunday families).
+- [ ] **4. Events (family, student, teacher)** — calendar gets events as its third source; `/family/events` (or per child) lists upcoming events with one-tap register / consent recorded with name and timestamp; students and teachers see events read-only. DoD: registration confirmation notification; withdrawing works.
+- [ ] **5. Reports** — `/admin/reports` with `@mantine/charts`: active students by ethnicity, spoken language, postal area, gender, age band, session, Arabic proficiency, registration reasons; year filter; counts only; CSV export; two or three headline charts on the dashboard. DoD: report queries tested against the seed; nothing per-student leaves the page.
+- [ ] **6. Audit viewer** — `/admin/settings/audit`: the log newest first with filters by action, person and date; before/after rendered readably. DoD: every audited action so far shows sensibly.
+- [ ] **7. Accounts** — student `/student/account`: add and verify an email, phone; then email login, reset and `/forgot-student-id` work for them; guardians and admins can reset a student's password (temporary password shown once, audited). Teacher `/teach/account` (name, phone, email preference). DoD: forgot-student-id e2e.
+- [ ] **8. Data protection** — on the guardian profile: export the family's data (JSON); on a declined application: delete outright; on a student who left: anonymise (keeps attendance and payments, strips name, DOB, medical, demographic fields, sign-in). Privacy notice page linked from `/register`. All audited. DoD: anonymisation tested; exports never include other families.
+- [ ] **9. Year rollover** — `/admin/academics/years/[id]/rollover`: create the next year (copy sessions, schedules, classes), then a screen listing every active student with a proposed next class (same level name; adjust), creating next year's enrolments at the new standard fee and ending the old ones; students not returning are marked inactive; guardians get "confirm your child's place" notifications. DoD: integration test rolls the seed over.
+- [ ] **10. Accessibility and phone pass** — axe on every main page in both schemes, keyboard paths for registers, forms and modals, 44px targets, contrast; fix what turns up. DoD: axe clean; documented in DESIGN §6.
+- [ ] **11. Deploy readiness** — the deferred Phase 0 deploy: Cloudflare resources, secrets, first staging deploy, GitHub secrets, Resend domain; backups (D1 Time Travel note, weekly export cron). DoD: staging URL works end to end with the seed.
+- [ ] **12. E2E + roadmap** — Playwright: record payment → family balance; publish trip → consent; forgot-student-id. Roadmap and PLAN kept current; the "Later" list reviewed with the school.
+
+## Decisions to make during Phase 3
+
+- What "overdue" means for the dashboard tile (a date in `school_settings`, or the end of the first term). Recommendation: a single optional "fees due by" date on the academic year, defaulting to the end of the first term.
+- Whether events with a fee create a payment record (PLAN says trip fees are later). Recommendation: no — show the amount, collect it outside the app.
+- Age bands for the report: recommendation 4–6, 7–9, 10–12, 13–15, 16+.
+
+## Explicitly not in Phase 3
+
+Stripe, PTM slots, homework completion tracking, Arabic/RTL, SMS/WhatsApp, per-lesson attendance, co-teachers, per-class schedule overrides.

@@ -40,7 +40,8 @@ test("a guardian registers, confirms their email and can register a child", asyn
 });
 
 test("registering with an email that already has an account is refused", async ({ page }) => {
-  await page.goto("/register");
+  // A direct load: wait for hydration or the typed values are thrown away.
+  await page.goto("/register", { waitUntil: "networkidle" });
   await page.getByLabel("Your name").fill("Someone");
   await page.getByLabel("Email").fill("parent3@example.com");
   await page.getByLabel("Phone").fill("0861234567");

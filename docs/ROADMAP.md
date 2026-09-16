@@ -10,7 +10,7 @@ Live document. Updated at the end of every work session, in the same commit as t
 |---|---|---|---|
 | Planning | Requirements, architecture, stack, UI library, design language | ✅ Done | — |
 | 0 — Foundation | Offline dev loop, schema v1, auth, roles, access layer, seed, CI, Cloudflare staging | ✅ Done (deploy deferred) | [PHASE-0.md](PHASE-0.md) |
-| 1 — Registration & setup | Guardian signup, applications, approvals, academics setup, timetable, staff invites | 🔄 In progress (7/14) | [PHASE-1.md](PHASE-1.md) |
+| 1 — Registration & setup | Guardian signup, applications, approvals, academics setup, timetable, staff invites | 🔄 In progress (8/14) | [PHASE-1.md](PHASE-1.md) |
 | 2 — Daily workflows | Teacher Today, registers, homework, notes, resources, family/student views, notifications | ⬜ | — |
 | 3 — Fees, events, reports | Fees & payments, events with consent, reports, audit viewer, year rollover, GDPR actions | ⬜ | — |
 | Later | Stripe, PTM slots, Arabic/RTL, SMS, co-teachers, per-class schedules | — | — |
@@ -21,9 +21,9 @@ Phase scope and rationale: [PLAN.md §17](PLAN.md). Definition of done for the c
 
 Phase 1, in order:
 
-1. Task 8 — application wizard (`/family/register-child`).
-2. Task 9 — applications inbox with approve/decline.
-3. Task 10–12 — admin people lists and profiles, teacher views, family/student views.
+1. Task 9 — applications inbox with approve/decline.
+2. Task 10–12 — admin people lists and profiles, teacher views, family/student views.
+3. Task 13–14 — notifications helper, end-to-end flow, Phase 2 checklist.
 
 ## Blocked / undecided
 
@@ -33,6 +33,7 @@ Phase 1, in order:
 
 ## Recently done
 
+- 2026-09-16 — Phase 1 task 8: `/family/register-child` wizard (you · child · family · review) on `Stepper`, per-step validation from the same Zod schemas the action uses, guardian details pre-filled, optional diversity questions with the standard sentence, "Register another child"; `/family` lists children with their status; `lib/demographics.ts` option lists; action tests.
 - 2026-09-16 — Phase 1 task 7: `/register` for guardians (name, email, phone, password) → guardian row, verification email, signed in; `/family` shows a saffron notice with resend until confirmed and hides "Register a child"; Better Auth gets its base URL from the request in dev; e2e register → confirm → verified.
 - 2026-09-16 — Phase 1 task 6: `/admin/staff` — teachers and admins list, invite (new account + emailed link, or the role added to an existing account), resend invite, stop/resume teaching, make/remove admin (never yourself); `account` status domain; `lib/app-url.ts` for links in emails; action tests.
 - 2026-09-16 — Phase 1 task 5: classes per year (add/edit/delete, refused with students), class teacher, a teacher select per subject in the session's schedule with a saffron double-booking warning, and the derived class timetable.

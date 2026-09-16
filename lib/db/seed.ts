@@ -1,3 +1,4 @@
+import { ethnicities as demographicEthnicities } from "@/lib/demographics";
 import { getTableColumns, sql, type Table } from "drizzle-orm";
 import type { Auth } from "@/lib/auth";
 import type { Db } from "@/lib/db";
@@ -70,15 +71,7 @@ const teacherNames = [
   "Ismail Haddad",
 ];
 const languages = ["Arabic", "Urdu", "Somali", "Bengali", "Kurdish"];
-const ethnicities = [
-  "Arab",
-  "Asian – Pakistani",
-  "Asian – Bangladeshi",
-  "Black – African",
-  "Mixed",
-  "Other",
-  null,
-];
+const ethnicities = [...demographicEthnicities.slice(0, 6), null];
 const areas = ["D15", "D7", "D1", "D3", "D9", "D11", "K78", "A94"];
 const streets = ["Main Street", "Castle Road", "Park Avenue", "Mill Lane", "Church View"];
 const allergies = [null, null, null, null, "Peanuts", "Penicillin", "Dairy", "Bee stings"];

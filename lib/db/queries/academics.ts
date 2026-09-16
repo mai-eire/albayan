@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, inArray, ne } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, ne, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/sqlite-core";
 import { db } from "@/lib/db";
 import {
@@ -50,6 +50,9 @@ export async function listSubjects(): Promise<Subject[]> {
   return (await db()).select().from(subjects).orderBy(desc(subjects.isActive), asc(subjects.name));
 }
 
+// Monday-first, so the school's weekend reads Saturday then Sunday.
+const weekOrder = sql`(${schoolSessions.dayOfWeek} + 6) % 7`;
+
 export type SessionRow = typeof schoolSessions.$inferSelect & {
   periods: (typeof sessionPeriods.$inferSelect)[];
   classCount: number;
@@ -63,7 +66,7 @@ export async function listSessions(academicYearId: string): Promise<SessionRow[]
     .leftJoin(classes, eq(classes.sessionId, schoolSessions.id))
     .where(eq(schoolSessions.academicYearId, academicYearId))
     .groupBy(schoolSessions.id)
-    .orderBy(asc(schoolSessions.dayOfWeek), asc(schoolSessions.startTime));
+    .orderBy(weekOrder, asc(schoolSessions.startTime));
   if (!rows.length) return [];
   const periods = await d
     .select()
@@ -133,7 +136,7 @@ export async function listClasses(academicYearId: string): Promise<ClassRow[]> {
     .leftJoin(enrolments, and(eq(enrolments.classId, classes.id), eq(enrolments.status, "active")))
     .where(eq(classes.academicYearId, academicYearId))
     .groupBy(classes.id)
-    .orderBy(asc(schoolSessions.dayOfWeek), asc(schoolSessions.startTime), asc(classes.name));
+    .orderBy(weekOrder, asc(schoolSessions.startTime), asc(classes.name));
   return rows.map((r) => ({
     ...r.cls,
     sessionName: r.sessionName,

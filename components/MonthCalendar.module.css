@@ -1,0 +1,76 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.day {
+  min-height: 56px;
+  padding: 4px 6px;
+  border-radius: var(--mantine-radius-md);
+  font-size: var(--mantine-font-size-sm);
+  color: var(--mantine-color-dimmed);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+
+  &[data-in-month] {
+    color: var(--mantine-color-text);
+  }
+
+  &[data-term][data-in-month] {
+    background: var(--app-ground);
+  }
+
+  &[data-lesson][data-in-month] {
+    background: var(--mantine-color-tile-light);
+  }
+
+  &[data-today] {
+    box-shadow: inset 0 0 0 2px var(--mantine-color-saffron-filled);
+  }
+}
+
+.number {
+  font-weight: 500;
+}
+
+.lesson,
+.event {
+  font-size: var(--mantine-font-size-xs);
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lesson {
+  color: var(--mantine-color-tile-light-color);
+}
+
+.event {
+  color: var(--mantine-color-plum-light-color);
+}
+
+@media (max-width: 36em) {
+  .day {
+    min-height: 44px;
+    padding: 2px 4px;
+  }
+
+  .lesson,
+  .event {
+    /* Just a dot on phones; the label is in aria-label. */
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    color: var(--mantine-color-tile-filled);
+    font-size: 0;
+  }
+
+  .event {
+    color: var(--mantine-color-plum-filled);
+  }
+}

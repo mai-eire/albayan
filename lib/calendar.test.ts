@@ -1,0 +1,49 @@
+import { describe, expect, it } from "vitest";
+import { buildMonth } from "./calendar";
+
+const terms = [{ name: "Autumn term", startDate: "2026-09-05", endDate: "2026-12-19" }];
+const lessonDays = [
+  { dayOfWeek: 6, label: "Saturday class" },
+  { dayOfWeek: 0, label: "Sunday class" },
+];
+
+describe("buildMonth", () => {
+  it("lays out Monday-first weeks covering the month", () => {
+    const month = buildMonth({ month: "2026-09", today: "2026-09-16", terms, lessonDays });
+    expect(month.title).toBe("September 2026");
+    expect(month.weeks[0][0].date).toBe("2026-08-31");
+    expect(month.weeks[0][0].inMonth).toBe(false);
+    expect(month.weeks.at(-1)![6].date).toBe("2026-10-04");
+    expect(month.weeks).toHaveLength(5);
+    expect(month.previous).toBe("2026-08");
+    expect(month.next).toBe("2026-10");
+    expect(month.weeks[2].find((d) => d.date === "2026-09-16")?.isToday).toBe(true);
+  });
+
+  it("marks lesson days only inside a term", () => {
+    const month = buildMonth({ month: "2026-09", today: "2026-09-16", terms, lessonDays });
+    const day = (date: string) => month.weeks.flat().find((d) => d.date === date)!;
+    expect(day("2026-09-05").lessons).toEqual(["Saturday class"]);
+    expect(day("2026-09-06").lessons).toEqual(["Sunday class"]);
+    expect(day("2026-09-07").lessons).toEqual([]);
+    // The Saturday before term starts is not a lesson day.
+    expect(day("2026-08-29")).toBeUndefined();
+    const august = buildMonth({ month: "2026-08", today: "2026-09-16", terms, lessonDays });
+    expect(august.weeks.flat().find((d) => d.date === "2026-08-29")?.lessons).toEqual([]);
+    expect(day("2026-09-05").termName).toBe("Autumn term");
+  });
+
+  it("places events and crosses the year boundary", () => {
+    const month = buildMonth({
+      month: "2026-12",
+      today: "2026-12-01",
+      terms,
+      lessonDays,
+      events: [{ date: "2026-12-19", title: "Last day of term" }],
+    });
+    expect(month.weeks.flat().find((d) => d.date === "2026-12-19")?.events).toEqual([
+      "Last day of term",
+    ]);
+    expect(month.next).toBe("2027-01");
+  });
+});

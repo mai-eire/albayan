@@ -12,6 +12,7 @@ export type CurrentUser = {
   name: string;
   email: string;
   isAdmin: boolean;
+  emailVerified: boolean;
   mustChangePassword: boolean;
   guardian: { id: number } | null;
   teacher: { id: number; isActive: boolean } | null;
@@ -42,6 +43,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
         name: true,
         email: true,
         isAdmin: true,
+        emailVerified: true,
         mustChangePassword: true,
         status: true,
       },
@@ -63,6 +65,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     name: user.name,
     email: user.email,
     isAdmin: user.isAdmin,
+    emailVerified: user.emailVerified,
     mustChangePassword: user.mustChangePassword,
     guardian: guardian ?? null,
     teacher: teacher ?? null,

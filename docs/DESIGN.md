@@ -184,6 +184,7 @@ Sensitive fields (ethnicity, languages, reasons) are grouped under their own hea
 
 - Success/error toasts: `@mantine/notifications` via `components/toast.ts` (`toast.success/error/warning`), top-end (Mantine only knows `top-right`; the RTL phase flips it), 4s, tile for success, clay for errors, saffron for warnings. Message states what happened: "Register submitted", "Payment recorded".
 - Inline errors for form validation; toasts for server failures.
+- Notices that stay on the page (an unverified email, a double-booked teacher): `Alert variant="light" color="saffron"` with a Tabler icon at 16, one sentence and, if there is something to do, one `light` button inside it. Never for success — that is a toast — and never more than one per page.
 - Loading: `Skeleton` for page-level loads; `loading` on the button for actions. Never block the whole screen with an overlay.
 - Empty states: `components/EmptyState.tsx` — Tabler icon in a light `ThemeIcon`, one sentence, one action. ("No homework due. Enjoy the weekend.")
 

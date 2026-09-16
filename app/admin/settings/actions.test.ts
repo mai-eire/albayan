@@ -20,6 +20,7 @@ const { updateSchoolSettings } = await import("./actions");
 const base = {
   name: "X",
   email: "x@example.com",
+  emailVerified: true,
   mustChangePassword: false,
   guardian: null,
   teacher: null,

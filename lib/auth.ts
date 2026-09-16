@@ -5,14 +5,19 @@ import { nextCookies } from "better-auth/next-js";
 import { username } from "better-auth/plugins";
 import { dbFor, type Db } from "@/lib/db";
 import * as schema from "@/lib/db/schema";
-import { sendPasswordReset } from "@/lib/email";
+import { appOrigin } from "@/lib/app-url";
+import { sendPasswordReset, sendVerifyEmail } from "@/lib/email";
 
-type Options = { schoolName: () => Promise<string> };
+// baseURL is optional for scripts and tests, which set BETTER_AUTH_URL instead.
+type Options = { schoolName: () => Promise<string>; baseURL?: string };
 
 // Email + password, with the student ID as username. Sessions are DB-backed cookies.
-export function createAuth(db: Db, { schoolName }: Options) {
+export function createAuth(db: Db, { schoolName, baseURL }: Options) {
   return betterAuth({
     appName: "Al-Bayan",
+    // Server-side api calls (register, resend) build links from this; the handler would
+    // otherwise infer it per request and the actions get nothing.
+    baseURL,
     database: drizzleAdapter(db, { provider: "sqlite", schema }),
     user: {
       modelName: "users",
@@ -32,6 +37,13 @@ export function createAuth(db: Db, { schoolName }: Options) {
       minPasswordLength: 8,
       sendResetPassword: async ({ user, url }) =>
         sendPasswordReset({ email: user.email, name: user.name }, url, await schoolName()),
+    },
+    // Guardians verify their email before applying for a child; the register action sends
+    // the first email, /family offers a resend. Nothing else needs verification.
+    emailVerification: {
+      autoSignInAfterVerification: true,
+      sendVerificationEmail: async ({ user, url }) =>
+        sendVerifyEmail({ email: user.email, name: user.name }, url, await schoolName()),
     },
     advanced: { database: { generateId: "serial" } },
     plugins: [
@@ -56,6 +68,7 @@ export async function auth(): Promise<Auth> {
   let instance = instances.get(env.DB);
   if (!instance) {
     instance = createAuth(dbFor(env.DB), {
+      baseURL: await appOrigin(),
       schoolName: async () =>
         (await import("@/lib/db/queries/settings")).getSchoolSettings().then((s) => s.name),
     });

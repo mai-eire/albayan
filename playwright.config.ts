@@ -20,6 +20,6 @@ export default defineConfig({
     url: `http://localhost:${port}/login`,
     reuseExistingServer: false,
     timeout: 120_000,
-    env: { WRANGLER_STATE: ".wrangler/e2e/v3" },
+    env: { WRANGLER_STATE: ".wrangler/e2e/v3", EMAIL_DIR: ".dev/e2e-mail" },
   },
 });

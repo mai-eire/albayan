@@ -10,7 +10,10 @@ export default async function LoginPage() {
     <AuthPage
       schoolName={name}
       title="Sign in"
-      links={[{ href: "/forgot-password", label: "Forgotten your password?" }]}
+      links={[
+        { href: "/forgot-password", label: "Forgotten your password?" },
+        { href: "/register", label: "New here? Create an account" },
+      ]}
     >
       <LoginForm />
     </AuthPage>

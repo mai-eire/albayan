@@ -19,6 +19,7 @@ function user(partial: Partial<Omit<CurrentUser, "areas">> & { id: number }): Cu
     name: "Someone",
     email: "someone@example.com",
     isAdmin: false,
+    emailVerified: true,
     mustChangePassword: false,
     guardian: null,
     teacher: null,

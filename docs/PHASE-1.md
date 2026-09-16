@@ -20,7 +20,7 @@ Definition of done: on a seeded DB, an admin can create a new session, edit its 
 
 - [x] **6. Staff** — `/admin/staff`: teachers and admins list; invite teacher (creates user + teacher row, sends `InviteEmail`), invite admin, resend invite, deactivate/reactivate teacher, remove admin flag (never the last admin). DoD: invited teacher accepts via `/invite/[token]` and shows in the list as active; audit rows written.
 
-- [ ] **7. Guardian registration** — `/register`: name, email, phone, password → Better Auth sign-up with email verification (`VerifyEmailEmail`); guardian row created on sign-up; `/family` shows "verify your email" until verified and blocks the application wizard. DoD: e2e registers, opens the link from `.dev/mail`, lands verified.
+- [x] **7. Guardian registration** — `/register`: name, email, phone, password → Better Auth sign-up with email verification (`VerifyEmailEmail`); guardian row created on sign-up; `/family` shows "verify your email" until verified and blocks the application wizard. DoD: e2e registers, opens the link from `.dev/mail`, lands verified.
 
 - [ ] **8. Application wizard** — `/family/register-child`: (1) your details incl. address, emergency contact; (2) child: names, DOB, gender, year group, Arabic proficiency, allergies/medical, preferred session (+ optional class); (3) optional diversity questions with the standard sentence; (4) review & submit. Creates `students` (status applied) + `student_guardians`. "Add another child" pre-fills step 1. DoD: pending child shows "Application received" on `/family`; validation tested at the action level.
 

@@ -16,7 +16,7 @@ Definition of done: on a seeded DB, an admin can create a new session, edit its 
 
 - [x] **4. Sessions & schedule editor** — sessions per year (name, weekday, start time, active); per session the ordered periods (subject or title, minutes, drag/arrow reorder) with the live computed timeline (10:00 Quran · 10:50 Arabic …). DoD: computed times match `lib/timetable.ts` unit tests; deleting a session with classes is refused.
 
-- [ ] **5. Classes & teachers per subject** — classes per session (name, room, capacity, class teacher); per class a table with one row per subject in the session's schedule and a teacher select, plus the rendered class timetable. Double-booked teacher (same subject, same session, two classes) shown as a warning, not blocked. DoD: teaching assignments upsert per (class, subject); warning appears in seed data when provoked.
+- [x] **5. Classes & teachers per subject** — classes per session (name, room, capacity, class teacher); per class a table with one row per subject in the session's schedule and a teacher select, plus the rendered class timetable. Double-booked teacher (same subject, same session, two classes) shown as a warning, not blocked. DoD: teaching assignments upsert per (class, subject); warning appears in seed data when provoked.
 
 - [ ] **6. Staff** — `/admin/staff`: teachers and admins list; invite teacher (creates user + teacher row, sends `InviteEmail`), invite admin, resend invite, deactivate/reactivate teacher, remove admin flag (never the last admin). DoD: invited teacher accepts via `/invite/[token]` and shows in the list as active; audit rows written.
 

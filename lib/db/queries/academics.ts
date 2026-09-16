@@ -1,12 +1,17 @@
-import { asc, count, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, ne } from "drizzle-orm";
+import { alias } from "drizzle-orm/sqlite-core";
 import { db } from "@/lib/db";
 import {
   academicYears,
   classes,
+  enrolments,
   schoolSessions,
   sessionPeriods,
   subjects,
+  teachers,
+  teachingAssignments,
   terms,
+  users,
 } from "@/lib/db/schema";
 
 export type YearRow = typeof academicYears.$inferSelect & { termCount: number };
@@ -90,4 +95,106 @@ export async function getSession(id: number): Promise<SessionRow | null> {
     d.select({ classCount: count() }).from(classes).where(eq(classes.sessionId, id)),
   ]);
   return { ...session, periods, classCount };
+}
+
+export type TeacherOption = { id: number; name: string; isActive: boolean };
+
+export async function listTeachers(): Promise<TeacherOption[]> {
+  const d = await db();
+  return d
+    .select({ id: teachers.id, name: users.name, isActive: teachers.isActive })
+    .from(teachers)
+    .innerJoin(users, eq(users.id, teachers.userId))
+    .orderBy(asc(users.name));
+}
+
+export type ClassRow = typeof classes.$inferSelect & {
+  sessionName: string;
+  classTeacherName: string | null;
+  studentCount: number;
+};
+
+export async function listClasses(academicYearId: string): Promise<ClassRow[]> {
+  const d = await db();
+  const classTeacher = alias(teachers, "class_teacher");
+  const classTeacherUser = alias(users, "class_teacher_user");
+  const rows = await d
+    .select({
+      cls: classes,
+      sessionName: schoolSessions.name,
+      sessionDay: schoolSessions.dayOfWeek,
+      classTeacherName: classTeacherUser.name,
+      studentCount: count(enrolments.id),
+    })
+    .from(classes)
+    .innerJoin(schoolSessions, eq(schoolSessions.id, classes.sessionId))
+    .leftJoin(classTeacher, eq(classTeacher.id, classes.classTeacherId))
+    .leftJoin(classTeacherUser, eq(classTeacherUser.id, classTeacher.userId))
+    .leftJoin(enrolments, and(eq(enrolments.classId, classes.id), eq(enrolments.status, "active")))
+    .where(eq(classes.academicYearId, academicYearId))
+    .groupBy(classes.id)
+    .orderBy(asc(schoolSessions.dayOfWeek), asc(schoolSessions.startTime), asc(classes.name));
+  return rows.map((r) => ({
+    ...r.cls,
+    sessionName: r.sessionName,
+    classTeacherName: r.classTeacherName,
+    studentCount: r.studentCount,
+  }));
+}
+
+export type ClassDetail = typeof classes.$inferSelect & {
+  session: typeof schoolSessions.$inferSelect;
+  periods: (typeof sessionPeriods.$inferSelect & { subjectName: string | null })[];
+  assignments: { subjectId: string; teacherId: number }[];
+  // Same teacher, same subject, another class in this session: they'd be in two rooms at once.
+  clashes: { subjectId: string; teacherId: number; className: string }[];
+  studentCount: number;
+};
+
+export async function getClass(id: number): Promise<ClassDetail | null> {
+  const d = await db();
+  const cls = await d.query.classes.findFirst({ where: eq(classes.id, id) });
+  if (!cls) return null;
+  const session = await d.query.schoolSessions.findFirst({
+    where: eq(schoolSessions.id, cls.sessionId),
+  });
+  if (!session) return null;
+  const [periods, assignments, siblings, [{ studentCount }]] = await Promise.all([
+    d
+      .select({ period: sessionPeriods, subjectName: subjects.name })
+      .from(sessionPeriods)
+      .leftJoin(subjects, eq(subjects.id, sessionPeriods.subjectId))
+      .where(eq(sessionPeriods.sessionId, session.id))
+      .orderBy(asc(sessionPeriods.sortOrder)),
+    d
+      .select({
+        subjectId: teachingAssignments.subjectId,
+        teacherId: teachingAssignments.teacherId,
+      })
+      .from(teachingAssignments)
+      .where(eq(teachingAssignments.classId, id)),
+    d
+      .select({
+        subjectId: teachingAssignments.subjectId,
+        teacherId: teachingAssignments.teacherId,
+        className: classes.name,
+      })
+      .from(teachingAssignments)
+      .innerJoin(classes, eq(classes.id, teachingAssignments.classId))
+      .where(and(eq(classes.sessionId, session.id), ne(classes.id, id))),
+    d
+      .select({ studentCount: count() })
+      .from(enrolments)
+      .where(and(eq(enrolments.classId, id), eq(enrolments.status, "active"))),
+  ]);
+  return {
+    ...cls,
+    session,
+    periods: periods.map((p) => ({ ...p.period, subjectName: p.subjectName })),
+    assignments,
+    clashes: siblings.filter((s) =>
+      assignments.some((a) => a.subjectId === s.subjectId && a.teacherId === s.teacherId),
+    ),
+    studentCount,
+  };
 }

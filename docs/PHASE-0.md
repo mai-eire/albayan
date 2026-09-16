@@ -21,13 +21,13 @@ Definition of done for the phase: a new contributor can `git clone && pnpm insta
   Daily-work, fees and events tables are added in their own phases, not now.
   DoD: migration generated and applied; types exported; constraints verified by an integration test that violates each one.
 
-- [ ] **5. Email transport** — `lib/email/transport.ts` with `file` (writes `.dev/mail/<ts>-<subject>.html`, logs a line with any link) and `resend` implementations; React Email base template.
+- [x] **5. Email transport** — `lib/email/transport.ts` with `file` (writes `.dev/mail/<ts>-<subject>.html`, logs a line with any link) and `resend` implementations; React Email base template.
   DoD: `pnpm test` exercises the file transport; no Resend key needed locally.
 
-- [ ] **6. Better Auth** — email/password + username plugin, Drizzle adapter, cookie sessions; pages: `/login` (accepts email *or* student ID), `/logout`, `/forgot-password`, `/reset-password`, `/invite/[token]`; forced password change flag for OTP accounts.
+- [x] **6. Better Auth** — email/password + username plugin, Drizzle adapter, cookie sessions; pages: `/login` (accepts email *or* student ID), `/logout`, `/forgot-password`, `/reset-password`, `/invite/[token]`; forced password change flag for OTP accounts.
   DoD: login/logout works; reset email lands in `.dev/mail/` and the link works.
 
-- [ ] **7. Bootstrap admin** — `pnpm bootstrap-admin --email … --name …` creates the first admin (idempotent). No public admin signup exists anywhere.
+- [x] **7. Bootstrap admin** — `pnpm bootstrap-admin --email … --name …` creates the first admin (idempotent). No public admin signup exists anywhere.
   DoD: fresh DB → script → login as admin.
 
 - [ ] **8. Role derivation + routing** — `getCurrentUser()` loads user + optional guardian/teacher/student rows once per request; `/` redirects to the user's (first) area; route-group layouts guard `/admin`, `/teach`, `/family`, `/student`; role switcher in the top bar for multi-role users.
@@ -61,6 +61,9 @@ Definition of done for the phase: a new contributor can `git clone && pnpm insta
 - `@playwright/test` was added in task 2 (ahead of task 13) to screenshot pages in both colour schemes and at phone width against the installed Chrome (`channel: "chrome"`, no browser download).
 - **Integration tests use `getPlatformProxy`** (wrangler → Miniflare in-process) with a temp `persist` dir and the `drizzle/*.sql` migrations applied by hand (`test/db.ts`), instead of `@cloudflare/vitest-pool-workers`. Same D1 implementation, plain Node test runner, one dependency fewer. Revisit only if a test needs Workers-runtime APIs.
 - **Better Auth tables** use ISO-text timestamps via a custom Drizzle type (`isoDate` in `lib/db/columns.ts`) so the whole DB stays readable; Better Auth sees `Date`s. Password hashes live in `accounts.password` (Better Auth's layout), not on `users` as PLAN §4 sketched. Column names are snake_case in SQLite (`casing: "snake_case"`), camelCase in TypeScript.
+- **Better Auth needs an email on every user.** Students who have none get a synthetic unique address, `<studentid>@students.invalid`, set on approval (Phase 1); it is never shown or emailed. Student ID doubles as the Better Auth username (case-insensitive, hyphens allowed).
+- **Invites** are our own tokens in Better Auth's `verifications` table (`lib/invites.ts`), seven-day expiry, single use; accepting sets the password through Better Auth's internal adapter and signs the user in. Temporary passwords (`lib/passwords.ts`) set `users.mustChangePassword`; `/change-password` clears it. Task 8 enforces the redirect globally.
+- `"type": "module"` in package.json so `tsx` scripts (`pnpm bootstrap-admin`) see the schema's `export *` re-exports.
 - **vinext is on the checkpoint list.** `create-cloudflare` now offers two Next.js paths: `vinext` (Cloudflare's Vite-based Next runtime, marked "recommended") and the OpenNext adapter. We scaffolded with `--variant=opennext` as planned; task 15 compares against vinext as well as React Router v7.
 - Tooling: pnpm 10 via corepack (`packageManager` pinned); `pnpm check` = ESLint (flat configs from `eslint-config-next`) + `tsc` + Prettier (Markdown excluded so docs aren't reflowed); `cloudflare-env.d.ts` is committed and generated env-only (`--include-runtime=false`) with runtime types from `@cloudflare/workers-types`; `agentRules: false` in `next.config.ts` because `next dev` otherwise appends a block to `CLAUDE.md`.
 

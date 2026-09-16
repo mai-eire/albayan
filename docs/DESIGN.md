@@ -126,6 +126,10 @@ Worked example — teacher Today page: eyebrow with the date, "Good morning, Mar
 
 Staff screens (admin, teacher) may use tables and `size="sm"` controls. Family and student screens use lists and cards, `size="md"` controls, and 44px minimum touch targets on primary actions.
 
+### 3.5 Sign-in pages
+
+Login, password reset, invite and change-password share one layout: no shell, the school mark and name centred at the top, then a single bordered card `maw={420}` on the ground colour holding the form, its one primary action and a short helper line. Links out of the form ("Forgotten your password?", "Back to sign in") are `Anchor size="sm"` under the card. Errors from the server show inline above the button in a `clay` light `Alert`, never a toast — the person is looking at the form.
+
 ---
 
 ## 4. Components

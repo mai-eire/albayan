@@ -46,7 +46,8 @@ export function resendTransport(apiKey: string, from: string): Transport {
   };
 }
 
-// EMAIL_TRANSPORT=resend needs RESEND_API_KEY and EMAIL_FROM; anything else writes files.
+// EMAIL_TRANSPORT=resend needs RESEND_API_KEY and EMAIL_FROM; anything else writes files
+// (to EMAIL_DIR, default .dev/mail).
 type EmailEnv = Record<string, string | undefined>;
 
 export function transportFromEnv(env: EmailEnv = process.env): Transport {
@@ -56,5 +57,5 @@ export function transportFromEnv(env: EmailEnv = process.env): Transport {
     }
     return resendTransport(env.RESEND_API_KEY, env.EMAIL_FROM);
   }
-  return fileTransport();
+  return fileTransport(env.EMAIL_DIR);
 }

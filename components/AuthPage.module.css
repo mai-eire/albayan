@@ -1,0 +1,5 @@
+.main {
+  min-height: 100dvh;
+  background: var(--app-ground);
+  padding: var(--mantine-spacing-xl) var(--mantine-spacing-md);
+}

@@ -8,6 +8,9 @@ export type ActionResult<T = void> =
 
 type Context = { user: CurrentUser; db: Db };
 
+// A handler's own "no": shown to the person as the form error, not thrown to Next.
+export class ActionError extends Error {}
+
 // Every write is a server action shaped like this: Zod parse → handler (which does its own
 // access check with lib/access, then writes, audits, notifies) → a typed result the form
 // can show. Anything unexpected still throws, so Next reports it.
@@ -30,7 +33,9 @@ export function action<Schema extends z.ZodType, Output>(
     try {
       return { ok: true, data: await handler(parsed.data, { user, db: await db() }) };
     } catch (error) {
-      if (error instanceof AccessDenied) return { ok: false, error: error.message };
+      if (error instanceof AccessDenied || error instanceof ActionError) {
+        return { ok: false, error: error.message };
+      }
       throw error;
     }
   };

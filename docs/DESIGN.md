@@ -170,7 +170,7 @@ Buttons say what happens: "Publish homework", "Submit register", "Record payment
 
 ### 4.7 Forms
 
-Mantine form components with `@mantine/form`. Labels above fields, required marked with the Mantine asterisk, description below the label, errors inline under the field. Field widths: `Group grow` for pairs, full width otherwise. Dates: `DateInput valueFormat="ddd D MMM YYYY"`. Money: `NumberInput` with `€` prefix, `decimalScale={2}`, backed by `lib/money.ts`. Selects use `allowDeselect={false}` when a value is required. Multi-step forms (registration wizard) use `Stepper` with a review step.
+Mantine form components with `@mantine/form`. Labels above fields, required marked with the Mantine asterisk, description below the label, errors inline under the field. Field widths: `Group grow` for pairs, full width otherwise. Dates: `DateField` (a `DateInput` preset to `valueFormat="ddd D MMM YYYY"` that also parses typed "19 Sep 2026", "19/9/2026" and ISO). Money: `NumberInput` with `€` prefix, `decimalScale={2}`, backed by `lib/money.ts`. Selects use `allowDeselect={false}` when a value is required. Multi-step forms (registration wizard) use `Stepper` with a review step.
 
 Sensitive fields (ethnicity, languages, reasons) are grouped under their own heading with the standard explanation copy (§7) and are always optional with "Prefer not to say".
 
@@ -238,4 +238,4 @@ Before building anything not covered here:
 
 A pull request that adds a hex value, a bare `style={{ fontSize }}`, a new colour meaning or a one-off component without touching this document is incomplete.
 
-Shared component inventory (created as needed, listed here when they exist). Existing: `Shell` (app shell with the four navigation sets, role switcher, colour-scheme toggle), `AuthPage`, `PageHeader`, `CardTitle`, `StatTile`, `StatusBadge`, `SubjectBadge`, `EmptyState`, `EntityList`, `ChildSwitcher`, `DirectionalIcon`, `MoneyText` (`lib/money.ts`), `DateText` (server-only; reads the school timezone), `SensitiveSection` (carries the standard sentence), `FormError`, `LinkButton`, `toast`.
+Shared component inventory (created as needed, listed here when they exist). Existing: `Shell` (app shell with the four navigation sets, role switcher, colour-scheme toggle), `AuthPage`, `PageHeader`, `CardTitle`, `StatTile`, `StatusBadge`, `SubjectBadge`, `EmptyState`, `EntityList`, `ChildSwitcher`, `DirectionalIcon`, `MoneyText` (`lib/money.ts`), `DateText` (server-only; reads the school timezone), `SensitiveSection` (carries the standard sentence), `FormError`, `LinkButton`, `AppLink` (both exist because Server Components can't pass `component={Link}` to Mantine), `toast`, `confirmDestructive`. In Server Components use Mantine's named parts (`TableThead`, `TableTr`…) rather than `Table.Thead`, which don't cross the boundary.

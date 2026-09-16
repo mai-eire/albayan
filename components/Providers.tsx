@@ -1,6 +1,7 @@
 "use client";
 
 import { MantineProvider } from "@mantine/core";
+import { ModalsProvider } from "@mantine/modals";
 import { Notifications } from "@mantine/notifications";
 import { cssVariablesResolver, theme } from "@/lib/theme";
 
@@ -12,7 +13,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       defaultColorScheme="auto"
     >
       <Notifications position="top-right" autoClose={4000} />
-      {children}
+      <ModalsProvider>{children}</ModalsProvider>
     </MantineProvider>
   );
 }

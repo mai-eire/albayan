@@ -5,7 +5,12 @@ import { getPlatformProxy } from "wrangler";
 import { dbFor, type Db } from "@/lib/db";
 
 // A throwaway local D1 (Miniflare, in-process, no network) with all migrations applied.
-export async function testDb(): Promise<{ db: Db; d1: D1Database; dispose: () => Promise<void> }> {
+export async function testDb(): Promise<{
+  db: Db;
+  d1: D1Database;
+  bucket: R2Bucket;
+  dispose: () => Promise<void>;
+}> {
   const dir = mkdtempSync(join(tmpdir(), "albayan-d1-"));
   const proxy = await getPlatformProxy<CloudflareEnv>({ persist: { path: dir } });
   const d1 = proxy.env.DB;
@@ -21,6 +26,7 @@ export async function testDb(): Promise<{ db: Db; d1: D1Database; dispose: () =>
   return {
     db: dbFor(d1),
     d1,
+    bucket: proxy.env.BUCKET,
     dispose: async () => {
       await proxy.dispose();
       rmSync(dir, { recursive: true, force: true });

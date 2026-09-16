@@ -1,17 +1,13 @@
-import { requireAdmin } from "@/lib/access";
+import { isStaff } from "@/lib/access";
 import { getCurrentUser } from "@/lib/current-user";
 import { maxFileBytes, putFile, safeFilename } from "@/lib/storage/bucket";
 
-// Upload: raw body, Content-Type and X-File-Name headers. Returns the key to store on the
-// resource row. Admin-only until resources exist (Phase 2 widens this to teachers).
+// Upload: raw body, Content-Type and X-File-Name headers. Returns the key that the
+// createResource action then stores; until that row exists only admin can fetch it.
 export async function POST(request: Request) {
   const user = await getCurrentUser();
   if (!user) return Response.json({ error: "Sign in to upload files." }, { status: 401 });
-  try {
-    requireAdmin(user);
-  } catch {
-    return Response.json({ error: "You can't upload files." }, { status: 403 });
-  }
+  if (!isStaff(user)) return Response.json({ error: "You can't upload files." }, { status: 403 });
 
   const declared = Number(request.headers.get("content-length") ?? 0);
   if (declared > maxFileBytes) return tooLarge();

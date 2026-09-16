@@ -11,7 +11,7 @@ Live document. Updated at the end of every work session, in the same commit as t
 | Planning | Requirements, architecture, stack, UI library, design language | ✅ Done | — |
 | 0 — Foundation | Offline dev loop, schema v1, auth, roles, access layer, seed, CI, Cloudflare staging | ✅ Done (deploy deferred) | [PHASE-0.md](PHASE-0.md) |
 | 1 — Registration & setup | Guardian signup, applications, approvals, academics setup, timetable, staff invites | ✅ Done | [PHASE-1.md](PHASE-1.md) |
-| 2 — Daily workflows | Teacher Today, registers, homework, notes, resources, family/student views, notifications | 🔄 In progress (5/13) | [PHASE-2.md](PHASE-2.md) |
+| 2 — Daily workflows | Teacher Today, registers, homework, notes, resources, family/student views, notifications | 🔄 In progress (6/13) | [PHASE-2.md](PHASE-2.md) |
 | 3 — Fees, events, reports | Fees & payments, events with consent, reports, audit viewer, year rollover, GDPR actions | ⬜ | — |
 | Later | Stripe, PTM slots, Arabic/RTL, SMS, co-teachers, per-class schedules | — | — |
 
@@ -21,9 +21,9 @@ Phase scope and rationale: [PLAN.md §17](PLAN.md). Definition of done for the c
 
 Phase 2, in order:
 
-1. Task 5 — resources (teacher uploads through `/api/files`, one target each).
-2. Task 6 — notes with visibility.
-3. Task 7–8 — class page tabs, family/student daily views.
+1. Task 6 — notes with visibility.
+2. Task 7 — teacher class page tabs (attendance summary, homework, resources) and student page extras.
+3. Task 8 — family/student daily views (attendance, homework, notes, resources).
 
 ## Blocked / undecided
 
@@ -33,6 +33,7 @@ Phase 2, in order:
 
 ## Recently done
 
+- 2026-09-16 — Phase 2 task 5: resources — `canViewResource` (audience, then school-wide / class / student connection) with `loadResourceViewer`; uploads open to staff, downloads gated by the owning resource; `/admin/resources` (school-wide), `/teach/resources` (share with a class, attach to homework); class/homework shares notify the class; `ResourceForm`/`ResourceList`; route tests for family-of-the-class vs another family, audience and the 25 MB cap.
 - 2026-09-16 — Phase 2 task 4: homework — `/teach/homework` with add/edit/publish/delete on the (class, subject) pairs I teach (`teachesSubjectIn`), drafts invisible to families, publishing notifies the class's guardians and students once (in-app + `NoticeEmail`); `lib/homework.ts` status and due labels with tests.
 - 2026-09-16 — Phase 2 task 3: `/admin/attendance?date=` — every class that day with students, absences and taken/not taken; drill in to view or correct a register (shares the teacher's editor; past-day changes audited, including newly created rows); the dashboard's "Registers missing" tile is real.
 - 2026-09-16 — Phase 2 task 2: registers — `/teach/attendance` (today's classes, taken/not taken) → tap-to-cycle register with notes and one save; `canEditRegister` (same day for the class's teachers, admin any day, audited after the day); new absences notify guardians, email only if the school's absence-emails toggle is on; `register` status domain.

@@ -1,0 +1,20 @@
+.row {
+  padding-block: var(--mantine-spacing-sm);
+  border-block-end: 1px solid var(--mantine-color-default-border);
+  align-items: flex-start;
+}
+
+.row:last-child {
+  border-block-end: none;
+}
+
+.icon {
+  flex: none;
+  margin-block-start: 2px;
+  color: var(--mantine-color-dimmed);
+}
+
+.body {
+  flex: 1;
+  min-width: 0;
+}

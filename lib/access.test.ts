@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   canEditRegister,
+  canViewResource,
   AccessDenied,
   canViewStudent,
   isGuardianOf,
@@ -143,5 +144,40 @@ describe("canEditRegister", () => {
     expect(canEditRegister(otherTeacher, level2, "2026-09-19", "2026-09-19")).toBe(false);
     expect(canEditRegister(formerTeacher, level2, "2026-09-19", "2026-09-19")).toBe(false);
     expect(canEditRegister(admin, level2, "2026-09-12", "2026-09-19")).toBe(true);
+  });
+});
+
+describe("canViewResource", () => {
+  const forAll = {
+    audience: "students_and_guardians" as const,
+    isSchoolWide: false,
+    classId: 100,
+    studentId: null,
+  };
+  const viewer = { classIds: [100], studentIds: [30] };
+  const stranger = { classIds: [], studentIds: [] };
+  it("checks the audience before the target", () => {
+    const staffOnly = { ...forAll, audience: "staff_only" as const };
+    expect(canViewResource(mother, staffOnly, viewer)).toBe(false);
+    expect(canViewResource(self, staffOnly, viewer)).toBe(false);
+    expect(canViewResource(quranTeacher, staffOnly, viewer)).toBe(true);
+    const parentsOnly = { ...forAll, audience: "guardians_only" as const };
+    expect(canViewResource(self, parentsOnly, viewer)).toBe(false);
+    expect(canViewResource(mother, parentsOnly, viewer)).toBe(true);
+  });
+  it("needs a connection to the class or student unless school-wide or admin", () => {
+    expect(canViewResource(mother, forAll, viewer)).toBe(true);
+    expect(canViewResource(mother, forAll, stranger)).toBe(false);
+    expect(
+      canViewResource(otherParent, { ...forAll, isSchoolWide: true, classId: null }, stranger),
+    ).toBe(true);
+    expect(canViewResource(self, { ...forAll, classId: null, studentId: 30 }, viewer)).toBe(true);
+    expect(
+      canViewResource(otherStudent, { ...forAll, classId: null, studentId: 30 }, stranger),
+    ).toBe(false);
+    expect(canViewResource(admin, forAll, stranger)).toBe(true);
+    expect(canViewResource(formerTeacher, { ...forAll, audience: "staff_only" }, viewer)).toBe(
+      false,
+    );
   });
 });

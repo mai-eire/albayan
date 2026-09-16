@@ -12,6 +12,7 @@ import type { HomeworkRow, HomeworkTarget } from "@/lib/db/queries/homework";
 import { dueLabel, homeworkStatus } from "@/lib/homework";
 import { deleteHomework } from "./actions";
 import { HomeworkForm } from "./HomeworkForm";
+import { ResourceForm } from "@/components/ResourceForm";
 
 export function HomeworkTable({
   rows,
@@ -26,6 +27,7 @@ export function HomeworkTable({
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState<HomeworkRow | null>(null);
+  const [attaching, setAttaching] = useState<HomeworkRow | null>(null);
 
   const remove = (row: HomeworkRow) =>
     confirmDestructive({
@@ -90,6 +92,7 @@ export function HomeworkTable({
                     <Menu.Item onClick={() => setEditing(row)}>
                       {row.publishedAt ? "Edit" : "Edit or publish"}
                     </Menu.Item>
+                    <Menu.Item onClick={() => setAttaching(row)}>Attach a file or link</Menu.Item>
                     <Menu.Item color="clay" onClick={() => remove(row)}>
                       Delete
                     </Menu.Item>
@@ -100,6 +103,18 @@ export function HomeworkTable({
           ))}
         </Table.Tbody>
       </Table>
+      <Modal
+        opened={attaching !== null}
+        onClose={() => setAttaching(null)}
+        title={attaching ? `Attach to "${attaching.title}"` : ""}
+      >
+        {attaching && (
+          <ResourceForm
+            target={{ kind: "homework", homeworkId: attaching.id }}
+            onDone={() => setAttaching(null)}
+          />
+        )}
+      </Modal>
       <Modal
         opened={editing !== null}
         onClose={() => setEditing(null)}

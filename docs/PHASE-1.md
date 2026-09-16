@@ -12,7 +12,7 @@ Definition of done: on a seeded DB, an admin can create a new session, edit its 
 
 - [x] **2. Academic years & terms** — `/admin/academics`: years list, create/edit year (dates, standard fee, mark current), terms per year. Actions audited. DoD: admin creates 2027-28 with three terms; "current" moves; validation on overlapping dates.
 
-- [ ] **3. Subjects** — same page, tab: list, add, rename, deactivate. Subject colour from `lib/subjects.ts`. DoD: new subject appears in the schedule editor's subject picker.
+- [x] **3. Subjects** — same page, tab: list, add, rename, deactivate. Subject colour from `lib/subjects.ts`. DoD: new subject appears in the schedule editor's subject picker.
 
 - [ ] **4. Sessions & schedule editor** — sessions per year (name, weekday, start time, active); per session the ordered periods (subject or title, minutes, drag/arrow reorder) with the live computed timeline (10:00 Quran · 10:50 Arabic …). DoD: computed times match `lib/timetable.ts` unit tests; deleting a session with classes is refused.
 

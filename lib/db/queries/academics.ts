@@ -1,6 +1,6 @@
 import { asc, count, desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { academicYears, terms } from "@/lib/db/schema";
+import { academicYears, subjects, terms } from "@/lib/db/schema";
 
 export type YearRow = typeof academicYears.$inferSelect & { termCount: number };
 export type Term = typeof terms.$inferSelect;
@@ -30,4 +30,10 @@ export async function getYear(id: string) {
 
 export async function getCurrentYear() {
   return (await db()).query.academicYears.findFirst({ where: eq(academicYears.isCurrent, true) });
+}
+
+export type Subject = typeof subjects.$inferSelect;
+
+export async function listSubjects(): Promise<Subject[]> {
+  return (await db()).select().from(subjects).orderBy(desc(subjects.isActive), asc(subjects.name));
 }

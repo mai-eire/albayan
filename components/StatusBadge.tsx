@@ -21,6 +21,11 @@ const statuses = {
     declined: ["clay", "Declined"],
     inactive: ["gray", "Inactive"],
   },
+  // Anything that can be switched off: subjects, teachers, sessions.
+  record: {
+    active: ["tile", "Active"],
+    inactive: ["gray", "Inactive"],
+  },
   homework: {
     due_later: ["gray", "Due later"],
     due_soon: ["saffron", "Due soon"],

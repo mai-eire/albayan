@@ -2,7 +2,7 @@
 
 Live document. Updated at the end of every work session, in the same commit as the work. Keep it under ~50 lines; detail belongs in the phase checklists.
 
-**Last updated:** 2026-09-16 · **Current phase:** 1 — Registration & setup (starting)
+**Last updated:** 2026-09-16 · **Current phase:** 2 — Daily workflows (starting)
 
 ## Phases
 
@@ -10,8 +10,8 @@ Live document. Updated at the end of every work session, in the same commit as t
 |---|---|---|---|
 | Planning | Requirements, architecture, stack, UI library, design language | ✅ Done | — |
 | 0 — Foundation | Offline dev loop, schema v1, auth, roles, access layer, seed, CI, Cloudflare staging | ✅ Done (deploy deferred) | [PHASE-0.md](PHASE-0.md) |
-| 1 — Registration & setup | Guardian signup, applications, approvals, academics setup, timetable, staff invites | 🔄 In progress (13/14) | [PHASE-1.md](PHASE-1.md) |
-| 2 — Daily workflows | Teacher Today, registers, homework, notes, resources, family/student views, notifications | ⬜ | — |
+| 1 — Registration & setup | Guardian signup, applications, approvals, academics setup, timetable, staff invites | ✅ Done | [PHASE-1.md](PHASE-1.md) |
+| 2 — Daily workflows | Teacher Today, registers, homework, notes, resources, family/student views, notifications | ⬜ Next (0/13) | [PHASE-2.md](PHASE-2.md) |
 | 3 — Fees, events, reports | Fees & payments, events with consent, reports, audit viewer, year rollover, GDPR actions | ⬜ | — |
 | Later | Stripe, PTM slots, Arabic/RTL, SMS, co-teachers, per-class schedules | — | — |
 
@@ -19,9 +19,11 @@ Phase scope and rationale: [PLAN.md §17](PLAN.md). Definition of done for the c
 
 ## Now
 
-Phase 1, in order:
+Phase 2, in order:
 
-1. Task 14 — end-to-end flow (register → apply → approve → student signs in; teacher blocked), then PHASE-2.md.
+1. Task 0 — schema v2 (attendance, homework, notes, resources).
+2. Task 1 — Teacher Today with computed lesson times.
+3. Task 2–3 — registers and the admin attendance page.
 
 ## Blocked / undecided
 
@@ -31,6 +33,7 @@ Phase 1, in order:
 
 ## Recently done
 
+- 2026-09-16 — Phase 1 closed. Task 14: `e2e/journey.spec.ts` runs register → confirm → apply → approve → student signs in with the emailed password and sees the timetable → a Saturday teacher gets 404 on the Sunday child; Playwright now runs one worker. PHASE-2.md written from PLAN §17.
 - 2026-09-16 — Phase 1 task 13: `lib/notify.ts` — every notification is an in-app row, the email runs after the response (`after()` → waitUntil) only if the person's email preference allows; approve/decline use it; the bell shows the unread count in every area; preference gate tested.
 - 2026-09-16 — Phase 1 task 12: `/family` children list → `/family/[id]` with `ChildSwitcher` and Overview (next class, application status, fee) · Details · Timetable; `/family/account` (details, emergency contact, sensitive info, email toggle — `users.emailNotifications`, migration 0002); `/student` home with the next class and `/student/timetable`; `getStudentForGuardian`/`getStudentForStudent` tested; `nextDateOn`/`relativeDay` in `lib/time.ts`.
 - 2026-09-16 — Phase 1 task 11: `/teach/classes` (my classes with day, what I teach, count) → class page with roster (age, Arabic, allergy/medical flags) and the class timetable; `/teach/students/[id]` limited profile; `lib/db/queries/teach.ts` with a test that logs the SQL and fails if any sensitive column is ever selected; `canViewStudent`/`teachesClass` enforced with 404s; `ClassTimetable` component.

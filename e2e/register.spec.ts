@@ -1,16 +1,5 @@
-import { readdirSync, readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
-
-// The e2e server writes emails to .dev/e2e-mail (playwright.config.ts).
-function latestEmail(subjectSlug: string) {
-  const dir = ".dev/e2e-mail";
-  const file = readdirSync(dir)
-    .filter((f) => f.includes(subjectSlug))
-    .sort()
-    .at(-1);
-  if (!file) throw new Error(`No email matching ${subjectSlug} in ${dir}`);
-  return readFileSync(`${dir}/${file}`, "utf8").replace(/&amp;/g, "&");
-}
+import { latestEmail } from "./mail";
 
 test("a guardian registers, confirms their email and can register a child", async ({ page }) => {
   await page.goto("/login");
@@ -28,7 +17,9 @@ test("a guardian registers, confirms their email and can register a child", asyn
     0,
   );
 
-  const link = latestEmail("confirm-your-email").match(/href="(http[^"]*verify-email[^"]*)"/)?.[1];
+  const link = latestEmail("confirm-your-email", "Nadia").match(
+    /href="(http[^"]*verify-email[^"]*)"/,
+  )?.[1];
   expect(link).toBeTruthy();
   await page.goto(link!);
 

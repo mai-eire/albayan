@@ -3,17 +3,11 @@
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { optionalText } from "@/lib/fields";
 import { requireAdmin } from "@/lib/access";
 import { action, ActionError } from "@/lib/actions";
 import { audit, diff } from "@/lib/audit";
 import { arabicProficiencies, genders, students } from "@/lib/db/schema";
-
-const optionalText = (max: number) =>
-  z
-    .string()
-    .trim()
-    .max(max)
-    .transform((v) => v || null);
 
 const detailsSchema = z.object({
   id: z.number().int(),

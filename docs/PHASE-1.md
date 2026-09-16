@@ -34,13 +34,19 @@ Definition of done: on a seeded DB, an admin can create a new session, edit its 
 
 - [x] **13. Notifications helper** — `lib/notify.ts`: `notify(db, { userId, type, title, body, href })` writes the row and, if the user's email preference allows, sends the matching email via `waitUntil`. Used by approve/decline and invites. Bell shows the unread count; the list UI is Phase 2. DoD: unit test for the preference gate.
 
-- [ ] **14. E2E + roadmap** — Playwright flow: register → verify → apply → admin approves → student logs in with the emailed password → timetable visible; teacher blocked from a student outside their classes. Roadmap and PLAN kept current; PHASE-2.md created at the end.
+- [x] **14. E2E + roadmap** — Playwright flow: register → verify → apply → admin approves → student logs in with the emailed password → timetable visible; teacher blocked from a student outside their classes. Roadmap and PLAN kept current; PHASE-2.md created at the end.
 
 ## Decisions to make during Phase 1
 
-- Student ID format: `ALB-26-0042` = prefix, two-digit start year of the academic year, four-digit sequence per year. Sequence source: `max(studentId)` for the year under the approve action (single-writer D1 makes this safe).
-- Email verification: Better Auth `emailVerification.sendOnSignUp`; applications require `users.emailVerified`.
-- Whether to keep the wizard state client-side (single client component with `Stepper`) or per-step server round trips. Recommendation: client-side, one action on submit.
+All settled 2026-09-16:
+
+- Student ID format: `ALB-26-0042` = prefix, two-digit start year of the academic year, four-digit sequence per year. Sequence source: `max(studentId)` for the year under the approve action (`lib/student-ids.ts`; single-writer D1 makes this safe).
+- Email verification: the register action sends the first email explicitly and `/family` offers a resend; applications require `users.emailVerified`. Better Auth takes its base URL from the request in dev (`lib/app-url.ts`) so links built by server-side api calls are absolute.
+- Wizard state is client-side (one `Stepper` component); each step validates with the same Zod schema the action applies; one action on submit.
+- Declining stores the reason in `students.declinedReason` (migration 0001); the family's own notes are never overwritten.
+- Email preference is one `users.emailNotifications` flag (migration 0002), edited on `/family/account`, honoured by `lib/notify.ts`.
+- Inviting an email that already has an account adds the role without an email; admin access can only be revoked by another admin.
+- Playwright runs with one worker: the specs share one dev server and one local D1.
 
 ## Explicitly not in Phase 1
 

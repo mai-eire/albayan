@@ -1,15 +1,9 @@
 import { z } from "zod";
+import { optionalText } from "@/lib/fields";
 import { arabicProficiencies, genders, registrationReasons, relationships } from "@/lib/db/schema";
 
 // One schema per wizard step, so the client can validate a step before moving on with the
 // same rules the action applies to the whole thing.
-const optionalText = (max: number) =>
-  z
-    .string()
-    .trim()
-    .max(max)
-    .transform((v) => v || null);
-
 export const guardianStepSchema = z.object({
   relationship: z.enum(relationships, { message: "Tell us how you're related to the child" }),
   addressLine1: z.string().trim().min(1, "Enter your address").max(120),

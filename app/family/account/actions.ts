@@ -3,18 +3,12 @@
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { optionalText } from "@/lib/fields";
 import { requireGuardian } from "@/lib/access";
 import { action } from "@/lib/actions";
 import { audit, diff } from "@/lib/audit";
 import { guardians, registrationReasons, users } from "@/lib/db/schema";
 import { routingKey } from "@/lib/demographics";
-
-const optionalText = (max: number) =>
-  z
-    .string()
-    .trim()
-    .max(max)
-    .transform((v) => v || null);
 
 const schema = z.object({
   name: z.string().trim().min(2, "Enter your name").max(80),

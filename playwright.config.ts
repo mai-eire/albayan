@@ -7,6 +7,8 @@ const port = 3210;
 export default defineConfig({
   testDir: "e2e",
   timeout: 30_000,
+  // One shared dev server and one local D1: parallel specs made requests hang under load.
+  workers: 1,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? "github" : "list",
   use: {

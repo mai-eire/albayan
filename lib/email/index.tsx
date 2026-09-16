@@ -3,6 +3,7 @@ import { AbsenceEmail } from "./templates/Absence";
 import { ApprovedEmail } from "./templates/Approved";
 import { DeclinedEmail } from "./templates/Declined";
 import { InviteEmail } from "./templates/Invite";
+import { NoticeEmail } from "./templates/Notice";
 import { PasswordResetEmail } from "./templates/PasswordReset";
 import { VerifyEmail } from "./templates/VerifyEmail";
 
@@ -84,5 +85,17 @@ export function sendAbsence(
     to: to.email,
     subject: `${details.childName} was marked absent`,
     body: <AbsenceEmail schoolName={schoolName} name={to.name} {...details} />,
+  });
+}
+
+export function sendNotice(
+  to: { email: string; name: string },
+  details: { title: string; body: string; url: string },
+  schoolName: string,
+) {
+  return sendEmail({
+    to: to.email,
+    subject: details.title,
+    body: <NoticeEmail schoolName={schoolName} name={to.name} {...details} />,
   });
 }

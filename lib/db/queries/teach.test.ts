@@ -6,6 +6,7 @@ import {
   enrolments,
   guardians,
   schoolSessions,
+  sessionPeriods,
   studentGuardians,
   students,
   subjects,
@@ -24,7 +25,8 @@ vi.mock("@/lib/db", async (importOriginal) => ({
   db: async () => db,
 }));
 
-const { getClassForTeacher, getStudentForTeacher, listClassesForTeacher } = await import("./teach");
+const { getClassForTeacher, getStudentForTeacher, listClassesForTeacher, listLessonsForTeacher } =
+  await import("./teach");
 
 // Every column a teacher must never see (CLAUDE.md "Privacy is structural"), by table.
 const hidden = {
@@ -173,5 +175,51 @@ describe("teacher queries", () => {
     ]);
     expect(JSON.stringify([cls, mine])).not.toMatch(/SECRET/);
     assertNothingHidden();
+  });
+});
+
+describe("listLessonsForTeacher", () => {
+  it("lists my periods on that weekday with computed times and the register flag", async () => {
+    await db.insert(subjects).values({ id: "arabic", name: "Arabic" });
+    await db.insert(sessionPeriods).values([
+      { sessionId: 1, sortOrder: 0, subjectId: "quran", durationMinutes: 50 },
+      { sessionId: 1, sortOrder: 1, title: "Break", durationMinutes: 10 },
+      { sessionId: 1, sortOrder: 2, subjectId: "arabic", durationMinutes: 50 },
+    ]);
+    await db.insert(users).values({ id: 3, name: "Second Teacher", email: "s@example.com" });
+    await db.insert(teachers).values({ id: 2, userId: 3 });
+    await db
+      .insert(classes)
+      .values({ id: 2, academicYearId: "2026-27", sessionId: 1, name: "Level 2" });
+    await db.insert(teachingAssignments).values([
+      { classId: 1, subjectId: "arabic", teacherId: 2 },
+      { classId: 2, subjectId: "arabic", teacherId: 2 },
+    ]);
+
+    expect(await listLessonsForTeacher(1, "2026-27", 6)).toEqual([
+      expect.objectContaining({
+        className: "Level 1",
+        subjectName: "Quran",
+        startTime: "10:00",
+        endTime: "10:50",
+        canTakeRegister: true,
+      }),
+    ]);
+    // Teacher 2 teaches Arabic in both classes but leads neither and Arabic isn't first.
+    expect(await listLessonsForTeacher(2, "2026-27", 6)).toEqual([
+      expect.objectContaining({
+        className: "Level 1",
+        subjectName: "Arabic",
+        startTime: "11:00",
+        canTakeRegister: false,
+      }),
+      expect.objectContaining({
+        className: "Level 2",
+        subjectName: "Arabic",
+        startTime: "11:00",
+        canTakeRegister: false,
+      }),
+    ]);
+    expect(await listLessonsForTeacher(1, "2026-27", 3)).toEqual([]);
   });
 });

@@ -14,6 +14,7 @@ import {
   teachingAssignments,
   users,
 } from "@/lib/db/schema";
+import { timePeriods } from "@/lib/timetable";
 
 // Teacher-facing queries. Every select here lists its columns; nothing under the
 // "sensitive" rules in CLAUDE.md (ethnicity, languages, reasons, address, guardian
@@ -251,4 +252,99 @@ export async function getStudentForTeacher(id: number): Promise<StudentForTeache
     .where(eq(studentGuardians.studentId, id))
     .orderBy(asc(studentGuardians.isPrimaryContact));
   return { ...student, guardians: guardianRows.reverse() };
+}
+
+export type Lesson = {
+  classId: number;
+  className: string;
+  room: string | null;
+  sessionName: string;
+  subjectId: string;
+  subjectName: string;
+  startTime: string;
+  endTime: string;
+  // The teacher can take this class's register: class teacher, or teaches its first period.
+  canTakeRegister: boolean;
+};
+
+// My lessons on a weekday, in time order: every period of a session running that day whose
+// subject I teach in a class of that session.
+export async function listLessonsForTeacher(
+  teacherId: number,
+  academicYearId: string,
+  dayOfWeek: number,
+): Promise<Lesson[]> {
+  const d = await db();
+  const sessions = await d
+    .select({
+      id: schoolSessions.id,
+      name: schoolSessions.name,
+      startTime: schoolSessions.startTime,
+    })
+    .from(schoolSessions)
+    .where(
+      and(
+        eq(schoolSessions.academicYearId, academicYearId),
+        eq(schoolSessions.dayOfWeek, dayOfWeek),
+        eq(schoolSessions.isActive, true),
+      ),
+    );
+  if (!sessions.length) return [];
+  const sessionIds = sessions.map((s) => s.id);
+  const [periods, myClasses, assignments] = await Promise.all([
+    d
+      .select({
+        sessionId: sessionPeriods.sessionId,
+        subjectId: sessionPeriods.subjectId,
+        subjectName: subjects.name,
+        title: sessionPeriods.title,
+        durationMinutes: sessionPeriods.durationMinutes,
+      })
+      .from(sessionPeriods)
+      .leftJoin(subjects, eq(subjects.id, sessionPeriods.subjectId))
+      .where(inArray(sessionPeriods.sessionId, sessionIds))
+      .orderBy(asc(sessionPeriods.sortOrder)),
+    d
+      .select({
+        id: classes.id,
+        name: classes.name,
+        room: classes.room,
+        sessionId: classes.sessionId,
+        classTeacherId: classes.classTeacherId,
+      })
+      .from(classes)
+      .where(inArray(classes.sessionId, sessionIds)),
+    d
+      .select({ classId: teachingAssignments.classId, subjectId: teachingAssignments.subjectId })
+      .from(teachingAssignments)
+      .where(eq(teachingAssignments.teacherId, teacherId)),
+  ]);
+  const lessons: Lesson[] = [];
+  for (const session of sessions) {
+    const timed = timePeriods(
+      session.startTime,
+      periods.filter((p) => p.sessionId === session.id),
+    );
+    const firstSubject = timed.find((p) => p.subjectId)?.subjectId ?? null;
+    for (const cls of myClasses.filter((c) => c.sessionId === session.id)) {
+      const mine = assignments.filter((a) => a.classId === cls.id).map((a) => a.subjectId);
+      const canTakeRegister =
+        cls.classTeacherId === teacherId || (firstSubject !== null && mine.includes(firstSubject));
+      for (const p of timed) {
+        if (!p.subjectId || !mine.includes(p.subjectId)) continue;
+        lessons.push({
+          classId: cls.id,
+          className: cls.name,
+          room: cls.room,
+          sessionName: session.name,
+          subjectId: p.subjectId,
+          subjectName: p.subjectName ?? p.subjectId,
+          startTime: p.startTime,
+          endTime: p.endTime,
+          canTakeRegister,
+        });
+      }
+    }
+  }
+  return lessons.sort((a, b) => a.startTime.localeCompare(b.startTime));
 }

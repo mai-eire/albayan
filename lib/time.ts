@@ -56,3 +56,19 @@ export function relativeDay(date: string, today: string, timezone: string, short
   if (diff === 1) return "tomorrow";
   return `on ${short ? formatDate(date, timezone).split(" ")[0] : formatDate(date, timezone)}`;
 }
+
+// "10:35" in the school timezone, for "now" on the Today page and register deadlines.
+export function timeIn(timezone: string, now = new Date()): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: timezone,
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(now);
+}
+
+// Greeting by the hour in the school timezone.
+export function greeting(timezone: string, now = new Date()): string {
+  const hour = Number(timeIn(timezone, now).slice(0, 2));
+  return hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+}

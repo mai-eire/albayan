@@ -48,10 +48,21 @@ Definition of done for the phase: a new contributor can `git clone && pnpm insta
 - [x] **13. Tests** — Vitest unit; Vitest workers pool integration on a throwaway local D1; Playwright with one smoke flow (admin logs in, sees dashboard shell). `pnpm test` runs unit + integration; `pnpm test:e2e` runs Playwright.
   DoD: all green offline; CI-ready.
 
-- [ ] **14. CI + Cloudflare** — GitHub Actions: `pnpm check` + `pnpm test` on PRs; deploy job on `main`: `wrangler d1 migrations apply` (staging then prod, remote) → `opennextjs-cloudflare deploy`. Create Worker, D1 (prod + staging), R2 buckets, `wrangler.toml` envs, secrets (`RESEND_API_KEY`, `BETTER_AUTH_SECRET`).
+- [~] **14. CI + Cloudflare** (workflows and Wrangler envs done; resources, secrets and first deploy need the Cloudflare account) — GitHub Actions: `pnpm check` + `pnpm test` on PRs; deploy job on `main`: `wrangler d1 migrations apply` (staging then prod, remote) → `opennextjs-cloudflare deploy`. Create Worker, D1 (prod + staging), R2 buckets, `wrangler.toml` envs, secrets (`RESEND_API_KEY`, `BETTER_AUTH_SECRET`).
   DoD: staging URL serves `/login`; migrations applied remotely.
 
 - [ ] **15. OpenNext checkpoint** — write a short note in this file: what (if anything) hurt (build times, unsupported features, dev-binding quirks). Decide: stay on Next.js or move to React Router v7 before any feature code. Record the decision in PLAN §1.
+
+## OpenNext checkpoint (task 15) — note written 2026-09-16, decision pending
+
+What the adapter cost during tasks 1–14:
+
+- **Nothing blocking.** Every planned piece works: D1 + R2 bindings in `next dev` through Miniflare, server actions, route handlers, streaming downloads, Better Auth, `next/font`, Server Components reading the DB. `opennextjs-cloudflare build` takes ~9 s; the Worker serves every route under `wrangler dev` identically to `next dev`.
+- **Small frictions, none OpenNext-specific:** functions can't cross the Server → Client Component boundary (needed `Providers` and `LinkButton`); `getCloudflareContext` must be awaited in the async form; Next 16 allows one dev server per build dir (e2e uses its own `distDir`); `next dev` writes to `CLAUDE.md` unless `agentRules: false`; Wrangler typegen makes vars literal types unless `--strict-vars=false`.
+- **Not yet exercised:** a real deploy, D1 remote migrations, `waitUntil` for email dispatch, cron. These are the same on any framework choice on Workers.
+- **vinext** (Cloudflare's Vite-based Next runtime, marked "recommended" by `create-cloudflare`) would remove the OpenNext build step but is young and changes the dev story; **React Router v7** would mean rewriting the auth pages, actions and layouts already built.
+
+Recommendation: **stay on Next.js + OpenNext.** Revisit only if the first real deploy (task 14, second half) surfaces something the local runs could not.
 
 ## Decisions to make during Phase 0 (small, record them here)
 

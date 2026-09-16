@@ -177,3 +177,69 @@ describe("schema v1 constraints", () => {
     expect(g.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
   });
 });
+
+describe("schema v2 constraints", () => {
+  it("allows one attendance row per student per day", async () => {
+    const row = { studentId: 1, classId: 1, date: "2026-09-19", recordedByUserId: 2 };
+    await db.insert(s.attendance).values(row);
+    await fails(db.insert(s.attendance).values({ ...row, status: "absent" }), /UNIQUE/);
+    await fails(
+      db.insert(s.attendance).values({ ...row, date: "2026-09-26", status: "asleep" as "late" }),
+      /attendance_status/,
+    );
+  });
+
+  it("CHECK-constrains note category and visibility", async () => {
+    await db
+      .insert(s.studentNotes)
+      .values({ studentId: 1, authorUserId: 2, body: "Great reading" });
+    await fails(
+      db
+        .insert(s.studentNotes)
+        .values({ studentId: 1, authorUserId: 2, body: "x", category: "gossip" as "general" }),
+      /student_notes_category/,
+    );
+    await fails(
+      db
+        .insert(s.studentNotes)
+        .values({ studentId: 1, authorUserId: 2, body: "x", visibility: "everyone" as "staff" }),
+      /student_notes_visibility/,
+    );
+  });
+
+  it("gives every resource exactly one target and the right fields for its kind", async () => {
+    const link = {
+      title: "Site",
+      kind: "link" as const,
+      url: "https://example.com",
+      uploadedByUserId: 2,
+    };
+    await db.insert(s.resources).values({ ...link, isSchoolWide: true });
+    await db.insert(s.resources).values({ ...link, classId: 1, subjectId: "quran" });
+    await db.insert(s.resources).values({ ...link, studentId: 1 });
+    await fails(db.insert(s.resources).values(link), /resources_one_target/);
+    await fails(
+      db.insert(s.resources).values({ ...link, isSchoolWide: true, classId: 1 }),
+      /resources_one_target/,
+    );
+    await fails(
+      db.insert(s.resources).values({ ...link, subjectId: "quran", studentId: 1 }),
+      /resources_one_target/,
+    );
+    await fails(
+      db.insert(s.resources).values({ ...link, isSchoolWide: true, kind: "file" }),
+      /resources_kind_fields/,
+    );
+    await fails(
+      db.insert(s.resources).values({
+        title: "F",
+        kind: "file",
+        storageKey: "k",
+        url: "https://x",
+        uploadedByUserId: 2,
+        isSchoolWide: true,
+      }),
+      /resources_kind_fields/,
+    );
+  });
+});

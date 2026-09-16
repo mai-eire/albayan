@@ -26,6 +26,11 @@ const statuses = {
     active: ["tile", "Active"],
     inactive: ["gray", "Inactive"],
   },
+  account: {
+    active: ["tile", "Active"],
+    invited: ["saffron", "Invited"],
+    disabled: ["gray", "Disabled"],
+  },
   homework: {
     due_later: ["gray", "Due later"],
     due_soon: ["saffron", "Due soon"],

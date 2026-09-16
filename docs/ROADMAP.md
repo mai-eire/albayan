@@ -10,7 +10,7 @@ Live document. Updated at the end of every work session, in the same commit as t
 |---|---|---|---|
 | Planning | Requirements, architecture, stack, UI library, design language | ✅ Done | — |
 | 0 — Foundation | Offline dev loop, schema v1, auth, roles, access layer, seed, CI, Cloudflare staging | ✅ Done (deploy deferred) | [PHASE-0.md](PHASE-0.md) |
-| 1 — Registration & setup | Guardian signup, applications, approvals, academics setup, timetable, staff invites | 🔄 In progress (5/14) | [PHASE-1.md](PHASE-1.md) |
+| 1 — Registration & setup | Guardian signup, applications, approvals, academics setup, timetable, staff invites | 🔄 In progress (6/14) | [PHASE-1.md](PHASE-1.md) |
 | 2 — Daily workflows | Teacher Today, registers, homework, notes, resources, family/student views, notifications | ⬜ | — |
 | 3 — Fees, events, reports | Fees & payments, events with consent, reports, audit viewer, year rollover, GDPR actions | ⬜ | — |
 | Later | Stripe, PTM slots, Arabic/RTL, SMS, co-teachers, per-class schedules | — | — |
@@ -21,8 +21,8 @@ Phase scope and rationale: [PLAN.md §17](PLAN.md). Definition of done for the c
 
 Phase 1, in order:
 
-1. Task 6 — staff invites.
-2. Task 7–9 — guardian registration, application wizard, applications inbox.
+1. Task 7 — guardian registration with email verification.
+2. Task 8–9 — application wizard, applications inbox with approve/decline.
 3. Task 10–12 — admin people lists and profiles, teacher views, family/student views.
 
 ## Blocked / undecided
@@ -33,6 +33,7 @@ Phase 1, in order:
 
 ## Recently done
 
+- 2026-09-16 — Phase 1 task 6: `/admin/staff` — teachers and admins list, invite (new account + emailed link, or the role added to an existing account), resend invite, stop/resume teaching, make/remove admin (never yourself); `account` status domain; `lib/app-url.ts` for links in emails; action tests.
 - 2026-09-16 — Phase 1 task 5: classes per year (add/edit/delete, refused with students), class teacher, a teacher select per subject in the session's schedule with a saffron double-booking warning, and the derived class timetable.
 - 2026-09-16 — Phase 1 task 4: sessions per year (add/edit/delete, refused with classes), schedule editor with subject-or-title periods, minutes, reorder, and a live computed timeline; `lib/timetable.ts` with tests.
 - 2026-09-16 — Phase 1 task 3: subjects tab (add with derived code, rename, deactivate/reactivate); `record` status domain.

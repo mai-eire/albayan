@@ -50,6 +50,7 @@ Status colours are assigned once, in `components/StatusBadge.tsx`:
 | Application | applied → saffron · active → tile · declined → clay · inactive → gray |
 | Homework | due later → gray · due today/tomorrow → saffron · overdue → clay |
 | Record | active → tile · inactive → gray (subjects, teachers, sessions) |
+| Account | active → tile · invited → saffron (waiting to set a password) · disabled → gray |
 
 ### 2.2 Typography
 

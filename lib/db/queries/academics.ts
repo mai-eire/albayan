@@ -7,6 +7,7 @@ import {
   enrolments,
   schoolSessions,
   sessionPeriods,
+  students,
   subjects,
   teachers,
   teachingAssignments,
@@ -220,4 +221,32 @@ export async function currentPeriod(
   return term
     ? { label: term.name, from: term.startDate, to: term.endDate }
     : { label: year.id, from: year.startDate, to: year.endDate };
+}
+
+export type RosterForAdmin = {
+  enrolmentId: number;
+  studentId: number;
+  studentCode: string | null;
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string;
+  feeCents: number;
+};
+
+// Who is in a class right now, with the enrolment the admin would move.
+export async function listRosterForAdmin(classId: number): Promise<RosterForAdmin[]> {
+  return (await db())
+    .select({
+      enrolmentId: enrolments.id,
+      studentId: students.id,
+      studentCode: students.studentId,
+      firstName: students.firstName,
+      lastName: students.lastName,
+      dateOfBirth: students.dateOfBirth,
+      feeCents: enrolments.feeCents,
+    })
+    .from(enrolments)
+    .innerJoin(students, eq(students.id, enrolments.studentId))
+    .where(and(eq(enrolments.classId, classId), eq(enrolments.status, "active")))
+    .orderBy(asc(students.firstName), asc(students.lastName));
 }

@@ -6,7 +6,9 @@ import { z } from "zod";
 import { requireAdmin } from "@/lib/access";
 import { action, ActionError } from "@/lib/actions";
 import { audit, diff } from "@/lib/audit";
+import { getSchoolSettings } from "@/lib/db/queries/settings";
 import { classes, enrolments, schoolSessions, teachingAssignments } from "@/lib/db/schema";
+import { todayIn } from "@/lib/time";
 
 const classSchema = z.object({
   sessionId: z.coerce.number().int(),
@@ -143,5 +145,53 @@ export const assignTeachers = action(
       changes: { assignments: [before, assignments] },
     });
     revalidatePath("/admin/academics");
+  },
+);
+
+// Moves a student to another class of the same year: the old enrolment ends today and a
+// new one starts, carrying the fee, so the history stays.
+export const moveStudent = action(
+  z.object({ enrolmentId: z.number().int(), classId: z.number().int() }),
+  async (input, { user, db }) => {
+    requireAdmin(user);
+    const current = await db.query.enrolments.findFirst({
+      where: and(eq(enrolments.id, input.enrolmentId), eq(enrolments.status, "active")),
+    });
+    if (!current) throw new ActionError("That place no longer exists.");
+    if (current.classId === input.classId) throw new ActionError("They're already in that class.");
+    const [from, to] = await Promise.all([
+      db.query.classes.findFirst({ where: eq(classes.id, current.classId) }),
+      db.query.classes.findFirst({ where: eq(classes.id, input.classId) }),
+    ]);
+    if (!from || !to || from.academicYearId !== to.academicYearId) {
+      throw new ActionError("Students can only move between classes of the same year.");
+    }
+    const { timezone } = await getSchoolSettings();
+    const today = todayIn(timezone);
+    await db
+      .update(enrolments)
+      .set({ status: "left", endDate: today })
+      .where(eq(enrolments.id, current.id));
+    const [next] = await db
+      .insert(enrolments)
+      .values({
+        studentId: current.studentId,
+        classId: to.id,
+        startDate: today,
+        feeCents: current.feeCents,
+        feeNote: current.feeNote,
+      })
+      .returning({ id: enrolments.id });
+    await audit(db, {
+      actorUserId: user.id,
+      action: "enrolment.move",
+      entityType: "student",
+      entityId: current.studentId,
+      changes: { classId: [from.id, to.id], enrolmentId: [current.id, next.id] },
+    });
+    revalidatePath("/admin/academics");
+    revalidatePath("/admin/students");
+    revalidatePath("/teach");
+    revalidatePath("/family");
   },
 );

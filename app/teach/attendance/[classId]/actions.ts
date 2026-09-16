@@ -97,6 +97,7 @@ export const saveRegister = action(schema, async (input, { user, db }) => {
         note: entry.note,
         recordedByUserId: user.id,
       });
+      changes[entry.studentId] = [null, `${entry.status}${entry.note ? ` (${entry.note})` : ""}`];
     }
     if (entry.status === "absent" && old?.status !== "absent") newlyAbsent.push(entry.studentId);
   }

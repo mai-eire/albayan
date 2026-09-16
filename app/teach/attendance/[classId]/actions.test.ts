@@ -186,6 +186,10 @@ describe("saveRegister", () => {
     expect(await db.select().from(auditLog)).toEqual([
       expect.objectContaining({
         action: "attendance.edit",
+        changes: { "1": [null, "present"], "2": [null, "present"] },
+      }),
+      expect.objectContaining({
+        action: "attendance.edit",
         entityId: `1:${yesterday}`,
         changes: { "2": ["present", "late (Bus)"] },
       }),

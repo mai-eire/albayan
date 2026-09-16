@@ -11,7 +11,7 @@ Live document. Updated at the end of every work session, in the same commit as t
 | Planning | Requirements, architecture, stack, UI library, design language | ✅ Done | — |
 | 0 — Foundation | Offline dev loop, schema v1, auth, roles, access layer, seed, CI, Cloudflare staging | ✅ Done (deploy deferred) | [PHASE-0.md](PHASE-0.md) |
 | 1 — Registration & setup | Guardian signup, applications, approvals, academics setup, timetable, staff invites | ✅ Done | [PHASE-1.md](PHASE-1.md) |
-| 2 — Daily workflows | Teacher Today, registers, homework, notes, resources, family/student views, notifications | 🔄 In progress (3/13) | [PHASE-2.md](PHASE-2.md) |
+| 2 — Daily workflows | Teacher Today, registers, homework, notes, resources, family/student views, notifications | 🔄 In progress (4/13) | [PHASE-2.md](PHASE-2.md) |
 | 3 — Fees, events, reports | Fees & payments, events with consent, reports, audit viewer, year rollover, GDPR actions | ⬜ | — |
 | Later | Stripe, PTM slots, Arabic/RTL, SMS, co-teachers, per-class schedules | — | — |
 
@@ -21,8 +21,8 @@ Phase scope and rationale: [PLAN.md §17](PLAN.md). Definition of done for the c
 
 Phase 2, in order:
 
-1. Task 3 — admin attendance page and the dashboard tile.
-2. Task 4–6 — homework, resources, notes.
+1. Task 4 — homework (teacher create/publish, `lib/homework.ts` status).
+2. Task 5–6 — resources, notes.
 3. Task 7–8 — class page tabs, family/student daily views.
 
 ## Blocked / undecided
@@ -33,6 +33,7 @@ Phase 2, in order:
 
 ## Recently done
 
+- 2026-09-16 — Phase 2 task 3: `/admin/attendance?date=` — every class that day with students, absences and taken/not taken; drill in to view or correct a register (shares the teacher's editor; past-day changes audited, including newly created rows); the dashboard's "Registers missing" tile is real.
 - 2026-09-16 — Phase 2 task 2: registers — `/teach/attendance` (today's classes, taken/not taken) → tap-to-cycle register with notes and one save; `canEditRegister` (same day for the class's teachers, admin any day, audited after the day); new absences notify guardians, email only if the school's absence-emails toggle is on; `register` status domain.
 - 2026-09-16 — Phase 2 task 1: Teacher Today — my lessons for the weekday with computed times on a `LessonTimeline` (past tile · now saffron · later gray), "Take register" on classes I lead or open, greeting by the hour; `listLessonsForTeacher` tested.
 - 2026-09-16 — Phase 2 task 0: schema v2 — `attendance` (one row per student per day), `homework`, `student_notes`, `resources` (exactly one target, file-or-link fields) as migration 0003 with constraint tests.

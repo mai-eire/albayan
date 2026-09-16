@@ -32,6 +32,7 @@ import {
   IconHome,
   IconInbox,
   IconLayoutDashboard,
+  IconLogout,
   IconSchool,
   IconSettings,
   IconUser,
@@ -44,9 +45,8 @@ import {
   IconClock,
   type Icon,
 } from "@tabler/icons-react";
+import type { Area } from "@/lib/current-user";
 import classes from "./Shell.module.css";
-
-export type Area = "admin" | "teach" | "family" | "student";
 
 type NavItem = { label: string; href: string; icon: Icon };
 
@@ -253,6 +253,14 @@ function UserMenu({ name }: { name: string }) {
             {label}
           </Menu.Item>
         ))}
+        <Menu.Divider />
+        <Menu.Item
+          component="a"
+          href="/logout"
+          leftSection={<IconLogout size={16} stroke={1.75} />}
+        >
+          Sign out
+        </Menu.Item>
       </Menu.Dropdown>
     </Menu>
   );

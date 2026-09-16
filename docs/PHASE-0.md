@@ -30,7 +30,7 @@ Definition of done for the phase: a new contributor can `git clone && pnpm insta
 - [x] **7. Bootstrap admin** — `pnpm bootstrap-admin --email … --name …` creates the first admin (idempotent). No public admin signup exists anywhere.
   DoD: fresh DB → script → login as admin.
 
-- [ ] **8. Role derivation + routing** — `getCurrentUser()` loads user + optional guardian/teacher/student rows once per request; `/` redirects to the user's (first) area; route-group layouts guard `/admin`, `/teach`, `/family`, `/student`; role switcher in the top bar for multi-role users.
+- [x] **8. Role derivation + routing** — `getCurrentUser()` loads user + optional guardian/teacher/student rows once per request; `/` redirects to the user's (first) area; route-group layouts guard `/admin`, `/teach`, `/family`, `/student`; role switcher in the top bar for multi-role users.
   DoD: a teacher hitting `/admin` is redirected; a teacher-parent sees the switcher and both areas.
 
 - [ ] **9. `lib/access.ts`** — `requireAdmin/Teacher/Guardian/Student`, `canViewStudent`, `teachesClass`, `teachesSubjectIn`, `isGuardianOf`. Pure functions over loaded data where possible; DB lookups isolated.

@@ -2,7 +2,7 @@
 
 import { Button, PasswordInput, Stack, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { FormError } from "@/components/FormError";
 import { authClient } from "@/lib/auth-client";
@@ -11,6 +11,7 @@ const failed = "We couldn't sign you in — check your details and try again.";
 
 export function LoginForm() {
   const router = useRouter();
+  const next = useSearchParams().get("next");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const form = useForm({
@@ -33,7 +34,7 @@ export function LoginForm() {
       setLoading(false);
       return;
     }
-    router.push(data.user.mustChangePassword ? "/change-password" : "/");
+    router.push(data.user.mustChangePassword ? "/change-password" : (next ?? "/"));
     router.refresh();
   });
 

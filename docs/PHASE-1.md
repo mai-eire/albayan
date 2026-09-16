@@ -14,7 +14,7 @@ Definition of done: on a seeded DB, an admin can create a new session, edit its 
 
 - [x] **3. Subjects** — same page, tab: list, add, rename, deactivate. Subject colour from `lib/subjects.ts`. DoD: new subject appears in the schedule editor's subject picker.
 
-- [ ] **4. Sessions & schedule editor** — sessions per year (name, weekday, start time, active); per session the ordered periods (subject or title, minutes, drag/arrow reorder) with the live computed timeline (10:00 Quran · 10:50 Arabic …). DoD: computed times match `lib/timetable.ts` unit tests; deleting a session with classes is refused.
+- [x] **4. Sessions & schedule editor** — sessions per year (name, weekday, start time, active); per session the ordered periods (subject or title, minutes, drag/arrow reorder) with the live computed timeline (10:00 Quran · 10:50 Arabic …). DoD: computed times match `lib/timetable.ts` unit tests; deleting a session with classes is refused.
 
 - [ ] **5. Classes & teachers per subject** — classes per session (name, room, capacity, class teacher); per class a table with one row per subject in the session's schedule and a teacher select, plus the rendered class timetable. Double-booked teacher (same subject, same session, two classes) shown as a warning, not blocked. DoD: teaching assignments upsert per (class, subject); warning appears in seed data when provoked.
 

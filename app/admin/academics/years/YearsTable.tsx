@@ -1,5 +1,4 @@
 import {
-  Anchor,
   Badge,
   Table,
   TableTbody,

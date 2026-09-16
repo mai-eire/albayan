@@ -10,7 +10,7 @@ Live document. Updated at the end of every work session, in the same commit as t
 |---|---|---|---|
 | Planning | Requirements, architecture, stack, UI library, design language | ✅ Done | — |
 | 0 — Foundation | Offline dev loop, schema v1, auth, roles, access layer, seed, CI, Cloudflare staging | ✅ Done (deploy deferred) | [PHASE-0.md](PHASE-0.md) |
-| 1 — Registration & setup | Guardian signup, applications, approvals, academics setup, timetable, staff invites | 🔄 In progress (3/14) | [PHASE-1.md](PHASE-1.md) |
+| 1 — Registration & setup | Guardian signup, applications, approvals, academics setup, timetable, staff invites | 🔄 In progress (4/14) | [PHASE-1.md](PHASE-1.md) |
 | 2 — Daily workflows | Teacher Today, registers, homework, notes, resources, family/student views, notifications | ⬜ | — |
 | 3 — Fees, events, reports | Fees & payments, events with consent, reports, audit viewer, year rollover, GDPR actions | ⬜ | — |
 | Later | Stripe, PTM slots, Arabic/RTL, SMS, co-teachers, per-class schedules | — | — |
@@ -21,7 +21,7 @@ Phase scope and rationale: [PLAN.md §17](PLAN.md). Definition of done for the c
 
 Phase 1, in order:
 
-1. Task 4–5 — sessions + schedule editor, classes + teachers per subject.
+1. Task 5 — classes + teachers per subject.
 2. Task 6 — staff invites.
 3. Task 7–9 — guardian registration, application wizard, applications inbox.
 
@@ -33,6 +33,7 @@ Phase 1, in order:
 
 ## Recently done
 
+- 2026-09-16 — Phase 1 task 4: sessions per year (add/edit/delete, refused with classes), schedule editor with subject-or-title periods, minutes, reorder, and a live computed timeline; `lib/timetable.ts` with tests.
 - 2026-09-16 — Phase 1 task 3: subjects tab (add with derived code, rename, deactivate/reactivate); `record` status domain.
 - 2026-09-16 — Phase 1 task 2: `/admin/academics` tabbed layout; years list, add/edit year (name derived from the first day, fee in euros, current flag), terms with overlap and in-year checks; `DateField`, `AppLink`, `confirmDestructive`, `ActionError`.
 - 2026-09-16 — Phase 1 task 1: `EntityList`, `CardTitle`, `DateText`, `MoneyText`, `SensitiveSection`, `DirectionalIcon`, `ChildSwitcher`; `lib/money.ts`, `lib/age.ts` with tests; gallery updated.

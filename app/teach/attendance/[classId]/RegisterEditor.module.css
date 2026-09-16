@@ -1,0 +1,21 @@
+.row {
+  padding-block: var(--mantine-spacing-sm);
+  border-block-end: 1px solid var(--mantine-color-default-border);
+}
+
+.row:last-child {
+  border-block-end: none;
+}
+
+/* The badge is the control; keep the tap target at least 44px tall (§6). */
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-inline: var(--mantine-spacing-xs);
+  border-radius: var(--mantine-radius-md);
+}
+
+.toggle:not(:disabled):hover {
+  background: var(--mantine-color-default-hover);
+}

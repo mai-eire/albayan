@@ -1,4 +1,5 @@
 import { sendEmail } from "./send";
+import { AbsenceEmail } from "./templates/Absence";
 import { ApprovedEmail } from "./templates/Approved";
 import { DeclinedEmail } from "./templates/Declined";
 import { InviteEmail } from "./templates/Invite";
@@ -71,5 +72,17 @@ export function sendDeclined(
     to: to.email,
     subject: `About ${details.childName}'s application`,
     body: <DeclinedEmail schoolName={schoolName} name={to.name} {...details} />,
+  });
+}
+
+export function sendAbsence(
+  to: { email: string; name: string },
+  details: { childName: string; date: string; className: string },
+  schoolName: string,
+) {
+  return sendEmail({
+    to: to.email,
+    subject: `${details.childName} was marked absent`,
+    body: <AbsenceEmail schoolName={schoolName} name={to.name} {...details} />,
   });
 }

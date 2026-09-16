@@ -26,6 +26,10 @@ const statuses = {
     active: ["tile", "Active"],
     inactive: ["gray", "Inactive"],
   },
+  register: {
+    taken: ["tile", "Taken"],
+    missing: ["saffron", "Not taken"],
+  },
   account: {
     active: ["tile", "Active"],
     invited: ["saffron", "Invited"],

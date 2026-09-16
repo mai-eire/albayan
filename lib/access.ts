@@ -105,6 +105,18 @@ export function canViewStudent(user: CurrentUser, student: StudentFacts): boolea
   return student.activeClass !== null && teachesClass(user, student.activeClass);
 }
 
+// Registers: a teacher of the class may take or change it on the day; afterwards only
+// admin can, and those edits are audited (PLAN §10).
+export function canEditRegister(
+  user: CurrentUser,
+  cls: ClassFacts,
+  date: string,
+  today: string,
+): boolean {
+  if (user.isAdmin) return true;
+  return date === today && teachesClass(user, cls);
+}
+
 // ---- Loaders -----------------------------------------------------------------------
 
 export async function loadClassFacts(classId: number): Promise<ClassFacts | null> {

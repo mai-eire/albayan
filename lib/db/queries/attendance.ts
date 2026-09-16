@@ -1,0 +1,137 @@
+import { and, asc, eq, inArray } from "drizzle-orm";
+import { db } from "@/lib/db";
+import {
+  attendance,
+  classes,
+  enrolments,
+  schoolSessions,
+  students,
+  users,
+  type AttendanceStatus,
+} from "@/lib/db/schema";
+
+export type RegisterRow = {
+  studentId: number;
+  firstName: string;
+  lastName: string;
+  status: AttendanceStatus | null;
+  note: string | null;
+};
+
+export type Register = {
+  classId: number;
+  className: string;
+  sessionName: string;
+  date: string;
+  rows: RegisterRow[];
+  // Who last saved it; null until it is taken.
+  takenBy: { name: string; at: string } | null;
+};
+
+// The class roster for a date with whatever was recorded. Names only: this is a
+// teacher-facing shape.
+export async function getRegister(classId: number, date: string): Promise<Register | null> {
+  const d = await db();
+  const [cls] = await d
+    .select({ id: classes.id, name: classes.name, sessionName: schoolSessions.name })
+    .from(classes)
+    .innerJoin(schoolSessions, eq(schoolSessions.id, classes.sessionId))
+    .where(eq(classes.id, classId));
+  if (!cls) return null;
+  const roster = await d
+    .select({ studentId: students.id, firstName: students.firstName, lastName: students.lastName })
+    .from(enrolments)
+    .innerJoin(students, eq(students.id, enrolments.studentId))
+    .where(and(eq(enrolments.classId, classId), eq(enrolments.status, "active")))
+    .orderBy(asc(students.firstName), asc(students.lastName));
+  const recorded = roster.length
+    ? await d
+        .select({
+          studentId: attendance.studentId,
+          status: attendance.status,
+          note: attendance.note,
+          updatedAt: attendance.updatedAt,
+          recordedBy: users.name,
+        })
+        .from(attendance)
+        .innerJoin(users, eq(users.id, attendance.recordedByUserId))
+        .where(
+          and(
+            eq(attendance.date, date),
+            inArray(
+              attendance.studentId,
+              roster.map((r) => r.studentId),
+            ),
+          ),
+        )
+        .orderBy(asc(attendance.updatedAt))
+    : [];
+  const latest = recorded.at(-1);
+  return {
+    classId: cls.id,
+    className: cls.name,
+    sessionName: cls.sessionName,
+    date,
+    rows: roster.map((r) => {
+      const row = recorded.find((a) => a.studentId === r.studentId);
+      return { ...r, status: row?.status ?? null, note: row?.note ?? null };
+    }),
+    takenBy: latest ? { name: latest.recordedBy, at: latest.updatedAt } : null,
+  };
+}
+
+export type RegisterSummary = {
+  classId: number;
+  className: string;
+  sessionName: string;
+  startTime: string;
+  studentCount: number;
+  recordedCount: number;
+  absentCount: number;
+};
+
+// Every class running on `date`'s weekday in the year, with how much of its register is in.
+export async function listRegistersForDate(
+  academicYearId: string,
+  date: string,
+  dayOfWeek: number,
+  onlyClassIds?: number[],
+): Promise<RegisterSummary[]> {
+  const d = await db();
+  const rows = await d
+    .select({
+      classId: classes.id,
+      className: classes.name,
+      sessionName: schoolSessions.name,
+      startTime: schoolSessions.startTime,
+    })
+    .from(classes)
+    .innerJoin(schoolSessions, eq(schoolSessions.id, classes.sessionId))
+    .where(
+      and(
+        eq(classes.academicYearId, academicYearId),
+        eq(schoolSessions.dayOfWeek, dayOfWeek),
+        eq(schoolSessions.isActive, true),
+        onlyClassIds ? inArray(classes.id, onlyClassIds.length ? onlyClassIds : [-1]) : undefined,
+      ),
+    )
+    .orderBy(asc(schoolSessions.startTime), asc(classes.name));
+  if (!rows.length) return [];
+  const classIds = rows.map((r) => r.classId);
+  const [enrolled, recorded] = await Promise.all([
+    d
+      .select({ classId: enrolments.classId })
+      .from(enrolments)
+      .where(and(inArray(enrolments.classId, classIds), eq(enrolments.status, "active"))),
+    d
+      .select({ classId: attendance.classId, status: attendance.status })
+      .from(attendance)
+      .where(and(inArray(attendance.classId, classIds), eq(attendance.date, date))),
+  ]);
+  return rows.map((r) => ({
+    ...r,
+    studentCount: enrolled.filter((e) => e.classId === r.classId).length,
+    recordedCount: recorded.filter((a) => a.classId === r.classId).length,
+    absentCount: recorded.filter((a) => a.classId === r.classId && a.status === "absent").length,
+  }));
+}

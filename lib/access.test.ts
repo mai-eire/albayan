@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  canEditRegister,
   AccessDenied,
   canViewStudent,
   isGuardianOf,
@@ -131,5 +132,16 @@ describe("canViewStudent", () => {
     expect(canViewStudent(quranTeacher, left)).toBe(false);
     expect(canViewStudent(mother, left)).toBe(true);
     expect(canViewStudent(admin, left)).toBe(true);
+  });
+});
+
+describe("canEditRegister", () => {
+  it("lets the class's teachers edit today only, admin any day", () => {
+    expect(canEditRegister(classTeacher, level2, "2026-09-19", "2026-09-19")).toBe(true);
+    expect(canEditRegister(quranTeacher, level2, "2026-09-19", "2026-09-19")).toBe(true);
+    expect(canEditRegister(classTeacher, level2, "2026-09-12", "2026-09-19")).toBe(false);
+    expect(canEditRegister(otherTeacher, level2, "2026-09-19", "2026-09-19")).toBe(false);
+    expect(canEditRegister(formerTeacher, level2, "2026-09-19", "2026-09-19")).toBe(false);
+    expect(canEditRegister(admin, level2, "2026-09-12", "2026-09-19")).toBe(true);
   });
 });

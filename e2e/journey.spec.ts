@@ -41,7 +41,7 @@ test("register → apply → approve → student signs in; teacher kept out", as
   await page.getByRole("main").getByRole("link", { name: "Register a child" }).click();
   await expect(page).toHaveURL(/register-child/);
   await pick(page, /Your relationship/, "Mother");
-  await page.getByRole("textbox", { name: /^Address(?! line)/ }).fill("1 Main Street");
+  await page.getByRole("textbox", { name: /^Your address/ }).fill("1 Main Street");
   await page.getByRole("textbox", { name: /^Town or city/ }).fill("Dublin");
   await page.getByRole("textbox", { name: /^Eircode/ }).fill("D15 AB12");
   await page.getByRole("textbox", { name: /^Name/ }).fill("Huda Farah");
@@ -66,7 +66,7 @@ test("register → apply → approve → student signs in; teacher kept out", as
   await page.goto("/admin/applications", { waitUntil: "networkidle" });
   await page.locator("tbody tr", { hasText: "Hamza Farah" }).click();
   await page.getByRole("button", { name: "Offer a place" }).click();
-  await expect(page.getByRole("combobox", { name: "Day" })).toHaveValue("Sunday");
+  await expect(page.getByRole("combobox", { name: "Session" })).toHaveValue("Sunday");
   await page.getByRole("button", { name: "Offer the place" }).click();
   await expect(page.getByText(/Hamza is now ALB-26-\d{4}/)).toBeVisible();
 
@@ -75,7 +75,7 @@ test("register → apply → approve → student signs in; teacher kept out", as
   await expect(page).toHaveURL(/\/family$/);
   await expect(page.getByRole("link", { name: "1 unread notifications" })).toBeVisible();
   const childHref = await page
-    .locator("main a[href^='/family/']:not([href*=register])")
+    .locator("main a[href^='/family/']:not([href*=register]):not([href*=parents])")
     .first()
     .getAttribute("href");
   await page.goto(childHref!);

@@ -13,36 +13,33 @@ async function signIn(page: Page, identifier: string, password = "password") {
   await expect(page).not.toHaveURL(/\/login/);
 }
 
-// Seed: Adam Hussain (student 30, ALB-26-0030) is in Level 1 (class 1); teacher1 leads it;
-// parent15 is his mother.
+// Seed: Aisha Siddiqui (student 34, ALB-26-0034) is in Level 1 (class 1); teacher1 leads it;
+// parent17 is her parent. (Ids come from the seed's fixed random sequence — reseed to check.)
 test("register → family sees the absence → office corrects it", async ({ page }) => {
   await signIn(page, "teacher1@example.com");
   await page.goto("/teach/attendance/1", { waitUntil: "networkidle" });
-  const adam = page.getByRole("button", { name: /^Adam:/ });
-  await adam.click(); // late
-  await adam.click(); // absent
-  await expect(adam).toHaveAttribute("aria-label", /absent/);
-  await page.getByRole("textbox", { name: "Note for Adam" }).fill("No message from home");
+  const aisha = page.locator('[aria-label="Aisha\'s attendance"]');
+  await aisha.getByText("Absent").click();
+  await expect(aisha.getByRole("radio", { name: "Absent" })).toBeChecked();
+  await page.getByRole("textbox", { name: "Note for Aisha" }).fill("No message from home");
   await page.getByRole("button", { name: "Submit register" }).click();
   await expect(page.getByText("Register submitted")).toBeVisible();
 
-  await signIn(page, "parent15@example.com");
+  await signIn(page, "parent17@example.com");
   await expect(page.getByRole("link", { name: /1 unread notification/ })).toBeVisible();
-  await page.goto("/family/30/attendance", { waitUntil: "networkidle" });
+  await page.goto("/family/34/attendance", { waitUntil: "networkidle" });
   await expect(page.getByText("Absent")).toBeVisible();
 
   await signIn(page, "admin@example.com");
   await page.goto("/admin/attendance/1", { waitUntil: "networkidle" });
-  await page.getByRole("button", { name: /^Adam:/ }).click(); // absent → excused
-  await expect(page.getByRole("button", { name: /^Adam:/ })).toHaveAttribute(
-    "aria-label",
-    /excused/,
-  );
+  const aishaAgain = page.locator('[aria-label="Aisha\'s attendance"]');
+  await aishaAgain.getByText("Excused").click();
+  await expect(aishaAgain.getByRole("radio", { name: "Excused" })).toBeChecked();
   await page.getByRole("button", { name: "Save changes" }).click();
   await expect(page.getByText("Register updated")).toBeVisible();
 
-  await signIn(page, "parent15@example.com");
-  await page.goto("/family/30/attendance", { waitUntil: "networkidle" });
+  await signIn(page, "parent17@example.com");
+  await page.goto("/family/34/attendance", { waitUntil: "networkidle" });
   await expect(page.getByText("Excused")).toBeVisible();
 });
 
@@ -56,13 +53,12 @@ test("homework with a file → the student opens it", async ({ page }) => {
   await page.getByRole("textbox", { name: /^Due/ }).press("Tab");
   await page.getByRole("dialog").getByRole("button", { name: "Publish" }).click();
   await expect(page.getByText("Homework published")).toBeVisible();
-  await page.getByRole("button", { name: /Actions for Surah Al-Fil/ }).click();
-  await page.getByRole("menuitem", { name: "Attach a file or link" }).click();
+  // The dialog stays open offering to attach something straight away.
   await page.locator("input[type=file]").setInputFiles("e2e/fixtures/sheet.txt");
   await page.getByRole("dialog").getByRole("button", { name: "Share", exact: true }).click();
   await expect(page.getByText("Shared", { exact: true })).toBeVisible();
 
-  await signIn(page, "ALB-26-0030");
+  await signIn(page, "ALB-26-0034");
   await page.goto("/student/homework", { waitUntil: "networkidle" });
   await expect(page.getByText("Surah Al-Fil, verses 1–5")).toBeVisible();
   await page.goto("/student/resources", { waitUntil: "networkidle" });

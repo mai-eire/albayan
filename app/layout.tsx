@@ -23,6 +23,7 @@ const bricolage = Bricolage_Grotesque({
 
 export const metadata: Metadata = {
   title: { default: "Al-Bayan", template: "%s · Al-Bayan" },
+  icons: { icon: "/favicon.svg" },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

@@ -39,7 +39,9 @@ Next.js 16 App Router on Cloudflare Workers via `@opennextjs/cloudflare` · Driz
 - `pnpm test` — unit + integration (Vitest; integration tests get a throwaway local D1 from `test/db.ts`, no network)
 - `pnpm test:e2e` — Playwright against the local app
 - `pnpm bootstrap-admin` — create the first admin
-- `pnpm check` — lint + typecheck + format check (`pnpm format` to fix)
+- `pnpm check` — lint + typecheck + format check (`pnpm format` to fix). Lint includes `albayan/server-boundary`: a file without `"use client"` may not pass `component={…}` to Mantine or use `Table.Thead`-style compound parts — both crash only at runtime.
+- `pnpm verify` — check + unit/integration + e2e, i.e. what CI runs. **Run it before every commit that touches `app/` or `components/`**; `pnpm check` and `pnpm test` alone cannot see a page that crashes on load.
+- `e2e/pages.spec.ts` opens every page as every role and fails on any console error, uncaught exception or 5xx. **Every new `page.tsx` must be added to its route list** — the suite fails until it is.
 
 ## Git
 

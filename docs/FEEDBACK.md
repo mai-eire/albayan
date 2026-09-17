@@ -45,7 +45,7 @@ Salah's notes from the first walkthrough (after Phase 3 task 1), one line each, 
 - ☑ Notes: add form at the top, one card per note.
 - ☑ Homework/Resources add buttons on the right; homework shows Draft/Published; attachment in the create form; no class picker when already on the class.
 - ✗ Student resources: choose the audience — the share form already has the audience picker (students & guardians / guardians only / staff only); the *target* follows the page you're on, so class material is shared from the class tab.
-- ☐ Calendar shows nothing useful for teachers → week view of their own lessons with times; month calendar stays for families and students and carries events later.
+- ☑ Calendar shows nothing useful for teachers → week view of their own lessons with times; month calendar stays for families and students and carries events later.
 - ✗ Filter a teacher's class list — a teacher has 1–4 classes.
 
 ## Family

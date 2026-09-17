@@ -24,6 +24,7 @@ import {
   IconBook,
   IconBuildingBank,
   IconCalendar,
+  IconCalendarTime,
   IconCalendarEvent,
   IconChartBar,
   IconCheck,
@@ -72,6 +73,7 @@ const nav: Record<Area, NavItem[]> = {
     { label: "Attendance", href: "/teach/attendance", icon: IconClipboardCheck },
     { label: "Homework", href: "/teach/homework", icon: IconBook },
     { label: "Resources", href: "/teach/resources", icon: IconFolder },
+    { label: "Timetable", href: "/teach/timetable", icon: IconCalendarTime },
     { label: "Calendar", href: "/teach/calendar", icon: IconCalendar },
   ],
   family: [

@@ -1,0 +1,17 @@
+.block {
+  display: block;
+  padding: var(--mantine-spacing-sm);
+  border-radius: var(--mantine-radius-md);
+  background: var(--block-tint);
+  border-inline-start: 3px solid var(--block-color);
+  color: inherit;
+  text-decoration: none;
+}
+
+a.block:hover {
+  filter: brightness(0.97);
+}
+
+.time {
+  font-variant-numeric: tabular-nums;
+}

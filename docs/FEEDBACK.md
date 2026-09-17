@@ -34,7 +34,7 @@ Salah's notes from the first walkthrough (after Phase 3 task 1), one line each, 
 
 - ☑ Student page shows siblings ("Also in this family" on the Guardians tab).
 - ☑ Collect the guardian's gender; relationship options follow it (Mother / Father).
-- ☐ Co-guardians: a parent adds another parent (invite by email, choose children or "all my children"); admin adds a guardian to a student or a child to a guardian. → new task 13.
+- ☑ Co-guardians: a parent adds another parent (invite by email, choose children or "all my children"); admin adds a guardian to a student or a child to a guardian. → new task 13.
 
 ## Teacher
 

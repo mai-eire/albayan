@@ -2,7 +2,7 @@
 
 Live document. Updated at the end of every work session, in the same commit as the work. Keep it under ~50 lines; detail belongs in the phase checklists.
 
-**Last updated:** 2026-09-16 · **Current phase:** 3 — Fees, events, reports, hardening (starting)
+**Last updated:** 2026-09-17 · **Current phase:** 3 — Fees, events, reports, hardening (starting)
 
 ## Phases
 
@@ -12,14 +12,14 @@ Live document. Updated at the end of every work session, in the same commit as t
 | 0 — Foundation | Offline dev loop, schema v1, auth, roles, access layer, seed, CI, Cloudflare staging | ✅ Done (deploy deferred) | [PHASE-0.md](PHASE-0.md) |
 | 1 — Registration & setup | Guardian signup, applications, approvals, academics setup, timetable, staff invites | ✅ Done | [PHASE-1.md](PHASE-1.md) |
 | 2 — Daily workflows | Teacher Today, registers, homework, notes, resources, family/student views, notifications | ✅ Done | [PHASE-2.md](PHASE-2.md) |
-| 3 — Fees, events, reports | Fees & payments, events with consent, reports, audit viewer, year rollover, GDPR actions, deploy | 🔄 In progress (2/13) | [PHASE-3.md](PHASE-3.md) |
+| 3 — Fees, events, reports | Fees & payments, events with consent, reports, audit viewer, year rollover, GDPR actions, deploy | 🔄 In progress (6/16) | [PHASE-3.md](PHASE-3.md) |
 | Later | Stripe, PTM slots, Arabic/RTL, SMS, co-teachers, per-class schedules | — | — |
 
 Phase scope and rationale: [PLAN.md §17](PLAN.md). Definition of done for the current phase is at the top of its checklist.
 
 ## Now
 
-Phase 3, in order:
+Salah's review of the feedback pass and tasks 13–15 (see [FEEDBACK.md](FEEDBACK.md)), then Phase 3 in order:
 
 1. Task 2 — fees for families (`/family/[id]/fees`, "How to pay", payment notification), and the outstanding-balance flag on the wizard and inbox.
 2. Task 3–4 — events with targeting, registration and consent.
@@ -33,6 +33,7 @@ Phase 3, in order:
 
 ## Recently done
 
+- 2026-09-17 — First-walkthrough feedback pass ([FEEDBACK.md](FEEDBACK.md)): dense sortable staff tables, breadcrumbs, read-only cards with Edit, Figures for money, header theme toggle, guardian editing, siblings, session end times, teachers fill past registers, segmented register control, homework status/attachments, guardian gender (migration 0005), simpler ethnicities. New tasks 13–15 done: co-guardians (parent invites another parent; admin adds a guardian or a child), staff table/profile with deactivation dates, term-wide attendance overview; teacher "My week" timetable.
 - 2026-09-16 — Phase 3 task 1: fees for the office. `lib/fees.ts` derives status and balance per student per year (payments follow a class move); `/admin/fees` lists who still owes with day/class/year filters, totals and CSV; "Record payment" modal (child picker, amount, how, when, paid by, reference); edit/delete payments and edit the fee from the student's Enrolment tab, all audited before/after; student profile gains a Fees tab, the guardian profile becomes Details · Payments; dashboard tile "Fees outstanding" is real; seed has payments. "Overdue" removed from the fee statuses.
 - 2026-09-16 — Phase 3 task 0: schema v3 — `payments` (positive amount, method), `events`, `event_targets` (one of session/class), `event_participants` (one row per child) as migration 0004 with constraint tests.
 - 2026-09-16 — Phase 2 closed. Task 12: `e2e/daily.spec.ts` — register with an absence → family sees it → office corrects it; homework with a file → student opens it, another class's student gets 403. PHASE-3.md written from PLAN §17 (deploy readiness folded in as task 11).

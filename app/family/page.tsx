@@ -27,9 +27,14 @@ export default async function FamilyOverview() {
         title="Your family"
         actions={
           user.emailVerified && kids.length > 0 ? (
-            <LinkButton href="/family/register-child" variant="light">
-              Register another child
-            </LinkButton>
+            <>
+              <LinkButton href="/family/parents" variant="light">
+                Add another parent
+              </LinkButton>
+              <LinkButton href="/family/register-child" variant="light">
+                Register another child
+              </LinkButton>
+            </>
           ) : undefined
         }
       />

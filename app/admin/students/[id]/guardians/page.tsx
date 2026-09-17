@@ -6,6 +6,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { listSiblingsForAdmin } from "@/lib/db/queries/students";
 import { relationshipLabels } from "@/lib/demographics";
 import { loadStudent } from "../load";
+import { AddGuardianButton } from "./AddGuardianButton";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -14,6 +15,9 @@ export default async function StudentGuardiansPage({ params }: Props) {
   const siblings = await listSiblingsForAdmin(student.id);
   return (
     <Stack gap="lg">
+      <Group justify="flex-end">
+        <AddGuardianButton student={{ id: student.id, firstName: student.firstName }} />
+      </Group>
       {student.guardians.map((g) => (
         <Card key={g.id}>
           <CardTitle

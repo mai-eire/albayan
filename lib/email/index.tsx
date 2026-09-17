@@ -2,6 +2,7 @@ import { sendEmail } from "./send";
 import { AbsenceEmail } from "./templates/Absence";
 import { ApprovedEmail } from "./templates/Approved";
 import { DeclinedEmail } from "./templates/Declined";
+import { GuardianInviteEmail } from "./templates/GuardianInvite";
 import { InviteEmail } from "./templates/Invite";
 import { NoticeEmail } from "./templates/Notice";
 import { PasswordResetEmail } from "./templates/PasswordReset";
@@ -31,6 +32,28 @@ export function sendInvite(
     to: to.email,
     subject: `Set up your ${schoolName} account`,
     body: <InviteEmail schoolName={schoolName} name={to.name} url={url} role={role} />,
+  });
+}
+
+export function sendGuardianInvite(
+  to: { email: string; name: string },
+  url: string,
+  invitedBy: string,
+  children: string[],
+  schoolName: string,
+) {
+  return sendEmail({
+    to: to.email,
+    subject: `${invitedBy} has added you as a parent at ${schoolName}`,
+    body: (
+      <GuardianInviteEmail
+        schoolName={schoolName}
+        name={to.name}
+        url={url}
+        invitedBy={invitedBy}
+        childNames={children}
+      />
+    ),
   });
 }
 

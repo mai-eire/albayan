@@ -29,10 +29,13 @@ vi.mock("@/lib/auth", async (importOriginal) => {
   };
 });
 vi.mock("@/lib/app-url", () => ({ appUrl: async (p: string) => `http://localhost:3000${p}` }));
-vi.mock("@/lib/db/queries/settings", () => ({ getSchoolSettings: async () => ({ name: "Test" }) }));
+vi.mock("@/lib/db/queries/settings", () => ({
+  getSchoolSettings: async () => ({ name: "Test", timezone: "UTC" }),
+}));
 vi.mock("next/cache", () => ({ revalidatePath: () => {} }));
 
-const { inviteStaff, setAdmin } = await import("./actions");
+const { inviteStaff, setAdmin, setTeacherActive, deleteInvite } = await import("./actions");
+const { listStaff } = await import("@/lib/db/queries/staff");
 
 const base = {
   name: "X",
@@ -131,5 +134,45 @@ describe("setAdmin", () => {
     });
     expect(await setAdmin({ userId: 2, isAdmin: true })).toEqual({ ok: true, data: undefined });
     expect((await db.query.users.findFirst({ where: eq(users.id, 2) }))?.isAdmin).toBe(true);
+  });
+});
+
+describe("setTeacherActive and deleteInvite", () => {
+  it("stamps the day a teacher stopped and hides them from the list until asked", async () => {
+    current = admin;
+    const teacher = await db.query.teachers.findFirst({ where: eq(teachers.userId, 2) });
+    expect(await setTeacherActive({ teacherId: teacher!.id, isActive: false })).toMatchObject({
+      ok: true,
+    });
+    const stopped = await db.query.teachers.findFirst({ where: eq(teachers.id, teacher!.id) });
+    expect(stopped).toMatchObject({
+      isActive: false,
+      deactivatedAt: expect.stringMatching(/^\d{4}-/),
+    });
+    // User 2 is also an admin by now, so they stay listed; a plain former teacher would not.
+    await setAdmin({ userId: 2, isAdmin: false });
+    expect((await listStaff()).map((s) => s.id)).not.toContain(2);
+    expect((await listStaff(true)).map((s) => s.id)).toContain(2);
+    expect(await setTeacherActive({ teacherId: teacher!.id, isActive: true })).toMatchObject({
+      ok: true,
+    });
+    expect(
+      (await db.query.teachers.findFirst({ where: eq(teachers.id, teacher!.id) }))?.deactivatedAt,
+    ).toBeNull();
+  });
+
+  it("deletes an invite nobody accepted, and nothing else", async () => {
+    current = admin;
+    const invited = await db.query.users.findFirst({ where: eq(users.email, "tariq@example.com") });
+    expect(await deleteInvite({ userId: 2 })).toMatchObject({ ok: false, error: /already/ });
+    expect(await deleteInvite({ userId: invited!.id })).toMatchObject({ ok: true });
+    expect(await db.query.users.findFirst({ where: eq(users.id, invited!.id) })).toBeUndefined();
+    expect(await db.select().from(teachers).where(eq(teachers.userId, invited!.id))).toHaveLength(
+      0,
+    );
+    expect((await db.select().from(auditLog)).at(-1)).toMatchObject({
+      action: "staff.delete_invite",
+      entityId: String(invited!.id),
+    });
   });
 });

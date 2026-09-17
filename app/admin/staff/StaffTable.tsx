@@ -3,13 +3,32 @@
 import { Badge, Button, Group, Menu, Table, Text } from "@mantine/core";
 import { IconDots } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
+import { AppLink } from "@/components/AppLink";
+import { confirmDestructive } from "@/components/confirm";
+import { SortableTh, useSort } from "@/components/SortableTh";
 import { StatusBadge } from "@/components/StatusBadge";
 import { toast } from "@/components/toast";
 import type { StaffRow } from "@/lib/db/queries/staff";
-import { resendInvite, setAdmin, setTeacherActive } from "./actions";
+import { formatDate } from "@/lib/time";
+import { deleteInvite, resendInvite, setAdmin, setTeacherActive } from "./actions";
 
-export function StaffTable({ staff, currentUserId }: { staff: StaffRow[]; currentUserId: number }) {
+type Key = "name" | "email" | "signin";
+
+export function StaffTable({
+  staff,
+  currentUserId,
+  timezone,
+}: {
+  staff: StaffRow[];
+  currentUserId: number;
+  timezone: string;
+}) {
   const router = useRouter();
+  const { sort, toggle, sorted } = useSort<Key, StaffRow>(
+    staff,
+    (s, key) => (key === "name" ? s.name : key === "email" ? s.email : s.lastSignInAt),
+    { key: "name", direction: "asc" },
+  );
 
   const run = async (result: Promise<{ ok: boolean; error?: string }>, done: string) => {
     const r = await result;
@@ -23,41 +42,61 @@ export function StaffTable({ staff, currentUserId }: { staff: StaffRow[]; curren
     <Table>
       <Table.Thead>
         <Table.Tr>
-          <Table.Th>Name</Table.Th>
+          <SortableTh label="Name" sortKey="name" sort={sort} onSort={toggle} />
+          <SortableTh label="Email" sortKey="email" sort={sort} onSort={toggle} />
+          <Table.Th>Phone</Table.Th>
           <Table.Th>Roles</Table.Th>
-          <Table.Th>Status</Table.Th>
+          <Table.Th>Account</Table.Th>
+          <SortableTh label="Last sign-in" sortKey="signin" sort={sort} onSort={toggle} />
           <Table.Th />
         </Table.Tr>
       </Table.Thead>
       <Table.Tbody>
-        {staff.map((person) => (
+        {sorted.map((person) => (
           <Table.Tr key={person.id}>
             <Table.Td>
-              <Text fw={500}>{person.name}</Text>
-              <Text size="sm" c="dimmed">
+              <AppLink href={`/admin/staff/${person.id}`} fw={500}>
+                {person.name}
+              </AppLink>
+            </Table.Td>
+            <Table.Td>
+              <Text component="span" c="dimmed">
                 {person.email}
               </Text>
             </Table.Td>
+            <Table.Td>{person.phone ?? "—"}</Table.Td>
             <Table.Td>
-              <Group gap="xs">
+              <Group gap="xs" wrap="nowrap">
                 {person.isAdmin && (
                   <Badge variant="outline" color="gray">
                     Admin
                   </Badge>
                 )}
-                {person.teacher && (
-                  <Badge
-                    variant="outline"
-                    color="gray"
-                    c={person.teacher.isActive ? undefined : "dimmed"}
-                  >
-                    {person.teacher.isActive ? "Teacher" : "Not teaching"}
-                  </Badge>
-                )}
+                {person.teacher &&
+                  (person.teacher.isActive ? (
+                    <Badge variant="outline" color="gray">
+                      Teacher
+                    </Badge>
+                  ) : (
+                    <Text size="sm" c="dimmed">
+                      Stopped teaching
+                      {person.teacher.deactivatedAt &&
+                        ` ${formatDate(person.teacher.deactivatedAt, timezone, true)}`}
+                    </Text>
+                  ))}
               </Group>
             </Table.Td>
             <Table.Td>
               <StatusBadge domain="account" value={person.status} />
+            </Table.Td>
+            <Table.Td>
+              {person.lastSignInAt ? (
+                formatDate(person.lastSignInAt, timezone, true)
+              ) : (
+                <Text component="span" c="dimmed">
+                  Never
+                </Text>
+              )}
             </Table.Td>
             <Table.Td ta="end">
               {(person.status === "invited" || person.teacher || person.id !== currentUserId) && (
@@ -111,6 +150,22 @@ export function StaffTable({ staff, currentUserId }: { staff: StaffRow[]; curren
                         }
                       >
                         {person.isAdmin ? "Remove admin access" : "Make admin"}
+                      </Menu.Item>
+                    )}
+                    {person.status === "invited" && (
+                      <Menu.Item
+                        color="clay"
+                        onClick={() =>
+                          confirmDestructive({
+                            title: "Delete this invite?",
+                            message: `${person.name} (${person.email}) never set up their account. The invite and their entry are removed. This cannot be undone.`,
+                            confirmLabel: "Delete invite",
+                            onConfirm: () =>
+                              run(deleteInvite({ userId: person.id }), "Invite deleted"),
+                          })
+                        }
+                      >
+                        Delete invite
                       </Menu.Item>
                     )}
                   </Menu.Dropdown>

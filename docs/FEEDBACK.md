@@ -17,8 +17,8 @@ Salah's notes from the first walkthrough (after Phase 3 task 1), one line each, 
 - ☑ Settings: say the student ID prefix only affects IDs issued from now on.
 - ☑ Resources: audience wording ("Students & guardians"); rows show who it's shared with and when. No separate "all" — staff always see everything.
 - ☑ Attendance list: Students + Absent → one "Present 7 / 8" column.
-- ☐ Attendance aggregate for the office (term view: date × class, teacher, present/total, register status). → new task 15.
-- ☐ Staff as a proper table; deactivation with its date; deactivated staff hidden by default with a toggle; delete only for invites never accepted; staff detail page (classes, sessions with times, notes written, last sign-in). → new task 14.
+- ☑ Attendance aggregate for the office (term view: date × class, teacher, present/total, register status). → new task 15.
+- ☑ Staff as a proper table; deactivation with its date; deactivated staff hidden by default with a toggle; delete only for invites never accepted; staff detail page (classes, sessions with times, notes written, last sign-in). → new task 14.
 - → Scheduling conflicts visible when assigning teachers (the clash check exists). → task 10.
 
 ## Fees

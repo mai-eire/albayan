@@ -1,4 +1,5 @@
 import { and, asc, count, desc, eq, gte, inArray, lte, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/sqlite-core";
 import { db } from "@/lib/db";
 import {
   attendance,
@@ -7,9 +8,11 @@ import {
   schoolSessions,
   sessionPeriods,
   students,
+  teachers,
   users,
   type AttendanceStatus,
 } from "@/lib/db/schema";
+import { lessonDatesBetween } from "@/lib/calendar";
 import { addMinutes } from "@/lib/timetable";
 
 export type RegisterRow = {
@@ -218,4 +221,86 @@ export async function listAttendanceForStudent(
     .where(eq(attendance.studentId, studentId))
     .orderBy(desc(attendance.date))
     .limit(limit);
+}
+
+export type TermRegisterRow = {
+  date: string;
+  classId: number;
+  className: string;
+  sessionId: number;
+  sessionName: string;
+  teacherName: string | null;
+  studentCount: number;
+  recordedCount: number;
+  absentCount: number;
+};
+
+// Every lesson date × class in the range, newest first, with how much of each register is
+// in. Lesson dates come from the session's weekday; counts from the attendance rows.
+export async function listRegistersForTerm(
+  academicYearId: string,
+  from: string,
+  to: string,
+): Promise<TermRegisterRow[]> {
+  const d = await db();
+  const classTeacher = alias(teachers, "class_teacher");
+  const classTeacherUser = alias(users, "class_teacher_user");
+  const rows = await d
+    .select({
+      classId: classes.id,
+      className: classes.name,
+      sessionId: schoolSessions.id,
+      sessionName: schoolSessions.name,
+      dayOfWeek: schoolSessions.dayOfWeek,
+      teacherName: classTeacherUser.name,
+    })
+    .from(classes)
+    .innerJoin(schoolSessions, eq(schoolSessions.id, classes.sessionId))
+    .leftJoin(classTeacher, eq(classTeacher.id, classes.classTeacherId))
+    .leftJoin(classTeacherUser, eq(classTeacherUser.id, classTeacher.userId))
+    .where(and(eq(classes.academicYearId, academicYearId), eq(schoolSessions.isActive, true)))
+    .orderBy(asc(schoolSessions.startTime), asc(classes.name));
+  if (!rows.length) return [];
+  const classIds = rows.map((r) => r.classId);
+  const [enrolled, recorded] = await Promise.all([
+    d
+      .select({ classId: enrolments.classId, n: count() })
+      .from(enrolments)
+      .where(and(inArray(enrolments.classId, classIds), eq(enrolments.status, "active")))
+      .groupBy(enrolments.classId),
+    d
+      .select({
+        classId: attendance.classId,
+        date: attendance.date,
+        n: count(),
+        absent: sql<number>`sum(case when ${attendance.status} = 'absent' then 1 else 0 end)`,
+      })
+      .from(attendance)
+      .where(
+        and(
+          inArray(attendance.classId, classIds),
+          gte(attendance.date, from),
+          lte(attendance.date, to),
+        ),
+      )
+      .groupBy(attendance.classId, attendance.date),
+  ]);
+  const out: TermRegisterRow[] = [];
+  for (const r of rows) {
+    for (const date of lessonDatesBetween(r.dayOfWeek, from, to)) {
+      const taken = recorded.find((a) => a.classId === r.classId && a.date === date);
+      out.push({
+        date,
+        classId: r.classId,
+        className: r.className,
+        sessionId: r.sessionId,
+        sessionName: r.sessionName,
+        teacherName: r.teacherName,
+        studentCount: enrolled.find((e) => e.classId === r.classId)?.n ?? 0,
+        recordedCount: taken?.n ?? 0,
+        absentCount: taken?.absent ?? 0,
+      });
+    }
+  }
+  return out.sort((a, b) => (a.date === b.date ? 0 : a.date > b.date ? -1 : 1));
 }

@@ -1,6 +1,6 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { and, eq, like } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/access";
@@ -10,9 +10,10 @@ import { audit } from "@/lib/audit";
 import { auth } from "@/lib/auth";
 import type { Db } from "@/lib/db";
 import { getSchoolSettings } from "@/lib/db/queries/settings";
-import { teachers, users } from "@/lib/db/schema";
+import { teachers, users, verifications } from "@/lib/db/schema";
 import { sendInvite } from "@/lib/email";
 import { createInvite } from "@/lib/invites";
+import { todayIn } from "@/lib/time";
 
 const inviteSchema = z
   .object({
@@ -124,15 +125,49 @@ export const setTeacherActive = action(
   z.object({ teacherId: z.number().int(), isActive: z.boolean() }),
   async (input, { user, db }) => {
     requireAdmin(user);
+    const { timezone } = await getSchoolSettings();
+    const deactivatedAt = input.isActive ? null : todayIn(timezone);
     await db
       .update(teachers)
-      .set({ isActive: input.isActive })
+      .set({ isActive: input.isActive, deactivatedAt })
       .where(eq(teachers.id, input.teacherId));
     await audit(db, {
       actorUserId: user.id,
       action: input.isActive ? "teacher.activate" : "teacher.deactivate",
       entityType: "teacher",
       entityId: input.teacherId,
+      changes: { deactivatedAt },
+    });
+    revalidatePath("/admin/staff");
+  },
+);
+
+// An invite nobody accepted leaves nothing behind, so it can go. Anyone who has signed in
+// stays (their registers and notes point at them) and is deactivated instead.
+export const deleteInvite = action(
+  z.object({ userId: z.number().int() }),
+  async (input, { user, db }) => {
+    requireAdmin(user);
+    const target = await db.query.users.findFirst({
+      columns: { id: true, name: true, email: true, status: true },
+      where: eq(users.id, input.userId),
+    });
+    if (!target || target.status !== "invited") {
+      throw new ActionError("That person has already set up their account.");
+    }
+    await db.delete(teachers).where(eq(teachers.userId, target.id));
+    await db
+      .delete(verifications)
+      .where(
+        and(like(verifications.identifier, "invite:%"), eq(verifications.value, String(target.id))),
+      );
+    await db.delete(users).where(eq(users.id, target.id));
+    await audit(db, {
+      actorUserId: user.id,
+      action: "staff.delete_invite",
+      entityType: "user",
+      entityId: target.id,
+      changes: { name: target.name, email: target.email },
     });
     revalidatePath("/admin/staff");
   },

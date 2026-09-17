@@ -41,6 +41,7 @@ vi.mock("next/server", () => ({ after: (work: () => Promise<void>) => void work(
 vi.mock("next/cache", () => ({ revalidatePath: () => {} }));
 
 const { saveRegister } = await import("./actions");
+const { listRegistersForTerm } = await import("@/lib/db/queries/attendance");
 
 const base = {
   name: "X",
@@ -194,5 +195,21 @@ describe("saveRegister", () => {
       ok: false,
       error: /future/,
     });
+  });
+});
+
+describe("listRegistersForTerm", () => {
+  it("lists every Saturday × class in the range with the counts of what was recorded", async () => {
+    const rows = await listRegistersForTerm("2026-27", "2026-09-05", "2026-09-19");
+    expect(rows.map((r) => r.date)).toEqual(["2026-09-19", "2026-09-12", "2026-09-05"]);
+    expect(rows[0]).toMatchObject({
+      classId: 1,
+      className: "Level 1",
+      sessionName: "Saturday",
+      teacherName: "Teacher",
+      studentCount: 2,
+    });
+    const taken = rows.filter((r) => r.recordedCount > 0);
+    for (const r of taken) expect(r.recordedCount).toBe(2);
   });
 });

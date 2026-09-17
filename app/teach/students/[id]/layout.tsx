@@ -14,11 +14,17 @@ export default async function TeacherStudentLayout({
   params,
   children,
 }: LayoutProps<"/teach/students/[id]">) {
-  const { student } = await loadTeacherStudent(params);
+  const { student, facts } = await loadTeacherStudent(params);
   return (
     <Stack gap="lg" maw={860} mx="auto">
       <PageHeader
-        eyebrow={[student.className, student.sessionName].filter(Boolean).join(" · ")}
+        breadcrumbs={[
+          { label: "My classes", href: "/teach/classes" },
+          ...(facts.activeClass && student.className
+            ? [{ label: student.className, href: `/teach/classes/${facts.activeClass.id}` }]
+            : []),
+        ]}
+        eyebrow={student.sessionName ?? undefined}
         title={`${student.firstName} ${student.lastName}`}
       />
       <LinkTabs base={`/teach/students/${student.id}`} tabs={tabs} />

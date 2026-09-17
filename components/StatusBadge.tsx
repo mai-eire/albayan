@@ -39,6 +39,11 @@ const statuses = {
     due_soon: ["saffron", "Due soon"],
     overdue: ["clay", "Overdue"],
   },
+  // Homework and events: a draft is the teacher's alone until published.
+  publication: {
+    draft: ["saffron", "Draft"],
+    published: ["tile", "Published"],
+  },
 } as const satisfies Record<string, Record<string, readonly [string, string]>>;
 
 type Statuses = typeof statuses;

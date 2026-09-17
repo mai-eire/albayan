@@ -6,3 +6,13 @@
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
 }
+
+.link {
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 150ms ease;
+
+  &:hover {
+    border-color: var(--mantine-color-tile-6);
+  }
+}

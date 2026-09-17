@@ -18,6 +18,7 @@ export default async function TeacherClassLayout({
   return (
     <Stack gap="lg" maw={1100} mx="auto">
       <PageHeader
+        breadcrumbs={[{ label: "My classes", href: "/teach/classes" }]}
         eyebrow={[
           cls.session.name,
           cls.room,

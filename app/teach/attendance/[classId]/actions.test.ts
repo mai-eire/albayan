@@ -166,16 +166,12 @@ describe("saveRegister", () => {
     expect(emails).toEqual(["p@example.com"]);
   });
 
-  it("past registers are admin-only and audited with before/after", async () => {
+  it("past registers can be filled in by the teacher and are audited with before/after", async () => {
     current = teacher;
-    expect(await saveRegister({ classId: 1, date: yesterday, entries: all() })).toMatchObject({
-      ok: false,
-      error: /only be changed by the office/,
-    });
-    current = admin;
     expect(await saveRegister({ classId: 1, date: yesterday, entries: all() })).toMatchObject({
       ok: true,
     });
+    current = admin;
     expect(
       await saveRegister({
         classId: 1,

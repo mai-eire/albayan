@@ -7,7 +7,15 @@ import { confirmDestructive } from "@/components/confirm";
 import { toast } from "@/components/toast";
 import type { ResourceRow } from "@/lib/db/queries/resources";
 import { deleteResource } from "@/lib/resources";
+import type { ResourceAudience } from "@/lib/db/schema";
+import { formatDate } from "@/lib/time";
 import classes from "./ResourceList.module.css";
+
+export const audienceLabels: Record<ResourceAudience, string> = {
+  students_and_guardians: "Students & guardians",
+  guardians_only: "Guardians only",
+  staff_only: "Staff only",
+};
 
 // "12 KB", "3.4 MB"
 export function formatBytes(bytes: number | null): string {
@@ -28,9 +36,23 @@ export type ResourceListItem = ResourceRow & {
   removable?: boolean;
 };
 
+type Props = {
+  items: ResourceListItem[];
+  // Staff see who can open each resource and when it was shared; families don't need to.
+  staff?: { timezone: string };
+};
+
 // Files and links as rows: icon, title (the link), context line, optional remove.
-export function ResourceList({ items }: { items: ResourceListItem[] }) {
+export function ResourceList({ items, staff }: Props) {
   const router = useRouter();
+  const detail = (r: ResourceListItem) =>
+    [
+      r.context ?? [r.uploadedByName, formatBytes(r.sizeBytes)].filter(Boolean).join(" · "),
+      staff && audienceLabels[r.audience],
+      staff && formatDate(r.createdAt, staff.timezone),
+    ]
+      .filter(Boolean)
+      .join(" · ");
   const remove = (r: ResourceRow) =>
     confirmDestructive({
       title: "Remove this resource?",
@@ -63,8 +85,7 @@ export function ResourceList({ items }: { items: ResourceListItem[] }) {
               {r.title}
             </Anchor>
             <Text size="sm" c="dimmed">
-              {r.context ??
-                [r.uploadedByName, formatBytes(r.sizeBytes)].filter(Boolean).join(" · ")}
+              {detail(r)}
             </Text>
             {r.description && <Text size="sm">{r.description}</Text>}
           </div>

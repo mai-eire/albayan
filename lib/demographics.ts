@@ -1,23 +1,18 @@
-import type { ArabicProficiency, RegistrationReason, Relationship } from "@/lib/db/schema";
+import {
+  relationships,
+  type ArabicProficiency,
+  type GuardianGender,
+  type RegistrationReason,
+  type Relationship,
+} from "@/lib/db/schema";
 
 // Option lists shared by the application wizard, the admin profiles and the reports.
 // Stored values are the keys; the labels are what families see.
 
 export const preferNotToSay = "Prefer not to say";
 
-export const ethnicities = [
-  "Arab",
-  "Asian – Pakistani",
-  "Asian – Bangladeshi",
-  "Asian – Indian",
-  "Asian – other",
-  "Black – African",
-  "Black – other",
-  "White – Irish",
-  "White – other",
-  "Mixed",
-  "Other",
-];
+// Top-level groups only; the report is about the mix of the school, not sub-categories.
+export const ethnicities = ["Arab", "Asian", "Black", "White", "Mixed", "Other"];
 
 // Irish mainstream school years; stored as the label.
 export const yearGroups = [
@@ -45,6 +40,18 @@ export const proficiencyLabels: Record<ArabicProficiency, string> = {
   advanced: "Reads and writes confidently",
   native: "Speaks Arabic at home",
 };
+
+export const guardianGenderOptions = [
+  { value: "female", label: "Female" },
+  { value: "male", label: "Male" },
+];
+
+// "Mother" isn't offered to a father and vice versa; with no gender given, both are.
+export function relationshipsFor(gender: GuardianGender | null | undefined): Relationship[] {
+  return relationships.filter(
+    (r) => !(gender === "female" && r === "father") && !(gender === "male" && r === "mother"),
+  );
+}
 
 export const relationshipLabels: Record<Relationship, string> = {
   mother: "Mother",

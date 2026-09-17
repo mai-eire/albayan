@@ -17,7 +17,13 @@ export default async function YearPage({ params }: Props) {
   if (!year) notFound();
   return (
     <Stack gap="lg" maw={720}>
-      <PageHeader eyebrow="Academic year" title={year.id} />
+      <PageHeader
+        breadcrumbs={[
+          { label: "Academics", href: "/admin/academics" },
+          { label: "Years", href: "/admin/academics/years" },
+        ]}
+        title={year.id}
+      />
       <Card>
         <CardTitle>Dates and fee</CardTitle>
         <YearForm existing={year} />

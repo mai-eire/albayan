@@ -25,6 +25,7 @@ export default async function AdminRegisterPage({ params, searchParams }: Props)
   return (
     <Stack gap="lg" maw={720}>
       <PageHeader
+        breadcrumbs={[{ label: "Attendance", href: `/admin/attendance?date=${date}` }]}
         eyebrow={`${register.className} · ${register.sessionName}`}
         title={formatDate(date, timezone, true)}
       />

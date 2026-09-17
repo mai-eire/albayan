@@ -29,7 +29,7 @@ import { LinkButton } from "@/components/LinkButton";
 import { sensitiveExplanation } from "@/components/SensitiveSection";
 import { toast } from "@/components/toast";
 import type { guardians } from "@/lib/db/schema";
-import { arabicProficiencies, registrationReasons, relationships } from "@/lib/db/schema";
+import { arabicProficiencies, registrationReasons } from "@/lib/db/schema";
 import {
   commonLanguages,
   ethnicities,
@@ -37,6 +37,7 @@ import {
   proficiencyLabels,
   reasonLabels,
   relationshipLabels,
+  relationshipsFor,
   yearGroups,
 } from "@/lib/demographics";
 import { submitApplication } from "./actions";
@@ -101,19 +102,27 @@ function stepErrors(schema: z.ZodType, values: Values): Record<string, string> |
 
 export function ApplicationWizard({
   guardian,
+  lastRelationship,
   days,
 }: {
   guardian: Guardian | null;
+  // What they said they were to the child they registered last; the default this time.
+  lastRelationship: string | null;
   days: DayChoice[];
 }) {
   const router = useRouter();
   const [step, setStep] = useState(0);
+  const relationshipOptions = relationshipsFor(guardian?.gender);
+  const hasAddress = Boolean(guardian?.addressLine1 && guardian?.city && guardian?.postalCode);
+  const [editingAddress, setEditingAddress] = useState(!hasAddress);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [submitted, setSubmitted] = useState<string | null>(null);
   const form = useForm<Values>({
     initialValues: {
-      relationship: null,
+      relationship:
+        lastRelationship ??
+        (guardian?.gender === "female" ? "mother" : guardian?.gender === "male" ? "father" : null),
       addressLine1: guardian?.addressLine1 ?? "",
       addressLine2: guardian?.addressLine2 ?? "",
       city: guardian?.city ?? "",
@@ -191,36 +200,61 @@ export function ApplicationWizard({
           <Stack gap="md" mt="md">
             <Select
               label="Your relationship to the child"
-              data={relationships.map((r) => ({ value: r, label: relationshipLabels[r] }))}
+              data={relationshipOptions.map((r) => ({ value: r, label: relationshipLabels[r] }))}
               allowDeselect={false}
               withAsterisk
               {...form.getInputProps("relationship")}
             />
-            <TextInput
-              label="Address"
-              autoComplete="address-line1"
-              withAsterisk
-              {...form.getInputProps("addressLine1")}
-            />
-            <TextInput
-              label="Address line 2"
-              autoComplete="address-line2"
-              {...form.getInputProps("addressLine2")}
-            />
-            <Group grow>
-              <TextInput
-                label="Town or city"
-                autoComplete="address-level2"
-                withAsterisk
-                {...form.getInputProps("city")}
-              />
-              <TextInput
-                label="Eircode"
-                autoComplete="postal-code"
-                withAsterisk
-                {...form.getInputProps("postalCode")}
-              />
-            </Group>
+            {editingAddress ? (
+              <>
+                <TextInput
+                  label="Your address"
+                  autoComplete="address-line1"
+                  withAsterisk
+                  {...form.getInputProps("addressLine1")}
+                />
+                <TextInput
+                  label="Address line 2"
+                  autoComplete="address-line2"
+                  {...form.getInputProps("addressLine2")}
+                />
+                <Group grow>
+                  <TextInput
+                    label="Town or city"
+                    autoComplete="address-level2"
+                    withAsterisk
+                    {...form.getInputProps("city")}
+                  />
+                  <TextInput
+                    label="Eircode"
+                    autoComplete="postal-code"
+                    withAsterisk
+                    {...form.getInputProps("postalCode")}
+                  />
+                </Group>
+              </>
+            ) : (
+              <Group justify="space-between" align="flex-start" wrap="nowrap">
+                <div>
+                  <Text size="xs" c="dimmed">
+                    Your address
+                  </Text>
+                  <Text size="sm">
+                    {[
+                      form.values.addressLine1,
+                      form.values.addressLine2,
+                      form.values.city,
+                      form.values.postalCode,
+                    ]
+                      .filter(Boolean)
+                      .join(", ")}
+                  </Text>
+                </div>
+                <Button variant="subtle" size="xs" onClick={() => setEditingAddress(true)}>
+                  Change
+                </Button>
+              </Group>
+            )}
             <Title order={4} mt="sm">
               Emergency contact
             </Title>

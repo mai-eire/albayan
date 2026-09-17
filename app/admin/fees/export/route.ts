@@ -17,7 +17,7 @@ export async function GET(request: Request) {
       "Student ID",
       "Student",
       "Class",
-      "Day",
+      "Session",
       "Guardian",
       "Fee",
       "Fee note",

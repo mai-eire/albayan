@@ -17,6 +17,7 @@ import { getCurrentYear } from "@/lib/db/queries/academics";
 import { listRegistersForDate } from "@/lib/db/queries/attendance";
 import { getSchoolSettings } from "@/lib/db/queries/settings";
 import { formatDate, todayIn } from "@/lib/time";
+import tabular from "@/components/tabular.module.css";
 import { DatePicker } from "./DatePicker";
 
 export const metadata = { title: "Attendance" };
@@ -57,9 +58,8 @@ export default async function AdminAttendancePage({ searchParams }: Props) {
           <TableThead>
             <TableTr>
               <TableTh>Class</TableTh>
-              <TableTh>Day</TableTh>
-              <TableTh>Students</TableTh>
-              <TableTh>Absent</TableTh>
+              <TableTh>Session</TableTh>
+              <TableTh ta="end">Present</TableTh>
               <TableTh>Register</TableTh>
             </TableTr>
           </TableThead>
@@ -72,13 +72,22 @@ export default async function AdminAttendancePage({ searchParams }: Props) {
                   </AppLink>
                 </TableTd>
                 <TableTd>
-                  {r.sessionName} · {r.startTime}
+                  {r.sessionName} {r.startTime}–{r.endTime}
                 </TableTd>
-                <TableTd>{r.studentCount}</TableTd>
-                <TableTd>
-                  {r.absentCount || (
+                <TableTd ta="end" className={tabular.tabular}>
+                  {r.recordedCount ? (
+                    <>
+                      <Text component="span" c={r.absentCount ? "clay" : undefined} fw={500}>
+                        {r.recordedCount - r.absentCount}
+                      </Text>
+                      <Text component="span" c="dimmed">
+                        {" "}
+                        / {r.studentCount}
+                      </Text>
+                    </>
+                  ) : (
                     <Text component="span" c="dimmed">
-                      —
+                      {r.studentCount} students
                     </Text>
                   )}
                 </TableTd>

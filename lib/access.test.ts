@@ -137,13 +137,15 @@ describe("canViewStudent", () => {
 });
 
 describe("canEditRegister", () => {
-  it("lets the class's teachers edit today only, admin any day", () => {
+  it("lets the class's teachers and admin edit any day up to today, never the future", () => {
     expect(canEditRegister(classTeacher, level2, "2026-09-19", "2026-09-19")).toBe(true);
     expect(canEditRegister(quranTeacher, level2, "2026-09-19", "2026-09-19")).toBe(true);
-    expect(canEditRegister(classTeacher, level2, "2026-09-12", "2026-09-19")).toBe(false);
+    expect(canEditRegister(classTeacher, level2, "2026-09-12", "2026-09-19")).toBe(true);
+    expect(canEditRegister(classTeacher, level2, "2026-09-26", "2026-09-19")).toBe(false);
     expect(canEditRegister(otherTeacher, level2, "2026-09-19", "2026-09-19")).toBe(false);
     expect(canEditRegister(formerTeacher, level2, "2026-09-19", "2026-09-19")).toBe(false);
     expect(canEditRegister(admin, level2, "2026-09-12", "2026-09-19")).toBe(true);
+    expect(canEditRegister(admin, level2, "2026-09-26", "2026-09-19")).toBe(false);
   });
 });
 

@@ -116,6 +116,8 @@ export type ClassRow = typeof classes.$inferSelect & {
   sessionName: string;
   classTeacherName: string | null;
   studentCount: number;
+  // The class teacher and every subject teacher, for filtering the list by teacher.
+  teacherIds: number[];
 };
 
 export async function listClasses(academicYearId: string): Promise<ClassRow[]> {
@@ -138,11 +140,30 @@ export async function listClasses(academicYearId: string): Promise<ClassRow[]> {
     .where(eq(classes.academicYearId, academicYearId))
     .groupBy(classes.id)
     .orderBy(weekOrder, asc(schoolSessions.startTime), asc(classes.name));
+  const assigned = rows.length
+    ? await d
+        .select({ classId: teachingAssignments.classId, teacherId: teachingAssignments.teacherId })
+        .from(teachingAssignments)
+        .where(
+          inArray(
+            teachingAssignments.classId,
+            rows.map((r) => r.cls.id),
+          ),
+        )
+    : [];
   return rows.map((r) => ({
     ...r.cls,
     sessionName: r.sessionName,
     classTeacherName: r.classTeacherName,
     studentCount: r.studentCount,
+    teacherIds: [
+      ...new Set(
+        [
+          r.cls.classTeacherId,
+          ...assigned.filter((a) => a.classId === r.cls.id).map((a) => a.teacherId),
+        ].filter((id): id is number => id !== null),
+      ),
+    ],
   }));
 }
 

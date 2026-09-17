@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildMonth } from "./calendar";
+import { buildMonth, lessonDatesBetween } from "./calendar";
 
 const terms = [{ name: "Autumn term", startDate: "2026-09-05", endDate: "2026-12-19" }];
 const lessonDays = [
@@ -45,5 +45,18 @@ describe("buildMonth", () => {
       "Last day of term",
     ]);
     expect(month.next).toBe("2027-01");
+  });
+});
+
+describe("lessonDatesBetween", () => {
+  it("lists the Saturdays in a range, inclusive", () => {
+    expect(lessonDatesBetween(6, "2026-09-05", "2026-09-26")).toEqual([
+      "2026-09-05",
+      "2026-09-12",
+      "2026-09-19",
+      "2026-09-26",
+    ]);
+    expect(lessonDatesBetween(0, "2026-09-05", "2026-09-06")).toEqual(["2026-09-06"]);
+    expect(lessonDatesBetween(0, "2026-09-07", "2026-09-12")).toEqual([]);
   });
 });

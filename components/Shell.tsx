@@ -15,6 +15,7 @@ import {
   ThemeIcon,
   Title,
   UnstyledButton,
+  useComputedColorScheme,
   useMantineColorScheme,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
@@ -41,7 +42,6 @@ import {
   IconUsersGroup,
   IconSun,
   IconMoon,
-  IconDeviceDesktop,
   IconClock,
   type Icon,
 } from "@tabler/icons-react";
@@ -162,6 +162,7 @@ export function Shell({ area, schoolName, user, roles, unread = 0, children }: P
                 <IconBell size={20} stroke={1.75} />
               </ActionIcon>
             </Indicator>
+            <SchemeToggle />
             <UserMenu name={user.name} />
           </Group>
         </Group>
@@ -233,14 +234,25 @@ function RoleSwitcher({ current, roles }: { current: Area; roles: Area[] }) {
   );
 }
 
-const schemes = [
-  { value: "light", label: "Light", icon: IconSun },
-  { value: "dark", label: "Dark", icon: IconMoon },
-  { value: "auto", label: "Follow system", icon: IconDeviceDesktop },
-] as const;
+// One tap flips light/dark; the header is where people look for it.
+function SchemeToggle() {
+  const { colorScheme, setColorScheme } = useMantineColorScheme();
+  const computed = useComputedColorScheme("light");
+  const dark = colorScheme === "auto" ? computed === "dark" : colorScheme === "dark";
+  return (
+    <ActionIcon
+      variant="subtle"
+      color="gray"
+      size="lg"
+      aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
+      onClick={() => setColorScheme(dark ? "light" : "dark")}
+    >
+      {dark ? <IconSun size={20} stroke={1.75} /> : <IconMoon size={20} stroke={1.75} />}
+    </ActionIcon>
+  );
+}
 
 function UserMenu({ name }: { name: string }) {
-  const { colorScheme, setColorScheme } = useMantineColorScheme();
   const initials = name
     .split(" ")
     .map((part) => part[0])
@@ -258,18 +270,6 @@ function UserMenu({ name }: { name: string }) {
       </Menu.Target>
       <Menu.Dropdown>
         <Menu.Label>{name}</Menu.Label>
-        <Menu.Label>Appearance</Menu.Label>
-        {schemes.map(({ value, label, icon: Icon }) => (
-          <Menu.Item
-            key={value}
-            leftSection={<Icon size={16} stroke={1.75} />}
-            rightSection={colorScheme === value ? <IconCheck size={14} /> : null}
-            onClick={() => setColorScheme(value)}
-          >
-            {label}
-          </Menu.Item>
-        ))}
-        <Menu.Divider />
         <Menu.Item
           component="a"
           href="/logout"

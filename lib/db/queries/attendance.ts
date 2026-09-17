@@ -1,14 +1,16 @@
-import { and, asc, desc, eq, gte, inArray, lte } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, inArray, lte, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
   attendance,
   classes,
   enrolments,
   schoolSessions,
+  sessionPeriods,
   students,
   users,
   type AttendanceStatus,
 } from "@/lib/db/schema";
+import { addMinutes } from "@/lib/timetable";
 
 export type RegisterRow = {
   studentId: number;
@@ -85,6 +87,7 @@ export type RegisterSummary = {
   className: string;
   sessionName: string;
   startTime: string;
+  endTime: string;
   studentCount: number;
   recordedCount: number;
   absentCount: number;
@@ -104,6 +107,7 @@ export async function listRegistersForDate(
       className: classes.name,
       sessionName: schoolSessions.name,
       startTime: schoolSessions.startTime,
+      minutes: sql<number>`coalesce((select sum(${sessionPeriods.durationMinutes}) from ${sessionPeriods} where ${sessionPeriods.sessionId} = ${schoolSessions.id}), 0)`,
     })
     .from(classes)
     .innerJoin(schoolSessions, eq(schoolSessions.id, classes.sessionId))
@@ -128,8 +132,9 @@ export async function listRegistersForDate(
       .from(attendance)
       .where(and(inArray(attendance.classId, classIds), eq(attendance.date, date))),
   ]);
-  return rows.map((r) => ({
+  return rows.map(({ minutes, ...r }) => ({
     ...r,
+    endTime: addMinutes(r.startTime, minutes),
     studentCount: enrolled.filter((e) => e.classId === r.classId).length,
     recordedCount: recorded.filter((a) => a.classId === r.classId).length,
     absentCount: recorded.filter((a) => a.classId === r.classId && a.status === "absent").length,
@@ -172,7 +177,28 @@ export async function summariseAttendance(
   return [...byStudent.values()];
 }
 
-export type AttendanceEntry = { date: string; status: AttendanceStatus; note: string | null };
+// How many rows each register of a class has, by date, for the dates given.
+export async function countRegisterRows(
+  classId: number,
+  dates: string[],
+): Promise<Map<string, number>> {
+  if (!dates.length) return new Map();
+  const rows = await (
+    await db()
+  )
+    .select({ date: attendance.date, n: count() })
+    .from(attendance)
+    .where(and(eq(attendance.classId, classId), inArray(attendance.date, dates)))
+    .groupBy(attendance.date);
+  return new Map(rows.map((r) => [r.date, r.n]));
+}
+
+export type AttendanceEntry = {
+  date: string;
+  status: AttendanceStatus;
+  note: string | null;
+  sessionName: string;
+};
 
 // One student's recent attendance, newest first.
 export async function listAttendanceForStudent(
@@ -180,8 +206,15 @@ export async function listAttendanceForStudent(
   limit = 12,
 ): Promise<AttendanceEntry[]> {
   return (await db())
-    .select({ date: attendance.date, status: attendance.status, note: attendance.note })
+    .select({
+      date: attendance.date,
+      status: attendance.status,
+      note: attendance.note,
+      sessionName: schoolSessions.name,
+    })
     .from(attendance)
+    .innerJoin(classes, eq(classes.id, attendance.classId))
+    .innerJoin(schoolSessions, eq(schoolSessions.id, classes.sessionId))
     .where(eq(attendance.studentId, studentId))
     .orderBy(desc(attendance.date))
     .limit(limit);

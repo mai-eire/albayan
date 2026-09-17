@@ -39,8 +39,8 @@ export function FeesFilters({ years, year, sessions, classes }: Props) {
         w={150}
       />
       <Select
-        aria-label="Day"
-        placeholder="Any day"
+        aria-label="Session"
+        placeholder="Any session"
         data={sessions.map((s) => ({ value: String(s.id), label: s.name }))}
         value={session}
         clearable

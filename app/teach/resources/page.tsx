@@ -1,4 +1,5 @@
 import { Card, Stack } from "@mantine/core";
+import { getSchoolSettings } from "@/lib/db/queries/settings";
 import { IconFolder } from "@tabler/icons-react";
 import { EmptyState } from "@/components/EmptyState";
 import { PageHeader } from "@/components/PageHeader";
@@ -13,7 +14,11 @@ export const metadata = { title: "Resources" };
 
 // Everything I've shared, wherever it is attached. Sharing starts from a class.
 export default async function TeacherResourcesPage() {
-  const [user, year] = await Promise.all([requireArea("teach"), getCurrentYear()]);
+  const [user, year, { timezone }] = await Promise.all([
+    requireArea("teach"),
+    getCurrentYear(),
+    getSchoolSettings(),
+  ]);
   const [items, myClasses] = await Promise.all([
     listResourcesUploadedBy(user.id),
     user.teacher && year ? listClassesForTeacher(user.teacher.id, year.id) : [],
@@ -45,6 +50,7 @@ export default async function TeacherResourcesPage() {
                 .filter(Boolean)
                 .join(" · "),
             }))}
+            staff={{ timezone }}
           />
         </Card>
       )}

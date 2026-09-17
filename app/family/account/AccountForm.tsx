@@ -21,7 +21,13 @@ import { sensitiveExplanation } from "@/components/SensitiveSection";
 import { toast } from "@/components/toast";
 import type { guardians } from "@/lib/db/schema";
 import { registrationReasons } from "@/lib/db/schema";
-import { commonLanguages, ethnicities, preferNotToSay, reasonLabels } from "@/lib/demographics";
+import {
+  commonLanguages,
+  ethnicities,
+  guardianGenderOptions,
+  preferNotToSay,
+  reasonLabels,
+} from "@/lib/demographics";
 import { updateAccount, type AccountInput } from "./actions";
 
 type Props = {
@@ -37,6 +43,7 @@ export function AccountForm({ user, guardian }: Props) {
     initialValues: {
       name: user.name,
       phone: user.phone ?? "",
+      gender: guardian?.gender ?? null,
       emailNotifications: user.emailNotifications,
       addressLine1: guardian?.addressLine1 ?? "",
       addressLine2: guardian?.addressLine2 ?? "",
@@ -77,6 +84,14 @@ export function AccountForm({ user, guardian }: Props) {
               <TextInput label="Name" withAsterisk {...form.getInputProps("name")} />
               <TextInput label="Phone" type="tel" withAsterisk {...form.getInputProps("phone")} />
             </Group>
+            <Select
+              label="Gender"
+              placeholder="Prefer not to say"
+              data={guardianGenderOptions}
+              clearable
+              maw={240}
+              {...form.getInputProps("gender")}
+            />
             <TextInput label="Address" {...form.getInputProps("addressLine1")} />
             <TextInput label="Address line 2" {...form.getInputProps("addressLine2")} />
             <Group grow>

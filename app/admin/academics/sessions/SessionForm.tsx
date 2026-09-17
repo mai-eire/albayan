@@ -74,7 +74,7 @@ export function SessionForm({
         />
         <Group grow>
           <Select
-            label="Day"
+            label="Day of the week"
             data={weekdays.map((d, i) => ({ value: String(i), label: d }))}
             allowDeselect={false}
             value={String(form.values.dayOfWeek)}

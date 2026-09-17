@@ -171,13 +171,15 @@ export async function seed(db: Db, auth: Auth) {
     const guardianId = f + 1;
     const lastName = f === 0 ? "Ahmed" : pick(lastNames);
     const area = pick(areas);
+    const isMother = f === 0 || random() < 0.6;
     guardians.push({
       id: guardianId,
+      gender: isMother ? "female" : "male",
       userId:
         f === 0
           ? teachers[0].userId
           : user({
-              name: `${pick(random() < 0.5 ? firstNamesF : firstNamesM)} ${lastName}`,
+              name: `${pick(isMother ? firstNamesF : firstNamesM)} ${lastName}`,
               email: `parent${f + 1}@example.com`,
               phone: `08${pad(5000000 + f * 2345, 7)}`,
             }),
@@ -234,7 +236,7 @@ export async function seed(db: Db, auth: Auth) {
       studentGuardians.push({
         studentId: id,
         guardianId,
-        relationship: f === 0 || random() < 0.6 ? "mother" : "father",
+        relationship: isMother ? "mother" : "father",
         isPrimaryContact: true,
       });
       if (!pending) {

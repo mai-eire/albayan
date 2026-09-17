@@ -1,4 +1,5 @@
 import { Card, Stack } from "@mantine/core";
+import { getSchoolSettings } from "@/lib/db/queries/settings";
 import { IconFolder } from "@tabler/icons-react";
 import { EmptyState } from "@/components/EmptyState";
 import { PageHeader } from "@/components/PageHeader";
@@ -10,7 +11,7 @@ export const metadata = { title: "Resources" };
 
 // School-wide documents: the calendar, policies, forms. Class material lives on classes.
 export default async function AdminResourcesPage() {
-  const items = await listSchoolWideResources();
+  const [items, { timezone }] = await Promise.all([listSchoolWideResources(), getSchoolSettings()]);
   return (
     <Stack gap="lg" maw={860}>
       <PageHeader
@@ -25,7 +26,10 @@ export default async function AdminResourcesPage() {
         />
       ) : (
         <Card>
-          <ResourceList items={items.map((r) => ({ ...r, removable: true }))} />
+          <ResourceList
+            items={items.map((r) => ({ ...r, removable: true }))}
+            staff={{ timezone }}
+          />
         </Card>
       )}
     </Stack>

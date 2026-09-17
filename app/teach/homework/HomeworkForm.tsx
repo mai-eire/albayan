@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Group, Modal, Select, Stack, Textarea, TextInput } from "@mantine/core";
+import { Button, Group, Modal, Select, Stack, Text, Textarea, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { DateField } from "@/components/DateField";
 import { FormError } from "@/components/FormError";
+import { ResourceForm } from "@/components/ResourceForm";
 import { toast } from "@/components/toast";
 import type { HomeworkRow, HomeworkTarget } from "@/lib/db/queries/homework";
 import { saveHomework } from "./actions";
@@ -25,6 +26,7 @@ export function HomeworkForm({
   existing,
   onDone,
 }: {
+  // On a class page these are that class's subjects only, so the class picker is skipped.
   targets: HomeworkTarget[];
   existing?: HomeworkRow;
   onDone: () => void;
@@ -32,6 +34,8 @@ export function HomeworkForm({
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState<"draft" | "publish" | null>(null);
+  // After creating, offer to attach a file or link straight away.
+  const [created, setCreated] = useState<{ id: number; title: string } | null>(null);
   const form = useForm<Values>({
     initialValues: {
       classId: existing?.classId ?? targets[0]?.classId ?? null,
@@ -44,6 +48,7 @@ export function HomeworkForm({
   const classOptions = targets.filter(
     (t, i) => targets.findIndex((u) => u.classId === t.classId) === i,
   );
+  const oneClass = classOptions.length === 1;
   const subjectOptions = targets.filter((t) => t.classId === form.values.classId);
 
   const submit = async (publish: boolean) => {
@@ -63,35 +68,53 @@ export function HomeworkForm({
           ? "Homework saved"
           : "Draft saved",
     );
-    onDone();
     router.refresh();
+    if (existing) onDone();
+    else setCreated({ id: result.data.id, title: form.values.title });
   };
 
   const published = Boolean(existing?.publishedAt);
+
+  if (created) {
+    return (
+      <Stack gap="md">
+        <Text size="sm" c="dimmed">
+          Attach a worksheet, a recording or a link to &ldquo;{created.title}&rdquo; — or skip this.
+        </Text>
+        <ResourceForm
+          target={{ kind: "homework", homeworkId: created.id }}
+          onDone={onDone}
+          cancelLabel="Skip"
+        />
+      </Stack>
+    );
+  }
 
   return (
     <form onSubmit={(e) => e.preventDefault()}>
       <Stack gap="md">
         <Group grow>
-          <Select
-            label="Class"
-            data={classOptions.map((t) => ({
-              value: String(t.classId),
-              label: `${t.className} · ${t.sessionName}`,
-            }))}
-            allowDeselect={false}
-            value={form.values.classId?.toString() ?? null}
-            onChange={(v) => {
-              const classId = v ? Number(v) : null;
-              form.setFieldValue("classId", classId);
-              form.setFieldValue(
-                "subjectId",
-                targets.find((t) => t.classId === classId)?.subjectId ?? null,
-              );
-            }}
-            error={form.errors.classId}
-            disabled={published}
-          />
+          {!oneClass && (
+            <Select
+              label="Class"
+              data={classOptions.map((t) => ({
+                value: String(t.classId),
+                label: `${t.className} · ${t.sessionName}`,
+              }))}
+              allowDeselect={false}
+              value={form.values.classId?.toString() ?? null}
+              onChange={(v) => {
+                const classId = v ? Number(v) : null;
+                form.setFieldValue("classId", classId);
+                form.setFieldValue(
+                  "subjectId",
+                  targets.find((t) => t.classId === classId)?.subjectId ?? null,
+                );
+              }}
+              error={form.errors.classId}
+              disabled={published}
+            />
+          )}
           <Select
             label="Subject"
             data={subjectOptions.map((t) => ({ value: t.subjectId, label: t.subjectName }))}

@@ -36,6 +36,7 @@ export default async function GuardiansPage({ searchParams }: Props) {
           <TableThead>
             <TableTr>
               <TableTh>Guardian</TableTh>
+              <TableTh>Email</TableTh>
               <TableTh>Phone</TableTh>
               <TableTh>Children</TableTh>
             </TableTr>
@@ -47,7 +48,9 @@ export default async function GuardiansPage({ searchParams }: Props) {
                   <AppLink href={`/admin/guardians/${g.id}`} fw={500}>
                     {g.name}
                   </AppLink>
-                  <Text size="sm" c="dimmed">
+                </TableTd>
+                <TableTd>
+                  <Text component="span" c="dimmed">
                     {g.email}
                   </Text>
                 </TableTd>

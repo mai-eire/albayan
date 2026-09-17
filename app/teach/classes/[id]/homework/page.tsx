@@ -1,4 +1,4 @@
-import { Stack, Text } from "@mantine/core";
+import { Group, Stack, Text } from "@mantine/core";
 import { IconBook } from "@tabler/icons-react";
 import { EmptyState } from "@/components/EmptyState";
 import { HomeworkTable } from "@/app/teach/homework/HomeworkTable";
@@ -23,9 +23,9 @@ export default async function ClassHomeworkPage({ params }: Props) {
   return (
     <Stack gap="md">
       {targets.length > 0 && (
-        <div>
+        <Group justify="flex-end">
           <AddHomeworkButton targets={targets} />
-        </div>
+        </Group>
       )}
       {rows.length === 0 ? (
         <EmptyState

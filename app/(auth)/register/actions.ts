@@ -6,13 +6,14 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { guardians } from "@/lib/db/schema";
+import { guardianGenders, guardians } from "@/lib/db/schema";
 import { passwordSchema } from "@/lib/passwords";
 
 const schema = z.object({
   name: z.string().trim().min(2, "Enter your name").max(80),
   email: z.string().trim().toLowerCase().email("Enter a valid email address"),
   phone: z.string().trim().min(6, "Enter a phone number we can reach you on").max(30),
+  gender: z.enum(guardianGenders).nullable(),
   password: passwordSchema,
 });
 
@@ -29,7 +30,7 @@ export async function registerGuardian(raw: unknown): Promise<Result> {
     for (const issue of parsed.error.issues) fieldErrors[issue.path.join(".")] ??= issue.message;
     return { ok: false, error: "Check the highlighted fields.", fieldErrors };
   }
-  const { name, email, phone, password } = parsed.data;
+  const { name, email, phone, gender, password } = parsed.data;
   const a = await auth();
   const h = await headers();
   let userId: number;
@@ -48,7 +49,7 @@ export async function registerGuardian(raw: unknown): Promise<Result> {
     }
     throw error;
   }
-  await (await db()).insert(guardians).values({ userId });
+  await (await db()).insert(guardians).values({ userId, gender });
   await a.api.sendVerificationEmail({ body: { email, callbackURL: "/family" }, headers: h });
   redirect("/family");
 }

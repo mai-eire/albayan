@@ -7,12 +7,13 @@ import { optionalText } from "@/lib/fields";
 import { requireGuardian } from "@/lib/access";
 import { action } from "@/lib/actions";
 import { audit, diff } from "@/lib/audit";
-import { guardians, registrationReasons, users } from "@/lib/db/schema";
+import { guardianGenders, guardians, registrationReasons, users } from "@/lib/db/schema";
 import { routingKey } from "@/lib/demographics";
 
 const schema = z.object({
   name: z.string().trim().min(2, "Enter your name").max(80),
   phone: z.string().trim().min(6, "Enter a phone number we can reach you on").max(30),
+  gender: z.enum(guardianGenders).nullable(),
   emailNotifications: z.boolean(),
   addressLine1: optionalText(120),
   addressLine2: optionalText(120),

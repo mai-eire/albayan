@@ -55,7 +55,7 @@ export default async function TeacherAttendancePage() {
             }))}
           />
           <Text size="sm" c="dimmed" mt="md">
-            Registers can be changed until the end of the day; after that, ask the office.
+            Missed a day? Open the class and pick the date from its Attendance tab.
           </Text>
         </Card>
       )}

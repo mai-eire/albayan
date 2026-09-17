@@ -17,6 +17,10 @@ export default async function SessionPage({ params }: Props) {
   return (
     <Stack gap="lg" maw={860}>
       <PageHeader
+        breadcrumbs={[
+          { label: "Academics", href: "/admin/academics" },
+          { label: "Sessions", href: `/admin/academics/sessions?year=${session.academicYearId}` },
+        ]}
         eyebrow={`${session.academicYearId} · ${weekdays[session.dayOfWeek]}`}
         title={session.name}
         actions={

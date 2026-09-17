@@ -9,5 +9,5 @@ export async function loadTeacherStudent(params: Promise<{ id: string }>) {
   if (!facts || !canViewStudent(user, facts)) notFound();
   const student = await getStudentForTeacher(id);
   if (!student) notFound();
-  return { user, student };
+  return { user, student, facts };
 }

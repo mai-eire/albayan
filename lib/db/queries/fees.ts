@@ -217,6 +217,10 @@ export type PaymentTarget = {
   enrolmentId: number;
   studentId: number;
   label: string;
+  // Lets the picker match "ALB-26-0042" as well as the name.
+  studentCode: string | null;
+  feeCents: number;
+  paidCents: number;
   guardians: { id: number; name: string }[];
 };
 
@@ -237,10 +241,13 @@ export async function listPaymentTargets(academicYearId: string): Promise<Paymen
       ),
     )
     .orderBy(desc(studentGuardians.isPrimaryContact));
-  return active.map(({ enrolment: e }) => ({
+  return active.map(({ enrolment: e, feeCents, paidCents }) => ({
     enrolmentId: e.id,
     studentId: e.studentId,
     label: `${e.firstName} ${e.lastName} · ${e.className} · ${e.sessionName}`,
+    studentCode: e.studentCode,
+    feeCents,
+    paidCents,
     guardians: links
       .filter((l) => l.studentId === e.studentId)
       .map(({ id, name }) => ({ id, name })),

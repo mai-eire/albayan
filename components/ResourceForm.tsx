@@ -19,13 +19,8 @@ import { useState } from "react";
 import { FormError } from "@/components/FormError";
 import { toast } from "@/components/toast";
 import { resourceAudiences, type ResourceAudience } from "@/lib/db/schema";
+import { audienceLabels } from "./ResourceList";
 import { createResource, type ResourceTarget } from "@/lib/resources";
-
-const audienceLabels: Record<ResourceAudience, string> = {
-  students_and_guardians: "Students and families",
-  guardians_only: "Families only",
-  staff_only: "Staff only",
-};
 
 // Share a file (uploaded through /api/files first) or a link with one target. The target
 // is decided by the page that opens the form; the person picks title, audience and content.
@@ -33,10 +28,12 @@ export function ResourceForm({
   target,
   onDone,
   defaultAudience = "students_and_guardians",
+  cancelLabel = "Cancel",
 }: {
   target: ResourceTarget;
   onDone: () => void;
   defaultAudience?: ResourceAudience;
+  cancelLabel?: string;
 }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -148,7 +145,7 @@ export function ResourceForm({
         <FormError message={error} />
         <Group justify="flex-end">
           <Button variant="default" onClick={onDone}>
-            Cancel
+            {cancelLabel}
           </Button>
           <Button type="submit" loading={saving}>
             Share

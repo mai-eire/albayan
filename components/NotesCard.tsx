@@ -86,75 +86,75 @@ export function NotesCard({
     });
 
   return (
-    <Card>
-      <CardTitle>Notes</CardTitle>
-      <form onSubmit={submit}>
-        <Stack gap="sm" mb="lg">
-          <Textarea
-            aria-label="New note"
-            placeholder={`Something about ${firstName} worth remembering`}
-            autosize
-            minRows={2}
-            {...form.getInputProps("body")}
-          />
-          <Group gap="sm" align="flex-end" wrap="wrap">
-            <Select
-              aria-label="Category"
-              data={noteCategories.map((c) => ({ value: c, label: categoryLabels[c] }))}
-              allowDeselect={false}
-              w={140}
-              {...form.getInputProps("category")}
+    <Stack gap="md">
+      <Card>
+        <CardTitle>Add a note</CardTitle>
+        <form onSubmit={submit}>
+          <Stack gap="sm">
+            <Textarea
+              aria-label="New note"
+              placeholder={`Something about ${firstName} worth remembering`}
+              autosize
+              minRows={2}
+              {...form.getInputProps("body")}
             />
-            <Select
-              aria-label="Who can see it"
-              data={noteVisibilities.map((v) => ({ value: v, label: visibilityLabels[v] }))}
-              allowDeselect={false}
-              w={180}
-              {...form.getInputProps("visibility")}
-            />
-            <Button type="submit" loading={saving} disabled={!form.values.body.trim()}>
-              Add note
-            </Button>
-          </Group>
-          <FormError message={error} />
-        </Stack>
-      </form>
+            <Group gap="sm" align="flex-end" wrap="wrap">
+              <Select
+                aria-label="Category"
+                data={noteCategories.map((c) => ({ value: c, label: categoryLabels[c] }))}
+                allowDeselect={false}
+                w={140}
+                {...form.getInputProps("category")}
+              />
+              <Select
+                aria-label="Who can see it"
+                data={noteVisibilities.map((v) => ({ value: v, label: visibilityLabels[v] }))}
+                allowDeselect={false}
+                w={180}
+                {...form.getInputProps("visibility")}
+              />
+              <Button type="submit" loading={saving} disabled={!form.values.body.trim()}>
+                Add note
+              </Button>
+            </Group>
+            <FormError message={error} />
+          </Stack>
+        </form>
+      </Card>
       {notes.length === 0 ? (
-        <Text size="sm" c="dimmed">
+        <Text size="sm" c="dimmed" ta="center" py="md">
           No notes yet.
         </Text>
       ) : (
-        <Stack gap="md">
-          {notes.map((note) => (
-            <div key={note.id}>
-              <Group gap="xs" justify="space-between" wrap="nowrap">
-                <Group gap="xs">
-                  <Badge variant="light" color={categoryColors[note.category]}>
-                    {categoryLabels[note.category]}
-                  </Badge>
-                  <Text size="sm" c="dimmed">
-                    {note.authorName} · {dayjs(note.createdAt).format("D MMM YYYY")} ·{" "}
-                    {visibilityLabels[note.visibility]}
-                  </Text>
-                </Group>
-                {(isAdmin || note.authorUserId === currentUserId) && (
-                  <ActionIcon
-                    variant="subtle"
-                    color="gray"
-                    aria-label="Remove note"
-                    onClick={() => remove(note)}
-                  >
-                    <IconTrash size={16} stroke={1.75} />
-                  </ActionIcon>
-                )}
+        notes.map((note) => (
+          <Card key={note.id}>
+            <Group gap="xs" justify="space-between" wrap="nowrap">
+              <Group gap="xs">
+                <Badge variant="light" color={categoryColors[note.category]}>
+                  {categoryLabels[note.category]}
+                </Badge>
+                <Text size="sm" c="dimmed">
+                  {note.authorName} · {dayjs(note.createdAt).format("D MMM YYYY")} ·{" "}
+                  {visibilityLabels[note.visibility]}
+                </Text>
               </Group>
-              <Text size="sm" mt={4} style={{ whiteSpace: "pre-wrap" }}>
-                {note.body}
-              </Text>
-            </div>
-          ))}
-        </Stack>
+              {(isAdmin || note.authorUserId === currentUserId) && (
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  aria-label="Remove note"
+                  onClick={() => remove(note)}
+                >
+                  <IconTrash size={16} stroke={1.75} />
+                </ActionIcon>
+              )}
+            </Group>
+            <Text size="sm" mt="xs" style={{ whiteSpace: "pre-wrap" }}>
+              {note.body}
+            </Text>
+          </Card>
+        ))
       )}
-    </Card>
+    </Stack>
   );
 }

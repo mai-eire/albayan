@@ -53,6 +53,7 @@ export function HomeworkTable({
             <Table.Th>Homework</Table.Th>
             <Table.Th>Class</Table.Th>
             <Table.Th>Due</Table.Th>
+            <Table.Th>Status</Table.Th>
             <Table.Th />
           </Table.Tr>
         </Table.Thead>
@@ -61,11 +62,6 @@ export function HomeworkTable({
             <Table.Tr key={row.id}>
               <Table.Td>
                 <Text fw={500}>{row.title}</Text>
-                {!row.publishedAt && (
-                  <Text size="sm" c="dimmed">
-                    Draft — families can&apos;t see it yet
-                  </Text>
-                )}
               </Table.Td>
               <Table.Td>
                 {row.className} <SubjectBadge subjectId={row.subjectId} name={row.subjectName} />
@@ -75,6 +71,9 @@ export function HomeworkTable({
                 <Text size="sm" c="dimmed">
                   {dueLabel(row.dueDate, today, timezone)}
                 </Text>
+              </Table.Td>
+              <Table.Td>
+                <StatusBadge domain="publication" value={row.publishedAt ? "published" : "draft"} />
               </Table.Td>
               <Table.Td ta="end">
                 <Menu shadow="md" position="bottom-end">

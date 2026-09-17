@@ -33,7 +33,7 @@ export default async function StudentEnrolmentPage({ params }: Props) {
         {e ? (
           <SimpleGrid cols={{ base: 2, xs: 4 }} spacing="md">
             <Field label="Class" value={e.className} />
-            <Field label="Day" value={e.sessionName} />
+            <Field label="Session" value={e.sessionName} />
             <Field label="Since" value={<DateText date={e.startDate} withYear />} />
             <Field
               label="Fee"
@@ -62,7 +62,7 @@ export default async function StudentEnrolmentPage({ params }: Props) {
         <CardTitle>Application</CardTitle>
         <SimpleGrid cols={{ base: 2, xs: 4 }} spacing="md">
           <Field label="Applied" value={<DateText date={student.appliedAt} withYear />} />
-          <Field label="Preferred day" value={student.preferredSessionName ?? "—"} />
+          <Field label="Preferred session" value={student.preferredSessionName ?? "—"} />
           <Field label="Preferred class" value={student.preferredClassName ?? "No preference"} />
           <Field
             label="Decided"

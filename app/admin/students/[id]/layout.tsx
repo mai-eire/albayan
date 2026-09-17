@@ -27,6 +27,7 @@ export default async function StudentLayout({
   return (
     <Stack gap="lg" maw={860}>
       <PageHeader
+        breadcrumbs={[{ label: "Students", href: "/admin/students" }]}
         eyebrow={context || "Not yet placed"}
         title={`${student.firstName} ${student.lastName}`}
         actions={<StatusBadge domain="application" value={student.status} size="md" />}

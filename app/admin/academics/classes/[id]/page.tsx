@@ -37,6 +37,10 @@ export default async function ClassPage({ params }: Props) {
   return (
     <Stack gap="lg" maw={860}>
       <PageHeader
+        breadcrumbs={[
+          { label: "Academics", href: "/admin/academics" },
+          { label: "Classes", href: `/admin/academics/classes?year=${cls.academicYearId}` },
+        ]}
         eyebrow={`${cls.academicYearId} · ${cls.session.name}`}
         title={cls.name}
         actions={<DeleteClassButton id={cls.id} name={cls.name} studentCount={cls.studentCount} />}

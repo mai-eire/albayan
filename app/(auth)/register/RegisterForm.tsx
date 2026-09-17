@@ -1,9 +1,10 @@
 "use client";
 
-import { Button, PasswordInput, Stack, Text, TextInput } from "@mantine/core";
+import { Button, PasswordInput, Select, Stack, Text, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useState } from "react";
 import { FormError } from "@/components/FormError";
+import { guardianGenderOptions } from "@/lib/demographics";
 import { validateNewPassword } from "../password";
 import { registerGuardian, type RegisterInput } from "./actions";
 
@@ -11,14 +12,14 @@ export function RegisterForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const form = useForm<RegisterInput & { confirm: string }>({
-    initialValues: { name: "", email: "", phone: "", password: "", confirm: "" },
+    initialValues: { name: "", email: "", phone: "", gender: null, password: "", confirm: "" },
     validate: validateNewPassword,
   });
 
-  const submit = form.onSubmit(async ({ name, email, phone, password }) => {
+  const submit = form.onSubmit(async ({ name, email, phone, gender, password }) => {
     setLoading(true);
     setError(null);
-    const result = await registerGuardian({ name, email, phone, password });
+    const result = await registerGuardian({ name, email, phone, gender, password });
     if (!result.ok) {
       if (result.fieldErrors) form.setErrors(result.fieldErrors);
       setError(result.error);
@@ -51,6 +52,13 @@ export function RegisterForm() {
           autoComplete="tel"
           withAsterisk
           {...form.getInputProps("phone")}
+        />
+        <Select
+          label="Gender"
+          placeholder="Prefer not to say"
+          data={guardianGenderOptions}
+          clearable
+          {...form.getInputProps("gender")}
         />
         <PasswordInput
           label="Password"

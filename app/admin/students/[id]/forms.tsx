@@ -5,6 +5,7 @@ import { useForm } from "@mantine/form";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { DateField } from "@/components/DateField";
+import { useEditingDone } from "@/components/EditableCard";
 import { FormError } from "@/components/FormError";
 import { toast } from "@/components/toast";
 import type { StudentForAdmin } from "@/lib/db/queries/students";
@@ -15,13 +16,15 @@ import { updateStudentDetails, updateStudentEthnicity, updateStudentHealth } fro
 type Result =
   { ok: true; data: unknown } | { ok: false; error: string; fieldErrors?: Record<string, string> };
 
-// The three cards share one save routine: submit, show field errors or a toast, refresh.
-function useSave<V extends Record<string, unknown>>(
+// The cards share one save routine: submit, show field errors or a toast, refresh, and
+// close the EditableCard they sit in.
+export function useSave<V extends Record<string, unknown>>(
   initial: V,
   save: (values: V) => Promise<Result>,
   done: string,
 ) {
   const router = useRouter();
+  const close = useEditingDone();
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const form = useForm<V>({ initialValues: initial });
@@ -38,23 +41,31 @@ function useSave<V extends Record<string, unknown>>(
     toast.success(done);
     form.resetDirty(values);
     router.refresh();
+    close?.();
   });
-  return { form, submit, error, saving };
+  return { form, submit, error, saving, close };
 }
 
-function SaveRow({
+export function SaveRow({
   saving,
   dirty,
   error,
+  close,
 }: {
   saving: boolean;
   dirty: boolean;
   error: string | null;
+  close: (() => void) | null;
 }) {
   return (
     <>
       <FormError message={error} />
       <Group justify="flex-end">
+        {close && (
+          <Button variant="default" onClick={close}>
+            Cancel
+          </Button>
+        )}
         <Button type="submit" loading={saving} disabled={!dirty}>
           Save changes
         </Button>
@@ -64,7 +75,7 @@ function SaveRow({
 }
 
 export function DetailsForm({ student }: { student: StudentForAdmin }) {
-  const { form, submit, error, saving } = useSave(
+  const { form, submit, error, saving, close } = useSave(
     {
       firstName: student.firstName,
       lastName: student.lastName,
@@ -120,14 +131,14 @@ export function DetailsForm({ student }: { student: StudentForAdmin }) {
           />
           <TextInput label="Student's phone" type="tel" {...form.getInputProps("phone")} />
         </Group>
-        <SaveRow saving={saving} dirty={form.isDirty()} error={error} />
+        <SaveRow saving={saving} dirty={form.isDirty()} error={error} close={close} />
       </Stack>
     </form>
   );
 }
 
 export function HealthForm({ student }: { student: StudentForAdmin }) {
-  const { form, submit, error, saving } = useSave(
+  const { form, submit, error, saving, close } = useSave(
     { allergies: student.allergies ?? "", medicalNotes: student.medicalNotes ?? "" },
     (values) => updateStudentHealth({ id: student.id, ...values }),
     "Health notes saved",
@@ -149,14 +160,14 @@ export function HealthForm({ student }: { student: StudentForAdmin }) {
           minRows={2}
           {...form.getInputProps("medicalNotes")}
         />
-        <SaveRow saving={saving} dirty={form.isDirty()} error={error} />
+        <SaveRow saving={saving} dirty={form.isDirty()} error={error} close={close} />
       </Stack>
     </form>
   );
 }
 
 export function EthnicityForm({ student }: { student: StudentForAdmin }) {
-  const { form, submit, error, saving } = useSave(
+  const { form, submit, error, saving, close } = useSave(
     { ethnicity: student.ethnicity ?? "" },
     (values) => updateStudentEthnicity({ id: student.id, ...values }),
     "Saved",
@@ -172,7 +183,7 @@ export function EthnicityForm({ student }: { student: StudentForAdmin }) {
           allowDeselect={false}
           maw={320}
         />
-        <SaveRow saving={saving} dirty={form.isDirty()} error={error} />
+        <SaveRow saving={saving} dirty={form.isDirty()} error={error} close={close} />
       </Stack>
     </form>
   );

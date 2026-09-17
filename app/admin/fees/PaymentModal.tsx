@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Group, Modal, Select, Stack, TextInput } from "@mantine/core";
+import { Button, Group, Modal, Select, Stack, Text, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -88,11 +88,14 @@ export function PaymentModal({ opened, onClose, targets, existing, today }: Prop
             <Select
               label="Child"
               placeholder="Search by name"
-              data={targets.map((t) => ({ value: String(t.enrolmentId), label: t.label }))}
+              data={targets.map((t) => ({
+                value: String(t.enrolmentId),
+                label: t.studentCode ? `${t.label} · ${t.studentCode}` : t.label,
+              }))}
               searchable
               withAsterisk
               allowDeselect={false}
-              nothingFoundMessage="No child with that name has a place this year"
+              nothingFoundMessage="No child with that name or ID has a place this year"
               value={form.values.enrolmentId ? String(form.values.enrolmentId) : null}
               onChange={(v) => {
                 const next = targets.find((t) => String(t.enrolmentId) === v);
@@ -101,6 +104,17 @@ export function PaymentModal({ opened, onClose, targets, existing, today }: Prop
               }}
               error={form.errors.enrolmentId}
             />
+          )}
+          {target && !existing && (
+            <Text size="sm" c="dimmed">
+              {target.feeCents === 0
+                ? "The fee is waived."
+                : `Paid ${formatEuros(target.paidCents)} of ${formatEuros(target.feeCents)} · ${
+                    target.paidCents >= target.feeCents
+                      ? "nothing outstanding"
+                      : `${formatEuros(target.feeCents - target.paidCents)} outstanding`
+                  }`}
+            </Text>
           )}
           <Group grow align="flex-start">
             <TextInput

@@ -19,7 +19,8 @@ export default async function GuardianLayout({
   return (
     <Stack gap="lg" maw={860}>
       <PageHeader
-        eyebrow={guardian.emailVerified ? "Guardian" : "Guardian · email not confirmed"}
+        breadcrumbs={[{ label: "Guardians", href: "/admin/guardians" }]}
+        eyebrow={guardian.emailVerified ? undefined : "Email not confirmed"}
         title={guardian.name}
       />
       <LinkTabs base={`/admin/guardians/${id}`} tabs={tabs} />

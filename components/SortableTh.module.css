@@ -1,0 +1,19 @@
+.button {
+  width: 100%;
+  font: inherit;
+  color: inherit;
+
+  .icon {
+    color: var(--mantine-color-dimmed);
+    opacity: 0.5;
+  }
+
+  &:hover .icon,
+  &[data-active] .icon {
+    opacity: 1;
+  }
+
+  &[data-active] .icon {
+    color: var(--mantine-color-tile-6);
+  }
+}

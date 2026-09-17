@@ -1,12 +1,20 @@
 "use client";
 
-import { Alert, Button, Card, Group, Stack, Text, TextInput, UnstyledButton } from "@mantine/core";
+import {
+  Alert,
+  Button,
+  Card,
+  Group,
+  SegmentedControl,
+  Stack,
+  Text,
+  TextInput,
+} from "@mantine/core";
 import { IconInfoCircle } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { CardTitle } from "@/components/CardTitle";
 import { FormError } from "@/components/FormError";
-import { StatusBadge } from "@/components/StatusBadge";
 import { toast } from "@/components/toast";
 import type { Register } from "@/lib/db/queries/attendance";
 import type { AttendanceStatus } from "@/lib/db/schema";
@@ -15,9 +23,22 @@ import classes from "./RegisterEditor.module.css";
 
 type Entry = { studentId: number; status: AttendanceStatus; note: string };
 
-const cycleOrder: AttendanceStatus[] = ["present", "late", "absent", "excused"];
+const statusOptions: { value: AttendanceStatus; label: string }[] = [
+  { value: "present", label: "Present" },
+  { value: "late", label: "Late" },
+  { value: "absent", label: "Absent" },
+  { value: "excused", label: "Excused" },
+];
 
-// Everyone starts present; tap a name's badge to cycle present → late → absent → excused.
+// The same colours as StatusBadge's attendance domain (DESIGN §2.1).
+const statusColor: Record<AttendanceStatus, string> = {
+  present: "tile",
+  late: "saffron",
+  absent: "clay",
+  excused: "gray",
+};
+
+// Everyone starts present; each row has a Present · Late · Absent · Excused control (§4.5).
 // A note field appears for anyone not present. One save for the whole class.
 export function RegisterEditor({
   register,
@@ -44,10 +65,8 @@ export function RegisterEditor({
     setEntries((all) => all.map((e) => (e.studentId === studentId ? { ...e, ...patch } : e)));
     setDirty(true);
   };
-  const cycle = (entry: Entry) => {
-    const next = cycleOrder[(cycleOrder.indexOf(entry.status) + 1) % cycleOrder.length];
+  const setStatus = (entry: Entry, next: AttendanceStatus) =>
     update(entry.studentId, { status: next, note: next === "present" ? "" : entry.note });
-  };
 
   const submit = async () => {
     setSaving(true);
@@ -98,18 +117,20 @@ export function RegisterEditor({
           const entry = entries.find((e) => e.studentId === row.studentId)!;
           return (
             <div key={row.studentId} className={classes.row}>
-              <Group justify="space-between" wrap="nowrap" gap="sm">
+              <Group justify="space-between" wrap="wrap" gap="sm">
                 <Text fw={500}>
                   {row.firstName} {row.lastName}
                 </Text>
-                <UnstyledButton
-                  onClick={() => editable && cycle(entry)}
-                  disabled={!editable}
-                  aria-label={`${row.firstName}: ${entry.status}. Tap to change`}
-                  className={classes.toggle}
-                >
-                  <StatusBadge domain="attendance" value={entry.status} size="md" />
-                </UnstyledButton>
+                <SegmentedControl
+                  size="xs"
+                  color={statusColor[entry.status]}
+                  value={entry.status}
+                  onChange={(v) => editable && setStatus(entry, v as AttendanceStatus)}
+                  readOnly={!editable}
+                  data={statusOptions}
+                  aria-label={`${row.firstName}'s attendance`}
+                  className={classes.control}
+                />
               </Group>
               {entry.status !== "present" && (
                 <TextInput

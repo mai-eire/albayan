@@ -1,4 +1,5 @@
 import { Card, Text } from "@mantine/core";
+import { getSchoolSettings } from "@/lib/db/queries/settings";
 import { CardTitle } from "@/components/CardTitle";
 import { ShareResourceButton } from "@/components/ResourceForm";
 import { ResourceList } from "@/components/ResourceList";
@@ -10,7 +11,10 @@ type Props = { params: Promise<{ id: string }> };
 // Files shared with this one family, not the class.
 export default async function TeacherStudentResourcesPage({ params }: Props) {
   const { user, student } = await loadTeacherStudent(params);
-  const shared = await listResourcesForStudent(student.id);
+  const [shared, { timezone }] = await Promise.all([
+    listResourcesForStudent(student.id),
+    getSchoolSettings(),
+  ]);
   return (
     <Card>
       <CardTitle
@@ -35,6 +39,7 @@ export default async function TeacherStudentResourcesPage({ params }: Props) {
             ...r,
             removable: user.isAdmin || r.uploadedByUserId === user.id,
           }))}
+          staff={{ timezone }}
         />
       )}
     </Card>

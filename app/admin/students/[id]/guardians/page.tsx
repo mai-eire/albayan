@@ -1,6 +1,9 @@
 import { Card, Group, Stack, Text, Title } from "@mantine/core";
 import { AppLink } from "@/components/AppLink";
 import { CardTitle } from "@/components/CardTitle";
+import { EntityList } from "@/components/EntityList";
+import { StatusBadge } from "@/components/StatusBadge";
+import { listSiblingsForAdmin } from "@/lib/db/queries/students";
 import { relationshipLabels } from "@/lib/demographics";
 import { loadStudent } from "../load";
 
@@ -8,6 +11,7 @@ type Props = { params: Promise<{ id: string }> };
 
 export default async function StudentGuardiansPage({ params }: Props) {
   const student = await loadStudent(params);
+  const siblings = await listSiblingsForAdmin(student.id);
   return (
     <Stack gap="lg">
       {student.guardians.map((g) => (
@@ -39,6 +43,20 @@ export default async function StudentGuardiansPage({ params }: Props) {
           </Text>
         </Card>
       ))}
+      {siblings.length > 0 && (
+        <Card>
+          <CardTitle>Also in this family</CardTitle>
+          <EntityList
+            items={siblings.map((s) => ({
+              key: s.id,
+              title: `${s.firstName} ${s.lastName}`,
+              detail: s.className ?? undefined,
+              badge: <StatusBadge domain="application" value={s.status} />,
+              href: `/admin/students/${s.id}`,
+            }))}
+          />
+        </Card>
+      )}
     </Stack>
   );
 }

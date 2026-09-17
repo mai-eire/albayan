@@ -1,21 +1,9 @@
-import {
-  Stack,
-  Table,
-  TableTbody,
-  TableTd,
-  TableTfoot,
-  TableTh,
-  TableThead,
-  TableTr,
-  Text,
-} from "@mantine/core";
+import { Card, Stack } from "@mantine/core";
 import { IconBuildingBank, IconDownload } from "@tabler/icons-react";
-import { AppLink } from "@/components/AppLink";
 import { EmptyState } from "@/components/EmptyState";
 import { LinkButton } from "@/components/LinkButton";
-import { MoneyText } from "@/components/MoneyText";
+import { Figures } from "@/components/Figures";
 import { PageHeader } from "@/components/PageHeader";
-import { StatusBadge } from "@/components/StatusBadge";
 import { listClasses, listSessions, listYears } from "@/lib/db/queries/academics";
 import { listFeeAccounts, listPaymentTargets } from "@/lib/db/queries/fees";
 import { getSchoolSettings } from "@/lib/db/queries/settings";
@@ -23,6 +11,7 @@ import { outstandingCents } from "@/lib/fees";
 import { formatEuros } from "@/lib/money";
 import { todayIn } from "@/lib/time";
 import { FeesFilters } from "./FeesFilters";
+import { FeesTable } from "./FeesTable";
 import { applyFeeFilters, parseFeeFilters } from "./filters";
 import { RecordPaymentButton } from "./RecordPaymentButton";
 
@@ -115,83 +104,27 @@ export default async function FeesPage({ searchParams }: Props) {
           }
         />
       ) : (
-        <Table>
-          <TableThead>
-            <TableTr>
-              <TableTh>Student</TableTh>
-              <TableTh>Class</TableTh>
-              <TableTh>Guardian</TableTh>
-              <TableTh ta="end">Fee</TableTh>
-              <TableTh ta="end">Paid</TableTh>
-              <TableTh ta="end">Balance</TableTh>
-              <TableTh>Status</TableTh>
-            </TableTr>
-          </TableThead>
-          <TableTbody>
-            {rows.map(({ enrolment: e, ...a }) => (
-              <TableTr key={e.studentId}>
-                <TableTd>
-                  <AppLink href={`/admin/students/${e.studentId}/fees`} fw={500}>
-                    {e.firstName} {e.lastName}
-                  </AppLink>
-                  <Text size="sm" c="dimmed">
-                    {e.studentCode}
-                  </Text>
-                </TableTd>
-                <TableTd>
-                  {e.className} · {e.sessionName}
-                </TableTd>
-                <TableTd>
-                  {e.guardianId ? (
-                    <AppLink href={`/admin/guardians/${e.guardianId}/payments`}>
-                      {e.guardianName}
-                    </AppLink>
-                  ) : (
-                    <Text component="span" c="dimmed">
-                      —
-                    </Text>
-                  )}
-                </TableTd>
-                <TableTd ta="end">
-                  <MoneyText cents={a.feeCents} />
-                  {e.feeNote && (
-                    <Text size="xs" c="dimmed">
-                      {e.feeNote}
-                    </Text>
-                  )}
-                </TableTd>
-                <TableTd ta="end">
-                  <MoneyText cents={a.paidCents} />
-                </TableTd>
-                <TableTd ta="end">
-                  <MoneyText cents={a.balanceCents} fw={500} />
-                </TableTd>
-                <TableTd>
-                  <StatusBadge domain="fee" value={a.status} />
-                </TableTd>
-              </TableTr>
-            ))}
-          </TableTbody>
-          <TableTfoot>
-            <TableTr>
-              <TableTh>
-                {rows.length} {rows.length === 1 ? "student" : "students"}
-              </TableTh>
-              <TableTh />
-              <TableTh />
-              <TableTh ta="end">
-                <MoneyText cents={totals.fee} />
-              </TableTh>
-              <TableTh ta="end">
-                <MoneyText cents={totals.paid} />
-              </TableTh>
-              <TableTh ta="end">
-                <MoneyText cents={totals.balance} />
-              </TableTh>
-              <TableTh />
-            </TableTr>
-          </TableTfoot>
-        </Table>
+        <>
+          <Card>
+            <Figures
+              items={[
+                {
+                  label: "Students",
+                  value: rows.length,
+                  hint: filters.show === "outstanding" ? "still to pay" : "with a place",
+                },
+                { label: "Fees", value: formatEuros(totals.fee) },
+                { label: "Paid", value: formatEuros(totals.paid) },
+                {
+                  label: "Outstanding",
+                  value: formatEuros(totals.balance),
+                  color: totals.balance ? "saffron" : undefined,
+                },
+              ]}
+            />
+          </Card>
+          <FeesTable rows={rows} />
+        </>
       )}
     </Stack>
   );

@@ -260,7 +260,7 @@ function ApproveForm({
       <Stack gap="md">
         <Group grow>
           <Select
-            label="Day"
+            label="Session"
             data={placements.map((p) => ({ value: String(p.id), label: p.name }))}
             allowDeselect={false}
             value={form.values.sessionId?.toString() ?? null}

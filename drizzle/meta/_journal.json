@@ -36,6 +36,13 @@
       "when": 1789585766667,
       "tag": "0004_schema_v3",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1789637904667,
+      "tag": "0005_guardian_gender_teacher_deactivated",
+      "breakpoints": true
     }
   ]
 }

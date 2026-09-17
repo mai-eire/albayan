@@ -35,7 +35,14 @@ export const theme = createTheme({
     Badge: { defaultProps: { variant: "light", radius: "md", tt: "none" } },
     Modal: { defaultProps: { radius: "lg" } },
     SegmentedControl: { defaultProps: { radius: "xl" } },
-    Table: { defaultProps: { verticalSpacing: "sm", highlightOnHover: true } },
+    // Staff tables are dense (DESIGN §4.5): striped, compact rows, small type.
+    Table: {
+      defaultProps: { verticalSpacing: "xs", fz: "sm", striped: true, highlightOnHover: true },
+    },
+    // The description sits under the input so paired fields keep their inputs level.
+    InputWrapper: {
+      defaultProps: { inputWrapperOrder: ["label", "input", "description", "error"] },
+    },
   },
 });
 

@@ -34,6 +34,18 @@ function shift(month: string, by: number): string {
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
 }
 
+// Every date falling on `dayOfWeek` between two dates inclusive — a class's lesson days.
+export function lessonDatesBetween(dayOfWeek: number, from: string, to: string): string[] {
+  const dates: string[] = [];
+  const date = new Date(`${from}T12:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + ((dayOfWeek - date.getUTCDay() + 7) % 7));
+  while (date.toISOString().slice(0, 10) <= to) {
+    dates.push(date.toISOString().slice(0, 10));
+    date.setUTCDate(date.getUTCDate() + 7);
+  }
+  return dates;
+}
+
 export function buildMonth(input: {
   month: string;
   today: string;

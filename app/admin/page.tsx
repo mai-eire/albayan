@@ -39,12 +39,14 @@ export default async function AdminDashboard() {
                 : "All in"
           }
           color={missing.length ? "saffron" : undefined}
+          href="/admin/attendance"
         />
         <StatTile
           label="Applications pending"
           value={pending}
           hint={pending ? "Waiting for review" : "Nothing to review"}
           color={pending ? "saffron" : undefined}
+          href="/admin/applications"
         />
         <StatTile
           label="Fees outstanding"
@@ -55,6 +57,7 @@ export default async function AdminDashboard() {
               : "Everyone has paid"
           }
           color={fees.families ? "saffron" : undefined}
+          href="/admin/fees"
         />
       </SimpleGrid>
     </Stack>

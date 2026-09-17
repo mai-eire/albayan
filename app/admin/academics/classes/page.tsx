@@ -4,15 +4,19 @@ import { EmptyState } from "@/components/EmptyState";
 import { PageHeader } from "@/components/PageHeader";
 import { listClasses, listSessions, listTeachers, listYears } from "@/lib/db/queries/academics";
 import { YearPicker } from "../YearPicker";
+import { ClassFilters } from "./ClassFilters";
 import { AddClassButton } from "./ClassForm";
 import { ClassesTable } from "./ClassesTable";
 
 export const metadata = { title: "Classes" };
 
-type Props = { searchParams: Promise<{ year?: string }> };
+type Props = {
+  searchParams: Promise<{ year?: string; session?: string; teacher?: string; q?: string }>;
+};
 
 export default async function ClassesPage({ searchParams }: Props) {
-  const [years, { year }] = await Promise.all([listYears(), searchParams]);
+  const [years, params] = await Promise.all([listYears(), searchParams]);
+  const { year } = params;
   const yearId = year ?? years.find((y) => y.isCurrent)?.id ?? years[0]?.id;
   if (!yearId) {
     return (
@@ -30,6 +34,13 @@ export default async function ClassesPage({ searchParams }: Props) {
     listSessions(yearId),
     listTeachers(),
   ]);
+  const q = params.q?.trim().toLowerCase();
+  const shown = classes.filter(
+    (c) =>
+      (!params.session || c.sessionId === Number(params.session)) &&
+      (!params.teacher || c.teacherIds.includes(Number(params.teacher))) &&
+      (!q || c.name.toLowerCase().includes(q)),
+  );
   return (
     <Stack gap="lg">
       <PageHeader
@@ -41,17 +52,25 @@ export default async function ClassesPage({ searchParams }: Props) {
           </Group>
         }
       />
-      {classes.length === 0 ? (
+      {classes.length > 0 && (
+        <ClassFilters
+          sessions={sessions}
+          teachers={teachers.filter((t) => classes.some((c) => c.teacherIds.includes(t.id)))}
+        />
+      )}
+      {shown.length === 0 ? (
         <EmptyState
           icon={<IconUsers size={20} stroke={1.75} />}
           message={
-            sessions.length
-              ? `No classes in ${yearId} yet.`
-              : `Add a session to ${yearId} before its classes.`
+            classes.length
+              ? "No classes match these filters."
+              : sessions.length
+                ? `No classes in ${yearId} yet.`
+                : `Add a session to ${yearId} before its classes.`
           }
         />
       ) : (
-        <ClassesTable classes={classes} />
+        <ClassesTable classes={shown} />
       )}
     </Stack>
   );

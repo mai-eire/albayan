@@ -1,12 +1,14 @@
 import { Card, SimpleGrid, Stack, Text } from "@mantine/core";
 import { notFound } from "next/navigation";
 import { CardTitle } from "@/components/CardTitle";
-import { Field } from "@/components/Field";
+import { EditableCard } from "@/components/EditableCard";
 import { EntityList } from "@/components/EntityList";
+import { Field } from "@/components/Field";
 import { SensitiveSection } from "@/components/SensitiveSection";
 import { StatusBadge } from "@/components/StatusBadge";
 import { getGuardianForAdmin } from "@/lib/db/queries/students";
-import { reasonLabels, relationshipLabels } from "@/lib/demographics";
+import { guardianGenderOptions, reasonLabels, relationshipLabels } from "@/lib/demographics";
+import { ContactForm, SensitiveForm } from "./forms";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -16,21 +18,32 @@ export default async function GuardianPage({ params }: Props) {
   const s = guardian.sensitive;
   return (
     <Stack gap="lg">
-      <Card>
-        <CardTitle>Contact</CardTitle>
-        <SimpleGrid cols={{ base: 1, xs: 3 }} spacing="md">
-          <Field label="Email" value={guardian.email} />
-          <Field label="Phone" value={guardian.phone ?? "—"} />
-          <Field
-            label="Emergency contact"
-            value={
-              guardian.emergencyContactName
-                ? `${guardian.emergencyContactName} (${guardian.emergencyContactRelationship}) · ${guardian.emergencyContactPhone}`
-                : "Not given"
-            }
-          />
-        </SimpleGrid>
-      </Card>
+      <EditableCard
+        title="Contact"
+        view={
+          <SimpleGrid cols={{ base: 2, xs: 4 }} spacing="md">
+            <Field label="Email" value={guardian.email} />
+            <Field label="Phone" value={guardian.phone} />
+            <Field
+              label="Gender"
+              value={
+                guardianGenderOptions.find((g) => g.value === guardian.gender)?.label ??
+                "Prefer not to say"
+              }
+            />
+            <Field
+              label="Emergency contact"
+              value={
+                guardian.emergencyContactName
+                  ? `${guardian.emergencyContactName} (${guardian.emergencyContactRelationship}) · ${guardian.emergencyContactPhone}`
+                  : "Not given"
+              }
+            />
+          </SimpleGrid>
+        }
+      >
+        <ContactForm guardian={guardian} />
+      </EditableCard>
       <Card>
         <CardTitle>Children</CardTitle>
         {guardian.children.length === 0 ? (
@@ -55,28 +68,35 @@ export default async function GuardianPage({ params }: Props) {
         )}
       </Card>
       <SensitiveSection>
-        <SimpleGrid cols={{ base: 1, xs: 2 }} spacing="md">
-          <Field label="Address" value={s.address ?? "Not given"} />
-          <Field
-            label="Languages at home"
-            value={s.spokenLanguages.length ? s.spokenLanguages.join(", ") : "Not given"}
-          />
-          <Field label="Ethnicity" value={s.ethnicity ?? "Prefer not to say"} />
-          <Field
-            label="Reasons for registering"
-            value={
-              s.registrationReasons.length
-                ? s.registrationReasons
-                    .map((r) =>
-                      r === "other" && s.registrationReasonOther
-                        ? s.registrationReasonOther
-                        : reasonLabels[r as keyof typeof reasonLabels],
-                    )
-                    .join(", ")
-                : "Not given"
-            }
-          />
-        </SimpleGrid>
+        <EditableCard
+          title="About the family"
+          view={
+            <SimpleGrid cols={{ base: 2, xs: 4 }} spacing="md">
+              <Field label="Address" value={s.address ?? "Not given"} />
+              <Field
+                label="Languages at home"
+                value={s.spokenLanguages.length ? s.spokenLanguages.join(", ") : "Not given"}
+              />
+              <Field label="Ethnicity" value={s.ethnicity ?? "Prefer not to say"} />
+              <Field
+                label="Reasons for registering"
+                value={
+                  s.registrationReasons.length
+                    ? s.registrationReasons
+                        .map((r) =>
+                          r === "other" && s.registrationReasonOther
+                            ? s.registrationReasonOther
+                            : reasonLabels[r],
+                        )
+                        .join(", ")
+                    : "Not given"
+                }
+              />
+            </SimpleGrid>
+          }
+        >
+          <SensitiveForm guardian={guardian} />
+        </EditableCard>
       </SensitiveSection>
     </Stack>
   );

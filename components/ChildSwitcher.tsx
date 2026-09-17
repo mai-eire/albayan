@@ -1,6 +1,7 @@
 "use client";
 
-import { Avatar, Button, Group } from "@mantine/core";
+import { ActionIcon, Avatar, Button, Group, Tooltip } from "@mantine/core";
+import { IconPlus } from "@tabler/icons-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -9,8 +10,9 @@ export type SwitcherChild = { id: number; firstName: string };
 // Siblings get a fixed pastel each so they are told apart at a glance (§4.11).
 const pastels = ["tile", "lapis", "plum", "saffron", "cyan", "grape"];
 
-// Pills under the header on every family page; hidden when there is one child (§5).
-// Keeps the current tab when switching: /family/12/timetable → /family/15/timetable.
+// Pills under the header on every family page, ending with "Register a child"; hidden
+// when there is one child (§5). Keeps the current tab when switching:
+// /family/12/timetable → /family/15/timetable.
 export function ChildSwitcher({ kids }: { kids: SwitcherChild[] }) {
   const pathname = usePathname();
   if (kids.length < 2) return null;
@@ -41,6 +43,19 @@ export function ChildSwitcher({ kids }: { kids: SwitcherChild[] }) {
           </Button>
         );
       })}
+      <Tooltip label="Register a child">
+        <ActionIcon
+          component={Link}
+          href="/family/register-child"
+          variant="light"
+          color="gray"
+          radius="xl"
+          size={42}
+          aria-label="Register a child"
+        >
+          <IconPlus size={18} stroke={1.75} />
+        </ActionIcon>
+      </Tooltip>
     </Group>
   );
 }

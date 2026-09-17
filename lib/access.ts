@@ -112,16 +112,18 @@ export function canViewStudent(user: CurrentUser, student: StudentFacts): boolea
   return student.activeClass !== null && teachesClass(user, student.activeClass);
 }
 
-// Registers: a teacher of the class may take or change it on the day; afterwards only
-// admin can, and those edits are audited (PLAN §10).
+// Registers: a teacher of the class may take or correct any register up to today — a missed
+// Saturday can be filled in on Monday. Changes after the day are audited (decision 2026-09-17,
+// docs/FEEDBACK.md); the future is nobody's.
 export function canEditRegister(
   user: CurrentUser,
   cls: ClassFacts,
   date: string,
   today: string,
 ): boolean {
+  if (date > today) return false;
   if (user.isAdmin) return true;
-  return date === today && teachesClass(user, cls);
+  return teachesClass(user, cls);
 }
 
 // A resource's target, with a homework target already resolved to its class.

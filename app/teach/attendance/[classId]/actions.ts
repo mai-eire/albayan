@@ -38,7 +38,7 @@ const schema = z.object({
 export type RegisterInput = z.input<typeof schema>;
 
 // Writes the whole register for a class and date. Rows already there are updated, so a
-// second save is an edit; edits after the day are admin-only and audited with before/after.
+// second save is an edit; edits after the day are audited with before/after.
 // New absences tell the guardians (email only if the school has turned that on).
 export const saveRegister = action(schema, async (input, { user, db }) => {
   const settings = await getSchoolSettings();
@@ -46,11 +46,7 @@ export const saveRegister = action(schema, async (input, { user, db }) => {
   if (input.date > today) throw new ActionError("You can't take a register for a future day.");
   const facts = await loadClassFacts(input.classId);
   if (!facts || !canEditRegister(user, facts, input.date, today)) {
-    throw new ActionError(
-      input.date === today
-        ? "You don't have access to this class."
-        : "Past registers can only be changed by the office.",
-    );
+    throw new ActionError("You don't have access to this class.");
   }
   const roster = await db
     .select({ studentId: enrolments.studentId })

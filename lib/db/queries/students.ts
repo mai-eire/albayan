@@ -9,6 +9,8 @@ import {
   studentGuardians,
   students,
   users,
+  type GuardianGender,
+  type RegistrationReason,
 } from "@/lib/db/schema";
 
 // Per-viewer queries (CLAUDE.md "Privacy is structural"): each function selects only what
@@ -47,6 +49,18 @@ export async function listChildrenForGuardian(guardianId: number): Promise<Child
 // The guardian's own row, for pre-filling the application wizard and the account page.
 export async function getGuardianSelf(guardianId: number) {
   return (await db()).query.guardians.findFirst({ where: eq(guardians.id, guardianId) });
+}
+
+// What they were to the child they registered most recently — the wizard's default.
+export async function lastRelationshipFor(guardianId: number): Promise<string | null> {
+  const row = await (
+    await db()
+  ).query.studentGuardians.findFirst({
+    columns: { relationship: true },
+    where: eq(studentGuardians.guardianId, guardianId),
+    orderBy: desc(studentGuardians.studentId),
+  });
+  return row?.relationship ?? null;
 }
 
 // ---- Admin ----------------------------------------------------------------------------
@@ -267,6 +281,7 @@ export type GuardianProfile = {
   name: string;
   email: string;
   phone: string | null;
+  gender: GuardianGender | null;
   emailVerified: boolean;
   emergencyContactName: string | null;
   emergencyContactPhone: string | null;
@@ -281,10 +296,14 @@ export type GuardianProfile = {
   }[];
   sensitive: {
     address: string | null;
+    addressLine1: string | null;
+    addressLine2: string | null;
+    city: string | null;
+    postalCode: string | null;
     area: string | null;
     spokenLanguages: string[];
     ethnicity: string | null;
-    registrationReasons: string[];
+    registrationReasons: RegistrationReason[];
     registrationReasonOther: string | null;
   };
 };
@@ -319,6 +338,7 @@ export async function getGuardianForAdmin(id: number): Promise<GuardianProfile |
     name: user.name,
     email: user.email,
     phone: user.phone,
+    gender: guardian.gender,
     emailVerified: user.emailVerified,
     emergencyContactName: guardian.emergencyContactName,
     emergencyContactPhone: guardian.emergencyContactPhone,
@@ -329,6 +349,10 @@ export async function getGuardianForAdmin(id: number): Promise<GuardianProfile |
         [guardian.addressLine1, guardian.addressLine2, guardian.city, guardian.postalCode]
           .filter(Boolean)
           .join(", ") || null,
+      addressLine1: guardian.addressLine1,
+      addressLine2: guardian.addressLine2,
+      city: guardian.city,
+      postalCode: guardian.postalCode,
       area: guardian.area,
       spokenLanguages: guardian.spokenLanguages ?? [],
       ethnicity: guardian.ethnicity,
@@ -356,4 +380,37 @@ export async function countEnrolledSiblings(studentId: number): Promise<number> 
       ),
     );
   return rows.length;
+}
+
+export type SiblingRow = {
+  id: number;
+  firstName: string;
+  lastName: string;
+  status: Student["status"];
+  className: string | null;
+};
+
+// Other children sharing a guardian with this student, oldest first.
+export async function listSiblingsForAdmin(studentId: number): Promise<SiblingRow[]> {
+  const d = await db();
+  const sibling = alias(studentGuardians, "sibling");
+  return d
+    .selectDistinct({
+      id: students.id,
+      firstName: students.firstName,
+      lastName: students.lastName,
+      status: students.status,
+      className: classes.name,
+      dateOfBirth: students.dateOfBirth,
+    })
+    .from(studentGuardians)
+    .innerJoin(sibling, eq(sibling.guardianId, studentGuardians.guardianId))
+    .innerJoin(students, eq(students.id, sibling.studentId))
+    .leftJoin(enrolments, activeEnrolment)
+    .leftJoin(classes, eq(classes.id, enrolments.classId))
+    .where(
+      and(eq(studentGuardians.studentId, studentId), sql`${sibling.studentId} <> ${studentId}`),
+    )
+    .orderBy(asc(students.dateOfBirth))
+    .then((rows) => rows.map(({ dateOfBirth: _dob, ...r }) => (void _dob, r)));
 }

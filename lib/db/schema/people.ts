@@ -12,6 +12,9 @@ export const registrationReasons = [
 ] as const;
 export type RegistrationReason = (typeof registrationReasons)[number];
 
+export const guardianGenders = ["female", "male"] as const;
+export type GuardianGender = (typeof guardianGenders)[number];
+
 // Sensitive columns (ethnicity, spokenLanguages, registrationReasons*, address) are
 // admin-only and never selected by teacher-facing queries (lib/db/queries).
 export const guardians = sqliteTable(
@@ -22,6 +25,10 @@ export const guardians = sqliteTable(
       .notNull()
       .unique()
       .references(() => users.id),
+    // Optional; it only decides whether "Mother" or "Father" is offered as the relationship.
+    // No CHECK: adding one to an existing table means a rebuild, which D1 migrations can't
+    // do while other tables reference it. The TypeScript union is the constraint.
+    gender: text({ enum: guardianGenders }),
     addressLine1: text(),
     addressLine2: text(),
     city: text(),
@@ -48,5 +55,7 @@ export const teachers = sqliteTable("teachers", {
     .references(() => users.id),
   title: text(),
   isActive: bool().notNull().default(true),
+  // When they stopped teaching; the list hides them from that day unless asked.
+  deactivatedAt: text(),
   ...timestamps,
 });

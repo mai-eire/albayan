@@ -1,4 +1,5 @@
 import { Card, Group, Stack, Text } from "@mantine/core";
+import { getSchoolSettings } from "@/lib/db/queries/settings";
 import { IconFolder } from "@tabler/icons-react";
 import { EmptyState } from "@/components/EmptyState";
 import { ShareResourceButton } from "@/components/ResourceForm";
@@ -10,10 +11,13 @@ type Props = { params: Promise<{ id: string }> };
 
 export default async function ClassResourcesPage({ params }: Props) {
   const { user, cls } = await loadTeacherClass(params);
-  const items = await listResourcesForClass(cls.id);
+  const [items, { timezone }] = await Promise.all([
+    listResourcesForClass(cls.id),
+    getSchoolSettings(),
+  ]);
   return (
     <Stack gap="md">
-      <Group>
+      <Group justify="flex-end">
         <ShareResourceButton
           target={{ kind: "class", classId: cls.id, subjectId: null }}
           label="Share with this class"
@@ -38,6 +42,7 @@ export default async function ClassResourcesPage({ params }: Props) {
                 .filter(Boolean)
                 .join(" · "),
             }))}
+            staff={{ timezone }}
           />
           <Text size="sm" c="dimmed" mt="md">
             Files attached to homework appear here too.

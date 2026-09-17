@@ -1,5 +1,15 @@
-import { Card, Group, Text } from "@mantine/core";
+import {
+  Card,
+  Table,
+  TableTbody,
+  TableTd,
+  TableTh,
+  TableThead,
+  TableTr,
+  Text,
+} from "@mantine/core";
 import { CardTitle } from "@/components/CardTitle";
+import { Figures } from "@/components/Figures";
 import { StatusBadge } from "@/components/StatusBadge";
 import { listAttendanceForStudent } from "@/lib/db/queries/attendance";
 import { getSchoolSettings } from "@/lib/db/queries/settings";
@@ -8,31 +18,64 @@ import { loadTeacherStudent } from "../load";
 
 type Props = { params: Promise<{ id: string }> };
 
+// Every register this student has been on, newest first, with the totals at the top.
 export default async function TeacherStudentAttendancePage({ params }: Props) {
   const [{ student }, { timezone }] = await Promise.all([
     loadTeacherStudent(params),
     getSchoolSettings(),
   ]);
-  const recent = await listAttendanceForStudent(student.id, 30);
+  const rows = await listAttendanceForStudent(student.id, 100);
+  const n = (status: string) => rows.filter((r) => r.status === status).length;
   return (
     <Card>
       <CardTitle>Attendance</CardTitle>
-      {recent.length === 0 ? (
+      {rows.length === 0 ? (
         <Text size="sm" c="dimmed">
           No registers yet.
         </Text>
       ) : (
-        <Group gap="sm" wrap="wrap">
-          {recent.map((a) => (
-            <Group key={a.date} gap={6} wrap="nowrap">
-              <StatusBadge domain="attendance" value={a.status} />
-              <Text size="sm" c="dimmed">
-                {formatDate(a.date, timezone)}
-                {a.note && ` · ${a.note}`}
-              </Text>
-            </Group>
-          ))}
-        </Group>
+        <>
+          <Figures
+            items={[
+              {
+                label: "Present",
+                value: n("present") + n("late"),
+                hint: `of ${rows.length} lessons`,
+              },
+              { label: "Late", value: n("late") },
+              { label: "Absent", value: n("absent"), color: n("absent") ? "clay" : undefined },
+              { label: "Excused", value: n("excused") },
+            ]}
+          />
+          <Table mt="lg">
+            <TableThead>
+              <TableTr>
+                <TableTh>Date</TableTh>
+                <TableTh>Session</TableTh>
+                <TableTh>Attendance</TableTh>
+                <TableTh>Note</TableTh>
+              </TableTr>
+            </TableThead>
+            <TableTbody>
+              {rows.map((a) => (
+                <TableTr key={a.date}>
+                  <TableTd>{formatDate(a.date, timezone, true)}</TableTd>
+                  <TableTd>{a.sessionName}</TableTd>
+                  <TableTd>
+                    <StatusBadge domain="attendance" value={a.status} />
+                  </TableTd>
+                  <TableTd>
+                    {a.note ?? (
+                      <Text component="span" c="dimmed">
+                        —
+                      </Text>
+                    )}
+                  </TableTd>
+                </TableTr>
+              ))}
+            </TableTbody>
+          </Table>
+        </>
       )}
     </Card>
   );

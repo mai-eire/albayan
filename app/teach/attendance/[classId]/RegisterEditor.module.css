@@ -7,15 +7,9 @@
   border-block-end: none;
 }
 
-/* The badge is the control; keep the tap target at least 44px tall (§6). */
-.toggle {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  padding-inline: var(--mantine-spacing-xs);
-  border-radius: var(--mantine-radius-md);
-}
-
-.toggle:not(:disabled):hover {
-  background: var(--mantine-color-default-hover);
+/* Full width on phones so each option stays a comfortable tap target (§6). */
+.control {
+  @media (max-width: 30em) {
+    width: 100%;
+  }
 }

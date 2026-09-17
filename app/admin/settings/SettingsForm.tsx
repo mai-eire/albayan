@@ -58,7 +58,7 @@ export function SettingsForm({ settings }: { settings: SchoolSettings }) {
             />
             <TextInput
               label="Student ID prefix"
-              description="Student IDs look like ALB-26-0042"
+              description="Student IDs look like ALB-26-0042. Changing this only affects IDs issued from now on."
               maw={200}
               {...form.getInputProps("studentIdPrefix")}
             />

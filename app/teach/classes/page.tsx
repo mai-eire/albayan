@@ -35,7 +35,7 @@ export default async function TeacherClassesPage() {
           <TableThead>
             <TableTr>
               <TableTh>Class</TableTh>
-              <TableTh>Day</TableTh>
+              <TableTh>Session</TableTh>
               <TableTh>You teach</TableTh>
               <TableTh>Students</TableTh>
             </TableTr>
@@ -54,15 +54,15 @@ export default async function TeacherClassesPage() {
                   )}
                 </TableTd>
                 <TableTd>
-                  {c.sessionName} · {c.startTime}
+                  {c.sessionName} {c.startTime}
                 </TableTd>
                 <TableTd>
+                  {c.subjects.join(", ")}
                   {c.isClassTeacher && (
-                    <Badge variant="outline" color="gray" me="xs">
+                    <Badge variant="outline" color="gray" ms="xs">
                       Class teacher
                     </Badge>
                   )}
-                  {c.subjects.join(", ")}
                 </TableTd>
                 <TableTd>{c.studentCount}</TableTd>
               </TableTr>

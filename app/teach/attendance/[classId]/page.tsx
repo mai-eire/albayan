@@ -25,7 +25,11 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   return (
     <Stack gap="lg" maw={720} mx="auto">
       <PageHeader
-        eyebrow={`${register.className} · ${register.sessionName}`}
+        breadcrumbs={[
+          { label: "My classes", href: "/teach/classes" },
+          { label: register.className, href: `/teach/classes/${classId}/attendance` },
+        ]}
+        eyebrow={register.sessionName}
         title={formatDate(date, timezone, date.slice(0, 4) !== today.slice(0, 4))}
       />
       <RegisterEditor

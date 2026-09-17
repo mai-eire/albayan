@@ -1,3 +1,5 @@
+"use client";
+
 import { Card, Group, Text } from "@mantine/core";
 import { IconChevronRight } from "@tabler/icons-react";
 import Link from "next/link";
@@ -14,7 +16,8 @@ type Props = {
   href?: string;
 };
 
-// Admin dashboard only, at most three (§3.3, §4.4).
+// Admin dashboard only, at most three (§3.3, §4.4). A client component because a Server
+// Component can't hand `component={Link}` to Mantine.
 export function StatTile({ label, value, hint, color, href }: Props) {
   const body = (
     <>

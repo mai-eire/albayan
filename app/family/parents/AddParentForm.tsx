@@ -37,6 +37,8 @@ export function AddParentForm({
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const form = useForm<Values>({
+    // The server's "check the highlighted fields" goes as soon as something changes.
+    onValuesChange: () => setError(null),
     initialValues: {
       name: "",
       email: "",

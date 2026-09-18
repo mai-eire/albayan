@@ -9,6 +9,7 @@ import {
   Text,
 } from "@mantine/core";
 import { CardTitle } from "@/components/CardTitle";
+import { Nothing } from "@/components/Nothing";
 import { Figures } from "@/components/Figures";
 import { StatusBadge } from "@/components/StatusBadge";
 import { listAttendanceForStudent } from "@/lib/db/queries/attendance";
@@ -64,13 +65,7 @@ export default async function TeacherStudentAttendancePage({ params }: Props) {
                   <TableTd>
                     <StatusBadge domain="attendance" value={a.status} />
                   </TableTd>
-                  <TableTd>
-                    {a.note ?? (
-                      <Text component="span" c="dimmed">
-                        —
-                      </Text>
-                    )}
-                  </TableTd>
+                  <TableTd>{a.note ?? <Nothing>no note</Nothing>}</TableTd>
                 </TableTr>
               ))}
             </TableTbody>

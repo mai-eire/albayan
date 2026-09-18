@@ -16,7 +16,10 @@ import { formatDate, formatHijri, nextDateOn, relativeDay, todayIn } from "@/lib
 export const metadata = { title: "Home" };
 
 export default async function StudentHome() {
-  const [user, { timezone }] = await Promise.all([requireArea("student"), getSchoolSettings()]);
+  const [user, { timezone, rules }] = await Promise.all([
+    requireArea("student"),
+    getSchoolSettings(),
+  ]);
   const me = user.student ? await getStudentForStudent(user.student.id) : null;
   const now = new Date();
   const today = todayIn(timezone);
@@ -74,6 +77,16 @@ export default async function StudentHome() {
                         notes[0].body.length > 90
                           ? `${notes[0].body.slice(0, 90)}…`
                           : notes[0].body,
+                    },
+                  ]
+                : []),
+              ...(rules
+                ? [
+                    {
+                      key: "rules",
+                      title: "School rules",
+                      detail: "What the school asks of everyone",
+                      href: "/student/rules",
                     },
                   ]
                 : []),

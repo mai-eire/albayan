@@ -33,6 +33,13 @@ export default async function ChildOverviewPage({ params }: Props) {
       detail: `${formatDate(next, timezone)} · ${child.place.startTime}${child.place.room ? ` · ${child.place.room}` : ""} · ${child.place.className}`,
       href: `/family/${child.id}/timetable`,
     });
+    if (child.offerNote) {
+      items.push({
+        key: "offer-note",
+        title: "A note from the school about the place",
+        detail: child.offerNote,
+      });
+    }
   } else if (child.status === "applied") {
     items.push({
       key: "application",

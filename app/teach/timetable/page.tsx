@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { WeekTimetable } from "@/components/WeekTimetable";
 import { requireArea } from "@/lib/access";
 import { getCurrentYear } from "@/lib/db/queries/academics";
-import { listLessonsForTeacher } from "@/lib/db/queries/teach";
+import { listDayForTeacher } from "@/lib/db/queries/teach";
 
 export const metadata = { title: "Timetable" };
 
@@ -17,7 +17,7 @@ export default async function TeacherTimetablePage() {
       ? await Promise.all(
           [0, 1, 2, 3, 4, 5, 6].map(async (day) => ({
             day,
-            lessons: await listLessonsForTeacher(user.teacher!.id, year.id, day),
+            ...(await listDayForTeacher(user.teacher!.id, year.id, day)),
           })),
         )
       : [];
@@ -31,6 +31,17 @@ export default async function TeacherTimetablePage() {
       title: l.className,
       detail: [l.sessionName, l.room].filter(Boolean).join(" · "),
       href: `/teach/classes/${l.classId}`,
+    })),
+  );
+  const staffSlots = byDay.flatMap(({ day, staffSlots }) =>
+    staffSlots.map((s) => ({
+      dayOfWeek: day,
+      startTime: s.startTime,
+      endTime: s.endTime,
+      subjectId: null,
+      subjectName: s.title,
+      title: s.title,
+      detail: `${s.sessionName} · staff only`,
     })),
   );
   const hours = lessons.reduce((sum, l) => sum + minutesBetween(l.startTime, l.endTime), 0) / 60;
@@ -51,7 +62,7 @@ export default async function TeacherTimetablePage() {
         />
       ) : (
         <Card>
-          <WeekTimetable lessons={lessons} />
+          <WeekTimetable lessons={[...lessons, ...staffSlots]} />
           <Text size="sm" c="dimmed" mt="md">
             Tap a lesson to open the class.
           </Text>

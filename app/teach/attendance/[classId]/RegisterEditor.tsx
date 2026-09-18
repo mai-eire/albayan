@@ -13,6 +13,7 @@ import {
 import { IconInfoCircle } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { AppLink } from "@/components/AppLink";
 import { CardTitle } from "@/components/CardTitle";
 import { FormError } from "@/components/FormError";
 import { toast } from "@/components/toast";
@@ -44,10 +45,13 @@ export function RegisterEditor({
   register,
   editable,
   backHref,
+  studentHrefBase,
 }: {
   register: Register;
   editable: boolean;
   backHref: string;
+  // Where a student's name leads (the office links to the profile; teachers see names).
+  studentHrefBase?: string;
 }) {
   const router = useRouter();
   const [entries, setEntries] = useState<Entry[]>(
@@ -118,9 +122,15 @@ export function RegisterEditor({
           return (
             <div key={row.studentId} className={classes.row}>
               <Group justify="space-between" wrap="wrap" gap="sm">
-                <Text fw={500}>
-                  {row.firstName} {row.lastName}
-                </Text>
+                {studentHrefBase ? (
+                  <AppLink href={`${studentHrefBase}/${row.studentId}`} fw={500}>
+                    {row.firstName} {row.lastName}
+                  </AppLink>
+                ) : (
+                  <Text fw={500}>
+                    {row.firstName} {row.lastName}
+                  </Text>
+                )}
                 <SegmentedControl
                   size="xs"
                   color={statusColor[entry.status]}

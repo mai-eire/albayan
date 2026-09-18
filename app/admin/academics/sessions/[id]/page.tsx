@@ -18,7 +18,6 @@ export default async function SessionPage({ params }: Props) {
     <Stack gap="lg" maw={860}>
       <PageHeader
         breadcrumbs={[
-          { label: "Academics", href: "/admin/academics" },
           { label: "Sessions", href: `/admin/academics/sessions?year=${session.academicYearId}` },
         ]}
         eyebrow={`${session.academicYearId} · ${weekdays[session.dayOfWeek]}`}
@@ -42,6 +41,7 @@ export default async function SessionPage({ params }: Props) {
           subjectId: p.subjectId,
           title: p.title,
           durationMinutes: p.durationMinutes,
+          staffOnly: p.staffOnly,
         }))}
         subjects={subjects.filter(
           (s) => s.isActive || session.periods.some((p) => p.subjectId === s.id),

@@ -1,0 +1,20 @@
+.row {
+  border-radius: var(--mantine-radius-md);
+  background: var(--mantine-color-body);
+
+  &[data-dragging] {
+    box-shadow: var(--mantine-shadow-md);
+  }
+}
+
+.handle {
+  display: flex;
+  align-items: center;
+  color: var(--mantine-color-dimmed);
+  cursor: grab;
+  touch-action: none;
+
+  &:active {
+    cursor: grabbing;
+  }
+}

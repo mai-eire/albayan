@@ -151,7 +151,12 @@ export const assignTeachers = action(
 // Moves a student to another class of the same year: the old enrolment ends today and a
 // new one starts, carrying the fee, so the history stays.
 export const moveStudent = action(
-  z.object({ enrolmentId: z.number().int(), classId: z.number().int() }),
+  z.object({
+    enrolmentId: z.number().int(),
+    classId: z.number().int(),
+    // The admin has seen that the class is full and wants them placed anyway.
+    overCapacity: z.boolean().default(false),
+  }),
   async (input, { user, db }) => {
     requireAdmin(user);
     const current = await db.query.enrolments.findFirst({
@@ -165,6 +170,16 @@ export const moveStudent = action(
     ]);
     if (!from || !to || from.academicYearId !== to.academicYearId) {
       throw new ActionError("Students can only move between classes of the same year.");
+    }
+    if (to.capacity !== null && !input.overCapacity) {
+      const [{ n }] = await db
+        .select({ n: count() })
+        .from(enrolments)
+        .where(and(eq(enrolments.classId, to.id), eq(enrolments.status, "active")));
+      if (n >= to.capacity)
+        throw new ActionError(
+          `${to.name} is full (${n} of ${to.capacity} places). Tick the box to place them anyway.`,
+        );
     }
     const { timezone } = await getSchoolSettings();
     const today = todayIn(timezone);

@@ -1,11 +1,10 @@
 import { Stack } from "@mantine/core";
-import { AcademicsTabs } from "./AcademicsTabs";
 
-// Years & terms · Subjects · Sessions · Classes — set up once a year, top to bottom.
+// Years & terms · Subjects · Sessions · Classes are sub-items in the sidebar; each page
+// stands on its own with its own breadcrumbs.
 export default function AcademicsLayout({ children }: { children: React.ReactNode }) {
   return (
-    <Stack gap="lg" maw={1180} mx="auto">
-      <AcademicsTabs />
+    <Stack gap="lg" maw={1180}>
       {children}
     </Stack>
   );

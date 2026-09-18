@@ -18,10 +18,7 @@ export default async function YearPage({ params }: Props) {
   return (
     <Stack gap="lg" maw={720}>
       <PageHeader
-        breadcrumbs={[
-          { label: "Academics", href: "/admin/academics" },
-          { label: "Years", href: "/admin/academics/years" },
-        ]}
+        breadcrumbs={[{ label: "Years & terms", href: "/admin/academics/years" }]}
         title={year.id}
       />
       <Card>

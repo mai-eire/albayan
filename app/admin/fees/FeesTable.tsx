@@ -2,6 +2,7 @@
 
 import { Table, Text } from "@mantine/core";
 import { AppLink } from "@/components/AppLink";
+import { Nothing } from "@/components/Nothing";
 import { MoneyText } from "@/components/MoneyText";
 import { SortableTh, useSort } from "@/components/SortableTh";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -67,9 +68,7 @@ export function FeesTable({ rows }: { rows: FeeAccountRow[] }) {
                   {e.guardianName}
                 </AppLink>
               ) : (
-                <Text component="span" c="dimmed">
-                  —
-                </Text>
+                <Nothing>no guardian</Nothing>
               )}
             </Table.Td>
             <Table.Td ta="end">

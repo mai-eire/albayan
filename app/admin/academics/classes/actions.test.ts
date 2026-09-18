@@ -135,4 +135,37 @@ describe("moveStudent", () => {
       error: /no longer/,
     });
   });
+
+  it("refuses a full class unless the admin says to go over capacity", async () => {
+    current = admin;
+    // Level 1 is empty now; give it one place and fill it.
+    await db.update(classes).set({ capacity: 1 }).where(eq(classes.id, 1));
+    await db.insert(students).values({
+      id: 2,
+      firstName: "Bilal",
+      lastName: "B",
+      gender: "male",
+      dateOfBirth: "2017-01-01",
+      status: "active",
+      appliedAt: "2026-08-01T00:00:00Z",
+      createdByGuardianId: 1,
+    });
+    await db
+      .insert(enrolments)
+      .values({ id: 50, studentId: 2, classId: 1, startDate: "2026-09-05", feeCents: 20000 });
+    const [amira] = await db
+      .select({ id: enrolments.id })
+      .from(enrolments)
+      .where(eq(enrolments.studentId, 1))
+      .orderBy(enrolments.id)
+      .limit(1)
+      .offset(1);
+    expect(await moveStudent({ enrolmentId: amira.id, classId: 1 })).toMatchObject({
+      ok: false,
+      error: /full \(1 of 1 places\)/,
+    });
+    expect(
+      await moveStudent({ enrolmentId: amira.id, classId: 1, overCapacity: true }),
+    ).toMatchObject({ ok: true });
+  });
 });

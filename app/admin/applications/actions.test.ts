@@ -82,11 +82,16 @@ describe("approveApplication", () => {
       classId: 1,
       fee: "200",
       feeNote: "Sibling discount",
+      offerNote: "Level 1 suits their Arabic best this year.",
     });
     expect(result).toEqual({ ok: true, data: { studentId: "ALB-26-0055" } });
 
     const placed = await db.query.students.findFirst({ where: eq(students.id, first.id) });
-    expect(placed).toMatchObject({ status: "active", studentId: "ALB-26-0055" });
+    expect(placed).toMatchObject({
+      status: "active",
+      studentId: "ALB-26-0055",
+      offerNote: "Level 1 suits their Arabic best this year.",
+    });
     expect(placed?.userId).toBeTruthy();
     expect(placed?.approvedAt).toBeTruthy();
     const [enrolment] = await db
@@ -104,6 +109,7 @@ describe("approveApplication", () => {
     expect(mail).toBeTruthy();
     const html = readFileSync(join(mailDir, mail!), "utf8");
     expect(html).toContain("ALB-26-0055");
+    expect(html).toContain("Level 1 suits their Arabic best this year.");
     const password = html.match(/first password is <strong>([a-z0-9]+)<\/strong>/)?.[1];
     expect(password).toBeTruthy();
 

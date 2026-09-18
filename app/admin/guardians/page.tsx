@@ -1,66 +1,61 @@
-import {
-  Stack,
-  Table,
-  TableTbody,
-  TableTd,
-  TableTh,
-  TableThead,
-  TableTr,
-  Text,
-} from "@mantine/core";
-import { IconUsersGroup } from "@tabler/icons-react";
-import { AppLink } from "@/components/AppLink";
-import { EmptyState } from "@/components/EmptyState";
+import { Stack } from "@mantine/core";
+import { ExportButton } from "@/components/ExportButton";
 import { PageHeader } from "@/components/PageHeader";
+import {
+  getCurrentYear,
+  listClasses,
+  listSessions,
+  listTeachers,
+} from "@/lib/db/queries/academics";
 import { listGuardiansForAdmin } from "@/lib/db/queries/students";
-import { SearchBox } from "./SearchBox";
+import { FamiliesList } from "./FamiliesList";
+import { InviteGuardianButton } from "./InviteGuardianButton";
 
-export const metadata = { title: "Guardians" };
+export const metadata = { title: "Families" };
 
-type Props = { searchParams: Promise<{ q?: string }> };
-
-export default async function GuardiansPage({ searchParams }: Props) {
-  const q = (await searchParams).q?.trim() || undefined;
-  const rows = await listGuardiansForAdmin(q);
+// Guardians grouped into families (lib/families.ts); each guardian still has their own page.
+export default async function FamiliesPage() {
+  const [guardians, year, teachers] = await Promise.all([
+    listGuardiansForAdmin(),
+    getCurrentYear(),
+    listTeachers(),
+  ]);
+  const [sessions, classes] = year
+    ? await Promise.all([listSessions(year.id), listClasses(year.id)])
+    : [[], []];
   return (
-    <Stack gap="lg" maw={960}>
-      <PageHeader title="Guardians" eyebrow={`${rows.length} shown`} />
-      <SearchBox />
-      {rows.length === 0 ? (
-        <EmptyState
-          icon={<IconUsersGroup size={20} stroke={1.75} />}
-          message="No guardians match that search."
-        />
-      ) : (
-        <Table>
-          <TableThead>
-            <TableTr>
-              <TableTh>Guardian</TableTh>
-              <TableTh>Email</TableTh>
-              <TableTh>Phone</TableTh>
-              <TableTh>Children</TableTh>
-            </TableTr>
-          </TableThead>
-          <TableTbody>
-            {rows.map((g) => (
-              <TableTr key={g.id}>
-                <TableTd>
-                  <AppLink href={`/admin/guardians/${g.id}`} fw={500}>
-                    {g.name}
-                  </AppLink>
-                </TableTd>
-                <TableTd>
-                  <Text component="span" c="dimmed">
-                    {g.email}
-                  </Text>
-                </TableTd>
-                <TableTd>{g.phone ?? "—"}</TableTd>
-                <TableTd>{g.children.length ? g.children.join(", ") : "—"}</TableTd>
-              </TableTr>
-            ))}
-          </TableTbody>
-        </Table>
-      )}
+    <Stack gap="lg" maw={1180}>
+      <PageHeader
+        title="Families"
+        actions={
+          <>
+            <ExportButton href="/admin/guardians/export" />
+            <InviteGuardianButton
+              guardians={guardians
+                .filter((g) => g.children.length > 0)
+                .map((g) => ({
+                  id: g.id,
+                  name: g.name,
+                  children: g.children.map((c) => ({ id: c.id, firstName: c.firstName })),
+                }))}
+            />
+          </>
+        }
+      />
+      <FamiliesList
+        guardians={guardians}
+        sessions={sessions.map((s) => ({ id: s.id, name: s.name }))}
+        classes={classes.map((c) => ({
+          id: c.id,
+          name: c.name,
+          sessionId: c.sessionId,
+          sessionName: c.sessionName,
+          teacherIds: c.teacherIds,
+        }))}
+        teachers={teachers
+          .filter((t) => classes.some((c) => c.teacherIds.includes(t.id)))
+          .map((t) => ({ id: t.id, name: t.name }))}
+      />
     </Stack>
   );
 }

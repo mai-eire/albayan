@@ -6,7 +6,7 @@ import { z } from "zod";
 import { requireAdmin } from "@/lib/access";
 import { action, ActionError } from "@/lib/actions";
 import { appUrl } from "@/lib/app-url";
-import { audit } from "@/lib/audit";
+import { audit, diff } from "@/lib/audit";
 import { auth } from "@/lib/auth";
 import type { Db } from "@/lib/db";
 import { getSchoolSettings } from "@/lib/db/queries/settings";
@@ -188,6 +188,39 @@ export const setAdmin = action(
       entityType: "user",
       entityId: input.userId,
     });
+    revalidatePath("/admin/staff");
+  },
+);
+
+// The office corrects a colleague's name or phone; their email is their sign-in and stays.
+export const updateStaffContact = action(
+  z.object({
+    userId: z.number().int(),
+    name: z.string().trim().min(2, "Enter their name").max(80),
+    phone: z
+      .string()
+      .trim()
+      .max(30)
+      .transform((v) => v || null),
+  }),
+  async ({ userId, name, phone }, { user, db }) => {
+    requireAdmin(user);
+    const before = await db.query.users.findFirst({
+      columns: { id: true, name: true, phone: true, isAdmin: true },
+      where: eq(users.id, userId),
+    });
+    if (!before) throw new ActionError("That person no longer exists.");
+    const changed = diff({ name: before.name, phone: before.phone }, { name, phone });
+    if (Object.keys(changed).length === 0) return;
+    await db.update(users).set({ name, phone }).where(eq(users.id, userId));
+    await audit(db, {
+      actorUserId: user.id,
+      action: "staff.update_contact",
+      entityType: "user",
+      entityId: userId,
+      changes: changed,
+    });
+    revalidatePath(`/admin/staff/${userId}`);
     revalidatePath("/admin/staff");
   },
 );

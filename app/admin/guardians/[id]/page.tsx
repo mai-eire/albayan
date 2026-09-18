@@ -4,18 +4,17 @@ import { CardTitle } from "@/components/CardTitle";
 import { EditableCard } from "@/components/EditableCard";
 import { EntityList } from "@/components/EntityList";
 import { Field } from "@/components/Field";
-import { SensitiveSection } from "@/components/SensitiveSection";
 import { StatusBadge } from "@/components/StatusBadge";
-import { getGuardianForAdmin } from "@/lib/db/queries/students";
-import { guardianGenderOptions, reasonLabels, relationshipLabels } from "@/lib/demographics";
-import { ContactForm, SensitiveForm } from "./forms";
+import { getGuardianForAdmin, listCoGuardians } from "@/lib/db/queries/students";
+import { guardianGenderOptions, relationshipLabels } from "@/lib/demographics";
+import { ContactForm } from "./forms";
 
 type Props = { params: Promise<{ id: string }> };
 
 export default async function GuardianPage({ params }: Props) {
-  const guardian = await getGuardianForAdmin(Number((await params).id));
+  const id = Number((await params).id);
+  const [guardian, coGuardians] = await Promise.all([getGuardianForAdmin(id), listCoGuardians(id)]);
   if (!guardian) notFound();
-  const s = guardian.sensitive;
   return (
     <Stack gap="lg">
       <EditableCard
@@ -57,7 +56,7 @@ export default async function GuardianPage({ params }: Props) {
               title: `${c.firstName} ${c.lastName}`,
               detail: [
                 relationshipLabels[c.relationship as keyof typeof relationshipLabels],
-                c.className,
+                c.className && `${c.className} · ${c.sessionName}`,
               ]
                 .filter(Boolean)
                 .join(" · "),
@@ -67,37 +66,19 @@ export default async function GuardianPage({ params }: Props) {
           />
         )}
       </Card>
-      <SensitiveSection>
-        <EditableCard
-          title="About the family"
-          view={
-            <SimpleGrid cols={{ base: 2, xs: 4 }} spacing="md">
-              <Field label="Address" value={s.address ?? "Not given"} />
-              <Field
-                label="Languages at home"
-                value={s.spokenLanguages.length ? s.spokenLanguages.join(", ") : "Not given"}
-              />
-              <Field label="Ethnicity" value={s.ethnicity ?? "Prefer not to say"} />
-              <Field
-                label="Reasons for registering"
-                value={
-                  s.registrationReasons.length
-                    ? s.registrationReasons
-                        .map((r) =>
-                          r === "other" && s.registrationReasonOther
-                            ? s.registrationReasonOther
-                            : reasonLabels[r],
-                        )
-                        .join(", ")
-                    : "Not given"
-                }
-              />
-            </SimpleGrid>
-          }
-        >
-          <SensitiveForm guardian={guardian} />
-        </EditableCard>
-      </SensitiveSection>
+      {coGuardians.length > 0 && (
+        <Card>
+          <CardTitle>Also in this family</CardTitle>
+          <EntityList
+            items={coGuardians.map((g) => ({
+              key: g.id,
+              title: g.name,
+              detail: `${relationshipLabels[g.relationship as keyof typeof relationshipLabels]} of ${g.childNames.join(", ")}`,
+              href: `/admin/guardians/${g.id}`,
+            }))}
+          />
+        </Card>
+      )}
     </Stack>
   );
 }

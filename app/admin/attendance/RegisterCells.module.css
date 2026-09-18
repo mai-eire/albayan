@@ -1,0 +1,18 @@
+/* Fixed-width halves so the "/" sits in the same column on every row. */
+.left {
+  display: inline-block;
+  min-width: 2.5ch;
+  text-align: end;
+}
+
+.slash {
+  display: inline-block;
+  width: 1.5ch;
+  text-align: center;
+}
+
+.right {
+  display: inline-block;
+  min-width: 2.5ch;
+  text-align: start;
+}

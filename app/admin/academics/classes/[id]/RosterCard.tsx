@@ -1,50 +1,57 @@
 "use client";
 
-import { Button, Card, Group, Menu, Modal, Select, Stack, Table, Text } from "@mantine/core";
+import { Button, Card, Menu, Table, Text } from "@mantine/core";
 import { IconDots } from "@tabler/icons-react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { AppLink } from "@/components/AppLink";
 import { CardTitle } from "@/components/CardTitle";
-import { FormError } from "@/components/FormError";
-import { toast } from "@/components/toast";
+import tabular from "@/components/tabular.module.css";
 import { ageOn } from "@/lib/age";
 import type { RosterForAdmin } from "@/lib/db/queries/academics";
 import type { AttendanceSummary } from "@/lib/db/queries/attendance";
-import { moveStudent } from "../actions";
+import type { FamilyMember } from "@/lib/db/queries/families";
+import { MoveStudentModal, type ClassChoice } from "../MoveStudentModal";
 
 type Props = {
   roster: RosterForAdmin[];
   attendance: AttendanceSummary[];
+  // Registers actually taken this term: the "n" in "7 / 9".
+  registersTaken: number;
   periodLabel: string | null;
-  otherClasses: { id: number; name: string; sessionName: string }[];
+  current: ClassChoice;
+  otherClasses: ClassChoice[];
+  capacity: number | null;
+  // Each student's brothers and sisters, keyed by student id, for the move modal.
+  families: Record<number, FamilyMember[]>;
   today: string;
 };
 
-// The class's students with this term's attendance counts; each row can be moved to
-// another class of the year.
-export function RosterCard({ roster, attendance, periodLabel, otherClasses, today }: Props) {
-  const router = useRouter();
+// The class's students with this term's attendance as "x / n" per status; each row can be
+// moved to another class of the year.
+export function RosterCard({
+  roster,
+  attendance,
+  registersTaken,
+  periodLabel,
+  current,
+  otherClasses,
+  capacity,
+  families,
+  today,
+}: Props) {
   const [moving, setMoving] = useState<RosterForAdmin | null>(null);
-  const [target, setTarget] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
   const counts = new Map(attendance.map((a) => [a.studentId, a]));
-
-  const move = async () => {
-    if (!moving || !target) return;
-    setSaving(true);
-    setError(null);
-    const result = await moveStudent({ enrolmentId: moving.enrolmentId, classId: Number(target) });
-    setSaving(false);
-    if (!result.ok) {
-      setError(result.error);
-      return;
-    }
-    toast.success(`${moving.firstName} moved`);
-    setMoving(null);
-    router.refresh();
-  };
+  const cell = (n: number | undefined, color?: string) => (
+    <Table.Td ta="end" className={tabular.tabular}>
+      <Text component="span" c={n ? color : "dimmed"} fw={n ? 500 : undefined}>
+        {n ?? 0}
+      </Text>
+      <Text component="span" c="dimmed">
+        {" "}
+        / {registersTaken}
+      </Text>
+    </Table.Td>
+  );
 
   return (
     <Card>
@@ -52,15 +59,21 @@ export function RosterCard({ roster, attendance, periodLabel, otherClasses, toda
         context={
           periodLabel && (
             <Text size="sm" c="dimmed">
-              Attendance · {periodLabel}
+              {periodLabel} · {registersTaken} {registersTaken === 1 ? "register" : "registers"}{" "}
+              taken
             </Text>
           )
         }
       >
         Students
-        <Text component="span" c="dimmed" fw={400}>
+        <Text
+          component="span"
+          c={capacity !== null && roster.length > capacity ? "clay" : "dimmed"}
+          fw={400}
+        >
           {" "}
           {roster.length}
+          {capacity !== null && ` / ${capacity}`}
         </Text>
       </CardTitle>
       {roster.length === 0 ? (
@@ -72,9 +85,11 @@ export function RosterCard({ roster, attendance, periodLabel, otherClasses, toda
           <Table.Thead>
             <Table.Tr>
               <Table.Th>Student</Table.Th>
-              <Table.Th>Age</Table.Th>
-              <Table.Th>Present</Table.Th>
-              <Table.Th>Absent</Table.Th>
+              <Table.Th ta="end">Age</Table.Th>
+              <Table.Th ta="end">Present</Table.Th>
+              <Table.Th ta="end">Late</Table.Th>
+              <Table.Th ta="end">Absent</Table.Th>
+              <Table.Th ta="end">Excused</Table.Th>
               <Table.Th />
             </Table.Tr>
           </Table.Thead>
@@ -91,9 +106,11 @@ export function RosterCard({ roster, attendance, periodLabel, otherClasses, toda
                       {s.studentCode}
                     </Text>
                   </Table.Td>
-                  <Table.Td>{ageOn(s.dateOfBirth, today)}</Table.Td>
-                  <Table.Td>{(a?.present ?? 0) + (a?.late ?? 0)}</Table.Td>
-                  <Table.Td c={a?.absent ? "clay" : undefined}>{a?.absent ?? 0}</Table.Td>
+                  <Table.Td ta="end">{ageOn(s.dateOfBirth, today)}</Table.Td>
+                  {cell(a?.present, "tile")}
+                  {cell(a?.late, "saffron")}
+                  {cell(a?.absent, "clay")}
+                  {cell(a?.excused)}
                   <Table.Td ta="end">
                     {otherClasses.length > 0 && (
                       <Menu shadow="md" position="bottom-end">
@@ -108,15 +125,7 @@ export function RosterCard({ roster, attendance, periodLabel, otherClasses, toda
                           </Button>
                         </Menu.Target>
                         <Menu.Dropdown>
-                          <Menu.Item
-                            onClick={() => {
-                              setMoving(s);
-                              setTarget(String(otherClasses[0].id));
-                              setError(null);
-                            }}
-                          >
-                            Move to another class
-                          </Menu.Item>
+                          <Menu.Item onClick={() => setMoving(s)}>Move to another class</Menu.Item>
                         </Menu.Dropdown>
                       </Menu>
                     )}
@@ -127,37 +136,13 @@ export function RosterCard({ roster, attendance, periodLabel, otherClasses, toda
           </Table.Tbody>
         </Table>
       )}
-      <Modal
-        opened={moving !== null}
+      <MoveStudentModal
+        student={moving && { enrolmentId: moving.enrolmentId, firstName: moving.firstName }}
+        current={current}
+        options={otherClasses}
+        family={moving ? families[moving.studentId] : []}
         onClose={() => setMoving(null)}
-        title={moving ? `Move ${moving.firstName}` : ""}
-      >
-        <Stack gap="md">
-          <Select
-            label="New class"
-            data={otherClasses.map((c) => ({
-              value: String(c.id),
-              label: `${c.name} · ${c.sessionName}`,
-            }))}
-            value={target}
-            onChange={setTarget}
-            allowDeselect={false}
-          />
-          <Text size="sm" c="dimmed">
-            Their place here ends today and the new one starts today, keeping the same fee. The
-            family sees the new class straight away.
-          </Text>
-          <FormError message={error} />
-          <Group justify="flex-end">
-            <Button variant="default" onClick={() => setMoving(null)}>
-              Cancel
-            </Button>
-            <Button onClick={move} loading={saving}>
-              Move student
-            </Button>
-          </Group>
-        </Stack>
-      </Modal>
+      />
     </Card>
   );
 }

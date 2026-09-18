@@ -1,4 +1,5 @@
-import { SimpleGrid, Stack } from "@mantine/core";
+import { Card, SimpleGrid, Stack, Text } from "@mantine/core";
+import { CardTitle } from "@/components/CardTitle";
 import { DateText } from "@/components/DateText";
 import { EditableCard } from "@/components/EditableCard";
 import { Field } from "@/components/Field";
@@ -40,6 +41,31 @@ export default async function StudentDetailsPage({ params }: Props) {
       >
         <HealthForm student={student} />
       </EditableCard>
+      <Card>
+        <CardTitle>Application</CardTitle>
+        <SimpleGrid cols={{ base: 2, xs: 4 }} spacing="md">
+          <Field label="Applied" value={<DateText date={student.appliedAt} withYear />} />
+          <Field
+            label="Preferred session"
+            value={student.preferredSessionName ?? "No preference"}
+          />
+          <Field label="Preferred class" value={student.preferredClassName ?? "No preference"} />
+          <Field
+            label="Decided"
+            value={student.approvedAt ? <DateText date={student.approvedAt} withYear /> : "Not yet"}
+          />
+        </SimpleGrid>
+        {student.applicationNotes && (
+          <Text size="sm" mt="md">
+            From the family: {student.applicationNotes}
+          </Text>
+        )}
+        {student.declinedReason && (
+          <Text size="sm" mt="md">
+            Declined: {student.declinedReason}
+          </Text>
+        )}
+      </Card>
     </Stack>
   );
 }

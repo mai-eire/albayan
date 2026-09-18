@@ -248,7 +248,11 @@ describe("updateEnrolmentFee", () => {
 
 describe("fee queries", () => {
   it("totals what is owed by family for the dashboard", async () => {
-    expect(await feesOutstanding("2026-27")).toEqual({ totalCents: 35000, families: 2 });
+    expect(await feesOutstanding("2026-27")).toMatchObject({ totalCents: 35000, families: 2 });
+    const { feesCents } = await feesOutstanding("2026-27");
+    expect(feesCents).toBe(
+      (await listFeeAccounts("2026-27")).reduce((sum, a) => sum + a.feeCents, 0),
+    );
   });
 
   it("lists a student's years with their payments across places", async () => {

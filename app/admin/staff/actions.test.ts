@@ -36,6 +36,7 @@ vi.mock("next/cache", () => ({ revalidatePath: () => {} }));
 
 const { inviteStaff, setAdmin, setTeacherActive, deleteInvite } = await import("./actions");
 const { listStaff } = await import("@/lib/db/queries/staff");
+const { applyStaffFilters } = await import("./filters");
 
 const base = {
   name: "X",
@@ -151,8 +152,10 @@ describe("setTeacherActive and deleteInvite", () => {
     });
     // User 2 is also an admin by now, so they stay listed; a plain former teacher would not.
     await setAdmin({ userId: 2, isAdmin: false });
-    expect((await listStaff()).map((s) => s.id)).not.toContain(2);
-    expect((await listStaff(true)).map((s) => s.id)).toContain(2);
+    const shown = (staff: Awaited<ReturnType<typeof listStaff>>) =>
+      applyStaffFilters(staff, { showFormer: false }).map((s) => s.id);
+    expect(shown(await listStaff())).not.toContain(2);
+    expect((await listStaff()).map((s) => s.id)).toContain(2);
     expect(await setTeacherActive({ teacherId: teacher!.id, isActive: true })).toMatchObject({
       ok: true,
     });

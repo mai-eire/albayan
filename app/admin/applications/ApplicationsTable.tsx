@@ -6,9 +6,9 @@ import {
   Drawer,
   Group,
   Modal,
-  Select,
   SimpleGrid,
   Stack,
+  Select,
   Table,
   Text,
   Textarea,
@@ -19,31 +19,101 @@ import { useForm } from "@mantine/form";
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useDebouncedCallback } from "@mantine/hooks";
+import { IconInbox, IconSearch } from "@tabler/icons-react";
+import { ClassFilter, type ClassFilterOption } from "@/components/ClassFilter";
+import { Nothing } from "@/components/Nothing";
+import { EmptyState } from "@/components/EmptyState";
 import { Field } from "@/components/Field";
+import { useUrlFilters } from "@/components/useUrlFilters";
 import { FormError } from "@/components/FormError";
 import { toast } from "@/components/toast";
 import { ageOn } from "@/lib/age";
 import type { Application } from "@/lib/db/queries/applications";
 import { proficiencyLabels, relationshipLabels } from "@/lib/demographics";
-import { formatEuros } from "@/lib/money";
-import { approveApplication, declineApplication } from "./actions";
-
-export type Placement = { id: number; name: string; classes: { id: number; name: string }[] };
+import type { ClassChoice } from "@/app/admin/academics/classes/ClassPicker";
+import type { FamilyMember } from "@/lib/db/queries/families";
+import { declineApplication } from "./actions";
+import { OfferPlaceModal } from "./OfferPlaceModal";
 
 type Props = {
   applications: Application[];
-  placements: Placement[];
+  classes: ClassChoice[];
+  sessions: { id: number; name: string }[];
+  // Each applicant's brothers and sisters, keyed by student id.
+  families: Record<number, FamilyMember[]>;
   standardFeeCents: number;
   today: string;
 };
 
-export function ApplicationsTable({ applications, placements, standardFeeCents, today }: Props) {
+// Filters above (child or guardian, the session and class asked for), one row per child.
+export function ApplicationsTable({
+  applications,
+  classes,
+  sessions,
+  families,
+  standardFeeCents,
+  today,
+}: Props) {
   const [open, setOpen] = useState<Application | null>(null);
   const [deciding, setDeciding] = useState<"approve" | "decline" | null>(null);
+  const { params, set } = useUrlFilters();
+  const q = params.get("q")?.trim().toLowerCase();
+  const session = params.get("session");
+  const cls = params.get("class");
+  const search = useDebouncedCallback((value: string) => set({ q: value }), 300);
+  const shown = applications.filter(
+    (a) =>
+      (!session || String(a.preferredSessionId) === session) &&
+      (!cls || String(a.preferredClassId) === cls) &&
+      (!q ||
+        `${a.firstName} ${a.lastName}`.toLowerCase().includes(q) ||
+        a.guardian.name.toLowerCase().includes(q)),
+  );
+  const classOptions: ClassFilterOption[] = classes.map((c) => ({
+    id: c.id,
+    name: c.name,
+    sessionId: c.sessionId,
+    sessionName: c.sessionName,
+  }));
 
   return (
     <>
-      <Table highlightOnHover>
+      <Group gap="sm" wrap="wrap">
+        <TextInput
+          aria-label="Search"
+          placeholder="Child or guardian"
+          leftSection={<IconSearch size={16} stroke={1.75} />}
+          defaultValue={params.get("q") ?? ""}
+          onChange={(e) => search(e.currentTarget.value)}
+          w={{ base: "100%", xs: 240 }}
+        />
+        <Select
+          aria-label="Preferred session"
+          placeholder="Any session asked for"
+          data={sessions.map((s) => ({ value: String(s.id), label: s.name }))}
+          value={session}
+          clearable
+          onChange={(v) => set({ session: v, class: null })}
+          w={200}
+        />
+        <ClassFilter
+          classes={classOptions}
+          sessionId={session}
+          value={cls}
+          onChange={(v) => set({ class: v })}
+        />
+        <Text size="sm" c="dimmed" ms="auto">
+          {shown.length} waiting
+        </Text>
+      </Group>
+      {shown.length === 0 && (
+        <EmptyState
+          icon={<IconInbox size={20} stroke={1.75} />}
+          message="No applications match. Try clearing a filter."
+        />
+      )}
+      <Table highlightOnHover display={shown.length ? undefined : "none"}>
         <Table.Thead>
           <Table.Tr>
             <Table.Th>Child</Table.Th>
@@ -55,7 +125,7 @@ export function ApplicationsTable({ applications, placements, standardFeeCents, 
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
-          {applications.map((a) => (
+          {shown.map((a) => (
             <Table.Tr key={a.id} onClick={() => setOpen(a)} style={{ cursor: "pointer" }}>
               <Table.Td>
                 <Text fw={500}>
@@ -66,14 +136,14 @@ export function ApplicationsTable({ applications, placements, standardFeeCents, 
                   {a.siblings.length > 0 && ` · sibling of ${a.siblings.join(", ")}`}
                 </Text>
               </Table.Td>
-              <Table.Td>{a.schoolYearGroup ?? "—"}</Table.Td>
+              <Table.Td>{a.schoolYearGroup ?? <Nothing>not given</Nothing>}</Table.Td>
               <Table.Td>{proficiencyLabels[a.arabicProficiency]}</Table.Td>
               <Table.Td>
-                {a.preferredSessionName ?? "—"}
-                {a.preferredClassName && (
+                {a.preferredSessionName ?? <Nothing>no preference</Nothing>}
+                {a.preferredSessionName && (
                   <Text size="sm" c="dimmed" component="span">
                     {" "}
-                    · {a.preferredClassName}
+                    · {a.preferredClassName ?? "any class"}
                   </Text>
                 )}
               </Table.Td>
@@ -161,24 +231,15 @@ export function ApplicationsTable({ applications, placements, standardFeeCents, 
         )}
       </Drawer>
 
-      <Modal
-        opened={open !== null && deciding === "approve"}
+      <OfferPlaceModal
+        application={open && deciding === "approve" ? open : null}
+        classes={classes}
+        family={open ? (families[open.id] ?? []) : []}
+        standardFeeCents={standardFeeCents}
+        today={today}
         onClose={() => setDeciding(null)}
-        title={open ? `Offer ${open.firstName} a place` : ""}
-      >
-        {open && (
-          <ApproveForm
-            application={open}
-            placements={placements}
-            standardFeeCents={standardFeeCents}
-            onDone={() => {
-              setDeciding(null);
-              setOpen(null);
-            }}
-            onCancel={() => setDeciding(null)}
-          />
-        )}
-      </Modal>
+        onDone={() => setOpen(null)}
+      />
       <Modal
         opened={open !== null && deciding === "decline"}
         onClose={() => setDeciding(null)}
@@ -196,118 +257,6 @@ export function ApplicationsTable({ applications, placements, standardFeeCents, 
         )}
       </Modal>
     </>
-  );
-}
-
-function ApproveForm({
-  application,
-  placements,
-  standardFeeCents,
-  onDone,
-  onCancel,
-}: {
-  application: Application;
-  placements: Placement[];
-  standardFeeCents: number;
-  onDone: () => void;
-  onCancel: () => void;
-}) {
-  const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-  const preferred =
-    placements.find((p) => p.id === application.preferredSessionId) ?? placements[0] ?? null;
-  const form = useForm<{
-    sessionId: number | null;
-    classId: number | null;
-    fee: string;
-    feeNote: string;
-  }>({
-    initialValues: {
-      sessionId: preferred?.id ?? null,
-      classId:
-        preferred?.classes.find((c) => c.id === application.preferredClassId)?.id ??
-        preferred?.classes[0]?.id ??
-        null,
-      fee: formatEuros(standardFeeCents).replace(/[€,]/g, ""),
-      feeNote: "",
-    },
-  });
-  const session = placements.find((p) => p.id === form.values.sessionId);
-
-  const submit = form.onSubmit(async (values) => {
-    setSaving(true);
-    setError(null);
-    const result = await approveApplication({
-      id: application.id,
-      classId: values.classId,
-      fee: values.fee,
-      feeNote: values.feeNote,
-    });
-    setSaving(false);
-    if (!result.ok) {
-      if (result.fieldErrors) form.setErrors(result.fieldErrors);
-      setError(result.error);
-      return;
-    }
-    toast.success(`${application.firstName} is now ${result.data.studentId}`);
-    onDone();
-    router.refresh();
-  });
-
-  return (
-    <form onSubmit={submit}>
-      <Stack gap="md">
-        <Group grow>
-          <Select
-            label="Session"
-            data={placements.map((p) => ({ value: String(p.id), label: p.name }))}
-            allowDeselect={false}
-            value={form.values.sessionId?.toString() ?? null}
-            onChange={(v) => {
-              const next = placements.find((p) => p.id === Number(v));
-              form.setFieldValue("sessionId", next?.id ?? null);
-              form.setFieldValue("classId", next?.classes[0]?.id ?? null);
-            }}
-          />
-          <Select
-            label="Class"
-            data={(session?.classes ?? []).map((c) => ({ value: String(c.id), label: c.name }))}
-            allowDeselect={false}
-            withAsterisk
-            value={form.values.classId?.toString() ?? null}
-            onChange={(v) => form.setFieldValue("classId", v ? Number(v) : null)}
-            error={form.errors.classId}
-          />
-        </Group>
-        <Group grow align="flex-start">
-          <TextInput
-            label="Fee for the year"
-            leftSection="€"
-            withAsterisk
-            {...form.getInputProps("fee")}
-          />
-          <TextInput
-            label="Fee note"
-            placeholder="Sibling discount"
-            {...form.getInputProps("feeNote")}
-          />
-        </Group>
-        <Text size="sm" c="dimmed">
-          {application.guardian.name} will get an email with {application.firstName}&apos;s student
-          ID and first password.
-        </Text>
-        <FormError message={error} />
-        <Group justify="flex-end">
-          <Button variant="default" onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button type="submit" loading={saving}>
-            Offer the place
-          </Button>
-        </Group>
-      </Stack>
-    </form>
   );
 }
 

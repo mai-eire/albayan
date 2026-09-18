@@ -136,7 +136,7 @@ function SubjectForm({ existing, onDone }: { existing?: Subject; onDone: () => v
         />
         {!existing && form.values.name && (
           <Text size="sm" c="dimmed">
-            Code: {subjectIdFor(form.values.name) || "—"} (fixed once created)
+            Code: {subjectIdFor(form.values.name) || "…"} (fixed once created)
           </Text>
         )}
         <FormError message={error} />

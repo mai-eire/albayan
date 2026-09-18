@@ -5,6 +5,7 @@ import { IconDots } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { AppLink } from "@/components/AppLink";
+import { Nothing } from "@/components/Nothing";
 import { confirmDestructive } from "@/components/confirm";
 import { MoneyText } from "@/components/MoneyText";
 import { toast } from "@/components/toast";
@@ -74,19 +75,9 @@ export function PaymentsTable({ payments, showChild, target, today, timezone }: 
                 <MoneyText cents={p.amountCents} fw={500} />
               </Table.Td>
               <Table.Td>{methodLabels[p.method]}</Table.Td>
+              <Table.Td>{p.paidByName ?? <Nothing>not recorded</Nothing>}</Table.Td>
               <Table.Td>
-                {p.paidByName ?? (
-                  <Text component="span" c="dimmed">
-                    —
-                  </Text>
-                )}
-              </Table.Td>
-              <Table.Td>
-                {p.reference ?? (
-                  <Text component="span" c="dimmed">
-                    —
-                  </Text>
-                )}
+                {p.reference ?? <Nothing>none</Nothing>}
                 {p.note && (
                   <Text size="sm" c="dimmed">
                     {p.note}

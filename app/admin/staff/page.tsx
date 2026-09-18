@@ -1,42 +1,56 @@
 import { Group, Stack } from "@mantine/core";
+import { ExportButton } from "@/components/ExportButton";
 import { PageHeader } from "@/components/PageHeader";
 import { getCurrentUser } from "@/lib/current-user";
+import {
+  getCurrentYear,
+  listClasses,
+  listSessions,
+  listSubjects,
+} from "@/lib/db/queries/academics";
 import { getSchoolSettings } from "@/lib/db/queries/settings";
 import { listStaff } from "@/lib/db/queries/staff";
 import { InviteButton } from "./InviteForm";
-import { ShowFormerToggle } from "./ShowFormerToggle";
 import { StaffTable } from "./StaffTable";
 
 export const metadata = { title: "Staff" };
 
-type Props = { searchParams: Promise<{ show?: string }> };
-
-export default async function StaffPage({ searchParams }: Props) {
-  const { show } = await searchParams;
-  const includeFormer = show === "all";
-  const [staff, me, { timezone }] = await Promise.all([
-    listStaff(includeFormer),
+export default async function StaffPage() {
+  const [year, me, { timezone }, subjects] = await Promise.all([
+    getCurrentYear(),
     getCurrentUser(),
     getSchoolSettings(),
+    listSubjects(),
   ]);
-  const former = staff.filter((s) => s.teacher && !s.teacher.isActive && !s.isAdmin).length;
+  const [staff, sessions, classes] = await Promise.all([
+    listStaff(year?.id ?? null),
+    year ? listSessions(year.id) : [],
+    year ? listClasses(year.id) : [],
+  ]);
   return (
-    <Stack gap="lg" maw={1100}>
+    <Stack gap="lg" maw={1180}>
       <PageHeader
         title="Staff"
-        eyebrow={
-          includeFormer && former
-            ? `${staff.length} people, ${former} no longer teaching`
-            : `${staff.length} people`
-        }
         actions={
           <Group gap="sm">
-            <ShowFormerToggle checked={includeFormer} />
+            <ExportButton href="/admin/staff/export" />
             <InviteButton />
           </Group>
         }
       />
-      <StaffTable staff={staff} currentUserId={me?.id ?? 0} timezone={timezone} />
+      <StaffTable
+        staff={staff}
+        sessions={sessions.map((s) => ({ id: s.id, name: s.name }))}
+        classes={classes.map((c) => ({
+          id: c.id,
+          name: c.name,
+          sessionId: c.sessionId,
+          sessionName: c.sessionName,
+        }))}
+        subjects={subjects.filter((s) => s.isActive).map((s) => ({ id: s.id, name: s.name }))}
+        currentUserId={me?.id ?? 0}
+        timezone={timezone}
+      />
     </Stack>
   );
 }

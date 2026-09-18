@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Card, Select, Stack, Switch, TextInput, Title } from "@mantine/core";
+import { Button, Card, Select, Stack, Switch, TextInput, Title, Textarea } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useState } from "react";
 import { FormError } from "@/components/FormError";
@@ -22,6 +22,7 @@ export function SettingsForm({ settings }: { settings: SchoolSettings }) {
       bankIban: settings.bankIban ?? "",
       bankBic: settings.bankBic ?? "",
       absenceEmails: settings.absenceEmails,
+      rules: settings.rules ?? "",
     },
   });
 
@@ -77,6 +78,17 @@ export function SettingsForm({ settings }: { settings: SchoolSettings }) {
             <TextInput label="IBAN" {...form.getInputProps("bankIban")} />
             <TextInput label="BIC" maw={200} {...form.getInputProps("bankBic")} />
           </Stack>
+        </Card>
+        <Card>
+          <Title order={3} mb="xs">
+            School rules
+          </Title>
+          <Textarea
+            description="Shown to families, students and staff as written. Leave a blank line between paragraphs."
+            autosize
+            minRows={6}
+            {...form.getInputProps("rules")}
+          />
         </Card>
         <FormError message={error} />
         <Button type="submit" loading={saving} style={{ alignSelf: "flex-start" }}>

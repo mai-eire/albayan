@@ -25,11 +25,16 @@ export default async function AdminRegisterPage({ params, searchParams }: Props)
   return (
     <Stack gap="lg" maw={720}>
       <PageHeader
-        breadcrumbs={[{ label: "Attendance", href: `/admin/attendance?date=${date}` }]}
+        breadcrumbs={[{ label: "Attendance", href: `/admin/attendance?view=day&date=${date}` }]}
         eyebrow={`${register.className} · ${register.sessionName}`}
         title={formatDate(date, timezone, true)}
       />
-      <RegisterEditor register={register} editable backHref={`/admin/attendance?date=${date}`} />
+      <RegisterEditor
+        register={register}
+        editable
+        backHref={`/admin/attendance?view=day&date=${date}`}
+        studentHrefBase="/admin/students"
+      />
     </Stack>
   );
 }

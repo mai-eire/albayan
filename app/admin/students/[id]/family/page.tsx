@@ -3,20 +3,32 @@ import { AppLink } from "@/components/AppLink";
 import { CardTitle } from "@/components/CardTitle";
 import { EntityList } from "@/components/EntityList";
 import { StatusBadge } from "@/components/StatusBadge";
-import { listSiblingsForAdmin } from "@/lib/db/queries/students";
+import { AddGuardianButton } from "@/app/admin/guardians/AddGuardianButton";
+import { listGuardiansForAdmin, listSiblingsForAdmin } from "@/lib/db/queries/students";
 import { relationshipLabels } from "@/lib/demographics";
 import { loadStudent } from "../load";
-import { AddGuardianButton } from "./AddGuardianButton";
 
 type Props = { params: Promise<{ id: string }> };
 
-export default async function StudentGuardiansPage({ params }: Props) {
+// The student's guardians with how to reach them, and the brothers and sisters they share.
+export default async function StudentFamilyPage({ params }: Props) {
   const student = await loadStudent(params);
-  const siblings = await listSiblingsForAdmin(student.id);
+  const [siblings, everyone] = await Promise.all([
+    listSiblingsForAdmin(student.id),
+    listGuardiansForAdmin(),
+  ]);
+  const linked = new Set(student.guardians.map((g) => g.id));
   return (
     <Stack gap="lg">
       <Group justify="flex-end">
-        <AddGuardianButton student={{ id: student.id, firstName: student.firstName }} />
+        <AddGuardianButton
+          kids={[{ id: student.id, firstName: student.firstName }]}
+          guardians={everyone
+            .filter((g) => !linked.has(g.id))
+            .map(({ id, name, email, phone }) => ({ id, name, email, phone }))}
+          label="Add guardian"
+          title={`Add a guardian for ${student.firstName}`}
+        />
       </Group>
       {student.guardians.map((g) => (
         <Card key={g.id}>
@@ -54,7 +66,7 @@ export default async function StudentGuardiansPage({ params }: Props) {
             items={siblings.map((s) => ({
               key: s.id,
               title: `${s.firstName} ${s.lastName}`,
-              detail: s.className ?? undefined,
+              detail: [s.studentId, s.className, s.sessionName].filter(Boolean).join(" · "),
               badge: <StatusBadge domain="application" value={s.status} />,
               href: `/admin/students/${s.id}`,
             }))}

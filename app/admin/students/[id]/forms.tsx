@@ -27,8 +27,9 @@ export function useSave<V extends Record<string, unknown>>(
   const close = useEditingDone();
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const form = useForm<V>({ initialValues: initial });
+  const form = useForm<V>({ initialValues: initial, onValuesChange: () => setError(null) });
   const submit = form.onSubmit(async (values) => {
+    if (saving) return;
     setSaving(true);
     setError(null);
     const result = await save(values);

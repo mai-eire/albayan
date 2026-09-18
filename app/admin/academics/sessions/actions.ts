@@ -79,8 +79,9 @@ const periodSchema = z
       .int()
       .min(5, "At least 5 minutes")
       .max(240, "At most 4 hours"),
+    staffOnly: z.boolean().default(false),
   })
-  .refine((p) => (p.subjectId ? !p.title : !!p.title), {
+  .refine((p) => (p.subjectId ? !p.title && !p.staffOnly : !!p.title), {
     message: "Pick a subject or give the slot a title",
   });
 
@@ -112,6 +113,7 @@ export const saveSchedule = action(
           subjectId: p.subjectId,
           title: p.title,
           durationMinutes: p.durationMinutes,
+          staffOnly: p.staffOnly,
         })),
       );
     }
@@ -122,10 +124,11 @@ export const saveSchedule = action(
       entityId: sessionId,
       changes: {
         periods: [
-          before.map(({ subjectId, title, durationMinutes }) => ({
+          before.map(({ subjectId, title, durationMinutes, staffOnly }) => ({
             subjectId,
             title,
             durationMinutes,
+            staffOnly,
           })),
           periods,
         ],

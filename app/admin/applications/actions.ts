@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
+import { and, count, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/access";
@@ -49,6 +49,10 @@ export const approveApplication = action(
     classId: z.number().int({ message: "Choose a class" }),
     fee: eurosField,
     feeNote: z.string().trim().max(120).optional(),
+    // A word to the family when the place isn't the one they asked for; goes in the email.
+    offerNote: z.string().trim().max(500).optional(),
+    // The admin has seen that the class is full and wants them placed anyway.
+    overCapacity: z.boolean().default(false),
   }),
   async (input, { user, db }) => {
     requireAdmin(user);
@@ -59,6 +63,17 @@ export const approveApplication = action(
       .innerJoin(schoolSessions, eq(schoolSessions.id, classes.sessionId))
       .where(eq(classes.id, input.classId));
     if (!placement) throw new ActionError("That class no longer exists.");
+    if (placement.cls.capacity !== null && !input.overCapacity) {
+      const [{ n }] = await db
+        .select({ n: count() })
+        .from(enrolments)
+        .where(and(eq(enrolments.classId, placement.cls.id), eq(enrolments.status, "active")));
+      if (n >= placement.cls.capacity)
+        throw new ActionError(
+          `${placement.cls.name} is full (${n} of ${placement.cls.capacity} places). Tick the box to place them anyway.`,
+        );
+    }
+    const offerNote = input.offerNote || null;
 
     const settings = await getSchoolSettings();
     const studentId = await nextStudentId(
@@ -71,7 +86,7 @@ export const approveApplication = action(
     const now = new Date().toISOString();
     await db
       .update(students)
-      .set({ studentId, userId, status: "active", approvedAt: now })
+      .set({ studentId, userId, status: "active", approvedAt: now, offerNote })
       .where(eq(students.id, student.id));
     const [enrolment] = await db
       .insert(enrolments)
@@ -93,6 +108,7 @@ export const approveApplication = action(
         classId: [null, placement.cls.id],
         feeCents: [null, input.fee],
         enrolmentId: [null, enrolment.id],
+        offerNote: [null, offerNote],
       },
     });
     const loginUrl = await appUrl("/login");
@@ -100,7 +116,7 @@ export const approveApplication = action(
       userId: contact.userId,
       type: "application.approved",
       title: `${student.firstName} has a place in ${placement.cls.name}`,
-      body: `Student ID ${studentId}. The first password is in the email we sent you.`,
+      body: `Student ID ${studentId}. The first password is in the email we sent you.${offerNote ? ` ${offerNote}` : ""}`,
       href: `/family/${student.id}`,
       email: () =>
         sendApproved(
@@ -110,6 +126,7 @@ export const approveApplication = action(
             studentId,
             password,
             placement: `${placement.cls.name} on ${placement.session.name}`,
+            note: offerNote,
             loginUrl,
           },
           settings.name,

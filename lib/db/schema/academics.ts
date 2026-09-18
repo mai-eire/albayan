@@ -69,6 +69,9 @@ export const sessionPeriods = sqliteTable(
     subjectId: text().references(() => subjects.id),
     title: text(),
     durationMinutes: integer().notNull(),
+    // A staff meeting or briefing: on the timeline for teachers and the office, never shown
+    // to families or students. Always a titled slot, never a subject.
+    staffOnly: bool().notNull().default(false),
     ...timestamps,
   },
   (t) => [

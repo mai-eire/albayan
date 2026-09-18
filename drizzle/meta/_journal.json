@@ -43,6 +43,13 @@
       "when": 1789637904667,
       "tag": "0005_guardian_gender_teacher_deactivated",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1789713263972,
+      "tag": "0006_staff_slots_rules_offer_note",
+      "breakpoints": true
     }
   ]
 }

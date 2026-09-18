@@ -13,6 +13,7 @@ const defaults: SchoolSettings = {
   bankIban: null,
   bankBic: null,
   absenceEmails: false,
+  rules: null,
   createdAt: "",
   updatedAt: "",
 };

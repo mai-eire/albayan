@@ -12,6 +12,8 @@ export const schoolSettings = sqliteTable("school_settings", {
   bankIban: text(),
   bankBic: text(),
   absenceEmails: bool().notNull().default(false),
+  // Plain text, paragraphs separated by blank lines; shown to families, students and staff.
+  rules: text(),
   ...timestamps,
 });
 

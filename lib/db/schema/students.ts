@@ -56,6 +56,8 @@ export const students = sqliteTable(
     preferredSessionId: integer().references(() => schoolSessions.id),
     preferredClassId: integer().references(() => classes.id),
     applicationNotes: text(),
+    // The office's word to the family when the place offered isn't the one they asked for.
+    offerNote: text(),
     declinedReason: text(),
     appliedAt: text().notNull(),
     approvedAt: text(),

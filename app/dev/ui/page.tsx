@@ -7,7 +7,9 @@ import { EmptyState } from "@/components/EmptyState";
 import { EntityList } from "@/components/EntityList";
 import { MoneyText } from "@/components/MoneyText";
 import { SensitiveSection } from "@/components/SensitiveSection";
+import { baseTab, LinkTabs } from "@/components/LinkTabs";
 import { PageHeader } from "@/components/PageHeader";
+import { ReviewCard } from "@/components/ReviewCard";
 import { Shell } from "@/components/Shell";
 import { StatTile } from "@/components/StatTile";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -28,8 +30,10 @@ export default function UiGallery() {
     >
       <Stack gap="xl" maw={960} mx="auto">
         <PageHeader
+          breadcrumbs={[{ label: "Dev", href: "/dev/ui" }]}
           eyebrow="Eyebrow · context line"
           title="UI gallery"
+          subtitle="Subtitle · the page's standing summary"
           actions={
             <>
               <Button leftSection={<IconPlus size={16} stroke={1.75} />}>Primary action</Button>
@@ -37,6 +41,28 @@ export default function UiGallery() {
             </>
           }
         />
+
+        <Section title="Tabs with marks">
+          <LinkTabs
+            base="/dev/ui"
+            tabs={[
+              { value: baseTab, label: "Details" },
+              { value: "paid", label: "Paid", mark: { kind: "good", label: "Paid in full" } },
+              { value: "part", label: "Part paid", mark: { kind: "partial", label: "Part paid" } },
+              {
+                value: "unpaid",
+                label: "Unpaid",
+                mark: { kind: "bad", label: "Nothing paid yet" },
+              },
+            ]}
+          />
+        </Section>
+
+        <Section title="Review card">
+          <ReviewCard title="Offering">
+            <Text size="sm">Level 2 · Saturday · Omar Farooq · 11 of 12 places · €250</Text>
+          </ReviewCard>
+        </Section>
 
         <Section title="Buttons">
           <Group>

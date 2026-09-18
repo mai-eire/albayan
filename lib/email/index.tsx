@@ -44,7 +44,9 @@ export function sendGuardianInvite(
 ) {
   return sendEmail({
     to: to.email,
-    subject: `${invitedBy} has added you as a parent at ${schoolName}`,
+    subject: children.length
+      ? `${invitedBy} has added you as a parent at ${schoolName}`
+      : `Your ${schoolName} account`,
     body: (
       <GuardianInviteEmail
         schoolName={schoolName}
@@ -76,6 +78,7 @@ export function sendApproved(
     studentId: string;
     password: string;
     placement: string;
+    note: string | null;
     loginUrl: string;
   },
   schoolName: string,

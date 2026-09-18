@@ -19,9 +19,11 @@ import {
   useMantineColorScheme,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { useState } from "react";
 import {
   IconBell,
   IconBook,
+  IconBook2,
   IconBuildingBank,
   IconCalendar,
   IconCalendarTime,
@@ -49,7 +51,13 @@ import {
 import type { Area } from "@/lib/current-user";
 import classes from "./Shell.module.css";
 
-type NavItem = { label: string; href: string; icon: Icon };
+type NavItem = {
+  label: string;
+  href: string;
+  icon: Icon;
+  // Sub-pages shown nested under the item, open while any of them is current.
+  children?: { label: string; href: string }[];
+};
 
 // The four navigation sets (docs/PLAN.md §7, §11).
 const nav: Record<Area, NavItem[]> = {
@@ -57,9 +65,19 @@ const nav: Record<Area, NavItem[]> = {
     { label: "Dashboard", href: "/admin", icon: IconLayoutDashboard },
     { label: "Applications", href: "/admin/applications", icon: IconInbox },
     { label: "Students", href: "/admin/students", icon: IconUsers },
-    { label: "Guardians", href: "/admin/guardians", icon: IconUsersGroup },
+    { label: "Families", href: "/admin/guardians", icon: IconUsersGroup },
     { label: "Staff", href: "/admin/staff", icon: IconUser },
-    { label: "Academics", href: "/admin/academics", icon: IconSchool },
+    {
+      label: "Academics",
+      href: "/admin/academics",
+      icon: IconSchool,
+      children: [
+        { label: "Years & terms", href: "/admin/academics/years" },
+        { label: "Subjects", href: "/admin/academics/subjects" },
+        { label: "Sessions", href: "/admin/academics/sessions" },
+        { label: "Classes", href: "/admin/academics/classes" },
+      ],
+    },
     { label: "Attendance", href: "/admin/attendance", icon: IconClipboardCheck },
     { label: "Fees", href: "/admin/fees", icon: IconBuildingBank },
     { label: "Events", href: "/admin/events", icon: IconCalendarEvent },
@@ -75,11 +93,13 @@ const nav: Record<Area, NavItem[]> = {
     { label: "Resources", href: "/teach/resources", icon: IconFolder },
     { label: "Timetable", href: "/teach/timetable", icon: IconCalendarTime },
     { label: "Calendar", href: "/teach/calendar", icon: IconCalendar },
+    { label: "School rules", href: "/teach/rules", icon: IconBook2 },
   ],
   family: [
     { label: "Overview", href: "/family", icon: IconHome },
     { label: "Register a child", href: "/family/register-child", icon: IconUserPlus },
     { label: "Calendar", href: "/family/calendar", icon: IconCalendar },
+    { label: "School rules", href: "/family/rules", icon: IconBook2 },
     { label: "Your account", href: "/family/account", icon: IconUser },
   ],
   student: [
@@ -171,18 +191,34 @@ export function Shell({ area, schoolName, user, roles, unread = 0, children }: P
       </AppShell.Header>
 
       <AppShell.Navbar p="sm">
-        {items.map(({ label, href, icon: Icon }) => (
-          <NavLink
-            key={href}
-            component={Link}
-            href={href}
-            label={label}
-            active={isActive(href)}
-            leftSection={<Icon size={18} stroke={1.75} />}
-            className={classes.navLink}
-            onClick={close}
-          />
-        ))}
+        {items.map(({ label, href, icon: Icon, children: sub }) =>
+          sub ? (
+            <NavGroup key={href} label={label} icon={Icon} active={isActive(href)}>
+              {sub.map((s) => (
+                <NavLink
+                  key={s.href}
+                  component={Link}
+                  href={s.href}
+                  label={s.label}
+                  active={isActive(s.href)}
+                  className={classes.navLink}
+                  onClick={close}
+                />
+              ))}
+            </NavGroup>
+          ) : (
+            <NavLink
+              key={href}
+              component={Link}
+              href={href}
+              label={label}
+              active={isActive(href)}
+              leftSection={<Icon size={18} stroke={1.75} />}
+              className={classes.navLink}
+              onClick={close}
+            />
+          ),
+        )}
       </AppShell.Navbar>
 
       <AppShell.Main className={classes.main}>{children}</AppShell.Main>
@@ -206,6 +242,39 @@ export function Shell({ area, schoolName, user, roles, unread = 0, children }: P
         </AppShell.Footer>
       )}
     </AppShell>
+  );
+}
+
+// A parent item that only opens its sub-items (each of those is the link). It opens
+// itself whenever one of them is the current page and can be toggled by hand otherwise.
+function NavGroup({
+  label,
+  icon: Icon,
+  active,
+  children,
+}: {
+  label: string;
+  icon: Icon;
+  active: boolean;
+  children: React.ReactNode;
+}) {
+  const [opened, setOpened] = useState(active);
+  const [wasActive, setWasActive] = useState(active);
+  if (active !== wasActive) {
+    setWasActive(active);
+    if (active) setOpened(true);
+  }
+  return (
+    <NavLink
+      label={label}
+      opened={opened}
+      onChange={setOpened}
+      leftSection={<Icon size={18} stroke={1.75} />}
+      className={classes.navLink}
+      childrenOffset={28}
+    >
+      {children}
+    </NavLink>
   );
 }
 
@@ -236,20 +305,22 @@ function RoleSwitcher({ current, roles }: { current: Area; roles: Area[] }) {
   );
 }
 
-// One tap flips light/dark; the header is where people look for it.
+// One tap flips light/dark; the header is where people look for it. The server can't
+// know the resolved scheme, so both icons are rendered and CSS shows the right one —
+// otherwise the first client render disagrees with the server's and React starts over.
 function SchemeToggle() {
-  const { colorScheme, setColorScheme } = useMantineColorScheme();
-  const computed = useComputedColorScheme("light");
-  const dark = colorScheme === "auto" ? computed === "dark" : colorScheme === "dark";
+  const { setColorScheme } = useMantineColorScheme();
+  const computed = useComputedColorScheme("light", { getInitialValueInEffect: true });
   return (
     <ActionIcon
       variant="subtle"
       color="gray"
       size="lg"
-      aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
-      onClick={() => setColorScheme(dark ? "light" : "dark")}
+      aria-label="Switch between light and dark mode"
+      onClick={() => setColorScheme(computed === "dark" ? "light" : "dark")}
     >
-      {dark ? <IconSun size={20} stroke={1.75} /> : <IconMoon size={20} stroke={1.75} />}
+      <IconSun size={20} stroke={1.75} className={classes.inDark} />
+      <IconMoon size={20} stroke={1.75} className={classes.inLight} />
     </ActionIcon>
   );
 }

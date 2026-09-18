@@ -75,3 +75,29 @@ export const methodLabels: Record<PaymentMethod, string> = {
   bank_transfer: "Bank transfer",
   card: "Card",
 };
+
+// The one status for a set of accounts (a family): anything unpaid wins, then part paid,
+// then paid; nothing to say when every fee is waived or there are none.
+export function combinedFeeStatus(statuses: FeeStatus[]): FeeStatus | null {
+  const real = statuses.filter((s) => s !== "waived");
+  if (real.length === 0) return null;
+  if (real.includes("unpaid")) return "unpaid";
+  if (real.includes("part_paid")) return "part_paid";
+  return "paid";
+}
+
+// How a fee status shows as a mark on a tab (components/LinkTabs.tsx).
+export function feeTabMark(
+  status: FeeStatus | null,
+): { kind: "good" | "partial" | "bad"; label: string } | null {
+  switch (status) {
+    case "paid":
+      return { kind: "good", label: "Paid in full" };
+    case "part_paid":
+      return { kind: "partial", label: "Part paid" };
+    case "unpaid":
+      return { kind: "bad", label: "Nothing paid yet" };
+    default:
+      return null;
+  }
+}

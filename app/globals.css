@@ -1,3 +1,19 @@
 h1 {
   letter-spacing: -0.02em;
 }
+
+/* Timeline bullets take the surface colour rather than white, so in dark mode a timetable
+   reads as coloured rings on the card instead of white discs (DESIGN §4.10). */
+.mantine-Timeline-itemBullet {
+  background-color: var(--mantine-color-body);
+}
+
+[data-mantine-color-scheme="dark"] .mantine-Timeline-itemBullet {
+  background-color: var(--mantine-color-dark-6);
+  /* Mantine's "filled" shade is dark in dark mode; lift the ring so the colour shows. */
+  border-color: color-mix(in srgb, var(--tli-color, var(--tl-color)) 65%, white);
+}
+
+[data-mantine-color-scheme="dark"] .mantine-Timeline-item[data-line-active]::before {
+  border-color: color-mix(in srgb, var(--tli-color, var(--tl-color)) 55%, white);
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { ActionIcon, Anchor, Group, Stack, Text } from "@mantine/core";
+import { ActionIcon, Anchor, Badge, Group, Stack, Text } from "@mantine/core";
 import { IconFile, IconLink, IconTrash } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { confirmDestructive } from "@/components/confirm";
@@ -28,6 +28,11 @@ export function resourceHref(r: Pick<ResourceRow, "kind" | "storageKey" | "url">
   return r.kind === "file" ? `/api/files/${r.storageKey}` : (r.url ?? "#");
 }
 
+// The name the file was uploaded with (keys are `uploads/<id>/<filename>`).
+export function resourceFileName(r: Pick<ResourceRow, "kind" | "storageKey">): string | null {
+  return r.kind === "file" ? (r.storageKey?.split("/").at(-1) ?? null) : null;
+}
+
 export type ResourceListItem = ResourceRow & {
   // What to show under the title; defaults to who shared it and the size.
   context?: string;
@@ -42,14 +47,14 @@ type Props = {
   staff?: { timezone: string };
 };
 
-// Files and links as rows: icon, title (the link), context line, optional remove.
+// Files and links as rows: icon, title (the link), context line, optional remove. Staff
+// see who may open it as a tag and when it was shared on the end side.
 export function ResourceList({ items, staff }: Props) {
   const router = useRouter();
   const detail = (r: ResourceListItem) =>
     [
       r.context ?? [r.uploadedByName, formatBytes(r.sizeBytes)].filter(Boolean).join(" · "),
-      staff && audienceLabels[r.audience],
-      staff && formatDate(r.createdAt, staff.timezone),
+      resourceFileName(r),
     ]
       .filter(Boolean)
       .join(" · ");
@@ -76,19 +81,31 @@ export function ResourceList({ items, staff }: Props) {
             <IconLink size={20} stroke={1.5} className={classes.icon} />
           )}
           <div className={classes.body}>
-            <Anchor
-              href={resourceHref(r)}
-              target={r.kind === "link" ? "_blank" : undefined}
-              rel={r.kind === "link" ? "noopener" : undefined}
-              fw={500}
-            >
-              {r.title}
-            </Anchor>
+            <Group gap="xs" wrap="wrap">
+              <Anchor
+                href={resourceHref(r)}
+                target={r.kind === "link" ? "_blank" : undefined}
+                rel={r.kind === "link" ? "noopener" : undefined}
+                fw={500}
+              >
+                {r.title}
+              </Anchor>
+              {staff && (
+                <Badge variant="outline" color="gray" size="sm">
+                  {audienceLabels[r.audience]}
+                </Badge>
+              )}
+            </Group>
             <Text size="sm" c="dimmed">
               {detail(r)}
             </Text>
             {r.description && <Text size="sm">{r.description}</Text>}
           </div>
+          {staff && (
+            <Text size="sm" c="dimmed" className={classes.date}>
+              {formatDate(r.createdAt, staff.timezone)}
+            </Text>
+          )}
           {r.removable && (
             <ActionIcon
               variant="subtle"

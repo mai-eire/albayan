@@ -7,7 +7,8 @@ export type LessonItem = {
   key: string | number;
   startTime: string;
   endTime: string;
-  subjectId: string;
+  // Null for a staff-only slot (a meeting), which shows its title in place of a subject.
+  subjectId: string | null;
   subjectName: string;
   // "Level 2 · Room 3"
   detail: string;
@@ -33,7 +34,11 @@ export function LessonTimeline({ lessons, now }: { lessons: LessonItem[]; now: s
             title={
               <Group gap="xs" wrap="wrap">
                 <Text fw={600}>{l.startTime}</Text>
-                <SubjectBadge subjectId={l.subjectId} name={l.subjectName} />
+                {l.subjectId ? (
+                  <SubjectBadge subjectId={l.subjectId} name={l.subjectName} />
+                ) : (
+                  <Text fw={500}>{l.subjectName}</Text>
+                )}
                 <Text c="dimmed" size="sm">
                   {l.detail}
                 </Text>

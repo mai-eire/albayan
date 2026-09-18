@@ -4,7 +4,24 @@ export type PeriodInput = {
   subjectId: string | null;
   title: string | null;
   durationMinutes: number;
+  // A staff meeting or briefing: on staff timetables only. Families and students get the
+  // list with these removed (`forFamilies`), and their day starts at the first slot left.
+  staffOnly?: boolean;
 };
+
+export function forFamilies<T extends PeriodInput>(periods: T[]): T[] {
+  return periods.filter((p) => !p.staffOnly);
+}
+
+// When the family's day starts: the session start plus any staff-only slots before the
+// first slot they can see.
+export function familyStart(startTime: string, periods: PeriodInput[]): string {
+  const first = periods.findIndex((p) => !p.staffOnly);
+  return addMinutes(
+    startTime,
+    periods.slice(0, first < 0 ? periods.length : first).reduce((n, p) => n + p.durationMinutes, 0),
+  );
+}
 
 export type TimedPeriod<T extends PeriodInput = PeriodInput> = T & {
   startTime: string;

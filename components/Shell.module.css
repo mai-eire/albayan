@@ -26,3 +26,15 @@
     color: var(--mantine-primary-color-filled);
   }
 }
+
+/* The scheme toggle shows the sun in dark mode and the moon in light, decided by CSS so
+   the server and the client render the same markup. */
+.inDark,
+.inLight {
+  display: none;
+}
+
+:global([data-mantine-color-scheme="dark"]) .inDark,
+:global([data-mantine-color-scheme="light"]) .inLight {
+  display: block;
+}

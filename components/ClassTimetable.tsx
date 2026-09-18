@@ -8,6 +8,8 @@ export type TimetablePeriod = {
   subjectName?: string | null;
   title: string | null;
   durationMinutes: number;
+  // Only on staff timetables: the page filters these out for families (lib/timetable.ts).
+  staffOnly?: boolean;
   // Shown under a subject: the teacher's name, or whatever the page wants to say.
   detail?: string | null;
 };
@@ -34,13 +36,15 @@ export function ClassTimetable({
               {p.subjectId ? (
                 <SubjectBadge subjectId={p.subjectId} name={p.subjectName ?? p.subjectId} />
               ) : (
-                <Text>{p.title}</Text>
+                <Text c={p.staffOnly ? "dimmed" : undefined}>{p.title}</Text>
               )}
             </Group>
           }
         >
           <Text size="sm" c="dimmed">
-            {p.subjectId ? (p.detail ?? "No teacher yet") : `until ${p.endTime}`}
+            {p.subjectId
+              ? (p.detail ?? "No teacher yet")
+              : `until ${p.endTime}${p.staffOnly ? " · staff only" : ""}`}
           </Text>
         </TimelineItem>
       ))}

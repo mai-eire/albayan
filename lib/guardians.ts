@@ -131,3 +131,36 @@ export async function addGuardianToChildren(
   });
   return { outcome: "linked" as const, name: user.name, guardianId };
 }
+
+// The office invites someone with no children yet: an account to set a password on, then
+// they register children themselves. Someone already registered is simply told so.
+export async function inviteGuardian(
+  db: Db,
+  actor: { id: number; name: string },
+  input: { name: string; email: string; phone: string | null; gender: GuardianGender | null },
+) {
+  const existing = await db.query.users.findFirst({
+    columns: { id: true },
+    where: eq(users.email, input.email),
+  });
+  if (existing) throw new ActionError(`${input.email} already has an account.`);
+  const [user] = await db
+    .insert(users)
+    .values({ name: input.name, email: input.email, phone: input.phone, status: "invited" })
+    .returning({ id: users.id, name: users.name, email: users.email });
+  const [guardian] = await db
+    .insert(guardians)
+    .values({ userId: user.id, gender: input.gender })
+    .returning({ id: guardians.id });
+  await audit(db, {
+    actorUserId: actor.id,
+    action: "guardian.invite",
+    entityType: "guardian",
+    entityId: guardian.id,
+    changes: { email: [null, user.email] },
+  });
+  const { name: schoolName } = await getSchoolSettings();
+  const token = await createInvite(await auth(), user.id);
+  await sendGuardianInvite(user, await appUrl(`/invite/${token}`), actor.name, [], schoolName);
+  return { outcome: "invited" as const, name: user.name, guardianId: guardian.id };
+}

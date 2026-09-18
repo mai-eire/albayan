@@ -7,6 +7,8 @@ type Props = {
   studentId: string;
   password: string;
   placement: string;
+  // From the office, when the place isn't the one the family asked for.
+  note?: string | null;
   loginUrl: string;
 };
 
@@ -17,6 +19,7 @@ export function ApprovedEmail({
   studentId,
   password,
   placement,
+  note,
   loginUrl,
 }: Props) {
   return (
@@ -31,6 +34,7 @@ export function ApprovedEmail({
         <strong>{studentId}</strong> and their first password is <strong>{password}</strong>. They
         will be asked to choose a new password the first time they sign in.
       </Paragraph>
+      {note && <Paragraph>A note from the school: {note}</Paragraph>}
       <Paragraph>Keep this email somewhere safe until then.</Paragraph>
       <ActionButton href={loginUrl}>Sign in</ActionButton>
       <FallbackLink href={loginUrl} />

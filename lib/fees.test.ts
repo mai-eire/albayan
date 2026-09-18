@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { feeAccounts, feeStatus, outstandingCents } from "./fees";
+import { combinedFeeStatus, feeAccounts, feeStatus, outstandingCents } from "./fees";
 
 describe("feeStatus", () => {
   it("derives the four states", () => {
@@ -74,5 +74,15 @@ describe("outstandingCents", () => {
     expect(
       outstandingCents([{ balanceCents: 10000 }, { balanceCents: -5000 }, { balanceCents: 0 }]),
     ).toBe(10000);
+  });
+});
+
+describe("combinedFeeStatus", () => {
+  it("reports the worst status across a family's children, ignoring waived fees", () => {
+    expect(combinedFeeStatus(["paid", "part_paid"])).toBe("part_paid");
+    expect(combinedFeeStatus(["paid", "unpaid", "part_paid"])).toBe("unpaid");
+    expect(combinedFeeStatus(["paid", "waived"])).toBe("paid");
+    expect(combinedFeeStatus(["waived"])).toBeNull();
+    expect(combinedFeeStatus([])).toBeNull();
   });
 });

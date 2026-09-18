@@ -9,6 +9,8 @@ import classes from "./StatTile.module.css";
 type Props = {
   label: string;
   value: string | number;
+  // What the value is out of ("/ €10,000"), smaller and dimmed after it.
+  outOf?: string;
   hint?: string;
   // Only when the number itself is a status ("3 registers missing" → "saffron").
   color?: "saffron" | "clay";
@@ -18,7 +20,7 @@ type Props = {
 
 // Admin dashboard only, at most three (§3.3, §4.4). A client component because a Server
 // Component can't hand `component={Link}` to Mantine.
-export function StatTile({ label, value, hint, color, href }: Props) {
+export function StatTile({ label, value, outOf, hint, color, href }: Props) {
   const body = (
     <>
       <Group justify="space-between" wrap="nowrap">
@@ -31,6 +33,12 @@ export function StatTile({ label, value, hint, color, href }: Props) {
       </Group>
       <Text className={classes.value} c={color}>
         {value}
+        {outOf && (
+          <Text component="span" className={classes.outOf} c="dimmed">
+            {" "}
+            / {outOf}
+          </Text>
+        )}
       </Text>
       {hint && (
         <Text size="xs" c="dimmed">

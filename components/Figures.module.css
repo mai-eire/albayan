@@ -6,3 +6,21 @@
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
 }
+
+.button {
+  display: block;
+  text-align: start;
+  border-radius: var(--mantine-radius-md);
+
+  &:hover .figure,
+  &[data-active] .figure {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
+  }
+}
+
+.aside {
+  font-size: var(--mantine-h3-font-size);
+  font-weight: 600;
+}

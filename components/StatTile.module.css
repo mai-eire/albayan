@@ -16,3 +16,8 @@
     border-color: var(--mantine-color-tile-6);
   }
 }
+
+.outOf {
+  font-size: var(--mantine-h3-font-size);
+  font-weight: 600;
+}

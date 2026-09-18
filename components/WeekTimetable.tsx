@@ -8,7 +8,8 @@ export type WeekLesson = {
   dayOfWeek: number;
   startTime: string;
   endTime: string;
-  subjectId: string;
+  // Null for a staff-only slot: a gray block with its title.
+  subjectId: string | null;
   subjectName: string;
   title: string;
   detail?: string | null;
@@ -28,7 +29,7 @@ export function WeekTimetable({ lessons }: { lessons: WeekLesson[] }) {
             .filter((l) => l.dayOfWeek === day)
             .sort((a, b) => a.startTime.localeCompare(b.startTime))
             .map((l, i) => {
-              const color = subjectColor(l.subjectId);
+              const color = l.subjectId ? subjectColor(l.subjectId) : "gray";
               const body = (
                 <>
                   <Text size="xs" c="dimmed" className={classes.time}>
@@ -37,7 +38,9 @@ export function WeekTimetable({ lessons }: { lessons: WeekLesson[] }) {
                   <Text fw={600} size="sm">
                     {l.title}
                   </Text>
-                  <SubjectBadge subjectId={l.subjectId} name={l.subjectName} size="xs" />
+                  {l.subjectId && (
+                    <SubjectBadge subjectId={l.subjectId} name={l.subjectName} size="xs" />
+                  )}
                   {l.detail && (
                     <Text size="xs" c="dimmed">
                       {l.detail}
@@ -47,7 +50,8 @@ export function WeekTimetable({ lessons }: { lessons: WeekLesson[] }) {
               );
               const style = {
                 "--block-color": `var(--mantine-color-${color}-6)`,
-                "--block-tint": `var(--mantine-color-${color}-light)`,
+                "--block-color-bright": `var(--mantine-color-${color}-4)`,
+                "--block-tint": `var(--mantine-color-${color}-0)`,
               } as React.CSSProperties;
               return l.href ? (
                 <a key={i} href={l.href} className={classes.block} style={style}>

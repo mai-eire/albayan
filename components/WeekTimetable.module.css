@@ -2,14 +2,25 @@
   display: block;
   padding: var(--mantine-spacing-sm);
   border-radius: var(--mantine-radius-md);
+  /* Shade 0 of the subject colour in light; in dark the same hue as a darker tint, so the
+     block still reads as its subject instead of a grey box (DESIGN §4.10). */
   background: var(--block-tint);
   border-inline-start: 3px solid var(--block-color);
   color: inherit;
   text-decoration: none;
 }
 
+:global([data-mantine-color-scheme="dark"]) .block {
+  background: color-mix(in srgb, var(--block-color) 28%, var(--mantine-color-dark-6));
+  border-inline-start-color: var(--block-color-bright);
+}
+
 a.block:hover {
   filter: brightness(0.97);
+}
+
+:global([data-mantine-color-scheme="dark"]) a.block:hover {
+  filter: brightness(1.1);
 }
 
 .time {

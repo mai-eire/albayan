@@ -1,0 +1,4 @@
+.card {
+  background: var(--mantine-color-tile-light);
+  border-color: color-mix(in srgb, var(--mantine-color-tile-6) 45%, transparent);
+}

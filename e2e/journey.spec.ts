@@ -66,8 +66,16 @@ test("register → apply → approve → student signs in; teacher kept out", as
   await page.goto("/admin/applications", { waitUntil: "networkidle" });
   await page.locator("tbody tr", { hasText: "Hamza Farah" }).click();
   await page.getByRole("button", { name: "Offer a place" }).click();
-  await expect(page.getByRole("combobox", { name: "Session" })).toHaveValue("Sunday");
-  await page.getByRole("button", { name: "Offer the place" }).click();
+  // The offer modal offers the session the family asked for; the office picks the class.
+  const offer = page.getByRole("dialog", { name: "Offer Hamza a place" });
+  await expect(offer.getByText("Session asked for")).toBeVisible();
+  await offer.getByRole("button", { name: "Class" }).click();
+  // The list is portalled outside the dialog.
+  await page
+    .getByRole("option", { name: /Sunday/ })
+    .first()
+    .click();
+  await offer.getByRole("button", { name: "Offer a place" }).click();
   await expect(page.getByText(/Hamza is now ALB-26-\d{4}/)).toBeVisible();
 
   // The parent sees the place and the notification.

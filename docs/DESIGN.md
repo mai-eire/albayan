@@ -100,7 +100,7 @@ Mantine defaults (150ms ease). No entrance animations, no parallax, no skeleton 
 
 ### 3.1 App shell
 
-`AppShell` with header 64px and a 240px sidebar on `sm+`; below `sm` the sidebar becomes a drawer behind a burger. Header: school mark + name on the start side; role switcher (multi-role users only), notifications bell with `Indicator color="saffron"`, avatar on the end side. Sidebar and header are surface-coloured; the main area is ground-coloured.
+`AppShell` with header 64px and a 240px sidebar on `sm+`; below `sm` the sidebar becomes a drawer behind a burger. A sidebar item may hold **sub-items** (Academics › Years & terms · Subjects · Sessions · Classes): the parent only opens the group, each sub-item is the page, and the group opens itself whenever one of them is current. Sub-items are for a set of setup pages that belong together; nothing else nests. Header: school mark + name on the start side; role switcher (multi-role users only), notifications bell with `Indicator color="saffron"`, avatar on the end side. Sidebar and header are surface-coloured; the main area is ground-coloured.
 
 **Student area** replaces the sidebar with a bottom tab bar on phones (5 tabs: Home, Timetable, Homework, Resources, Calendar) and keeps the sidebar on desktop.
 
@@ -111,10 +111,12 @@ Every page uses `components/PageHeader.tsx`:
 ```
 [breadcrumbs: Students › Ibrahim Nasser   — every nested staff page]
 [eyebrow: date / context, sm dimmed]
-[h1 title]                                    [primary action] [secondary action]
+[h1 title] [status badge]                     [primary action] [secondary action]
 ```
-Breadcrumbs are the trail *to* the page (the current page is the title); every staff page below a list has them so the way back is always visible. Family and student pages are one level deep and use the `ChildSwitcher` and tabs instead.
-One primary (`filled`) action per page, at most two secondary (`light`). Anything else goes in a `Menu` "More" button.
+Breadcrumbs are the trail *to* the page (the current page is the title); every staff page below a list has them so the way back is always visible. They are links and look like links — anchor colour, a leading ‹ chevron — never dimmed text, or nobody knows they go back. Family and student pages are one level deep and use the `ChildSwitcher` and tabs instead.
+
+The optional **subtitle** is one dimmed line under the title for the page's standing summary ("Autumn term · 3 registers still to come"). It stays in the same place whatever view the page is showing; a page whose controls switch views (attendance by day / this term) keeps title, subtitle and controls where they are and only swaps the table.
+The entity's status badge sits beside the name (`badge`), not among the actions. One primary (`filled`) action per page, at most two secondary (`light`). Anything else goes in a `Menu` "More" button.
 
 Content column `maw={960} mx="auto"` — narrower than a typical dashboard on purpose; wide tables (admin lists) may use `maw={1180}`. **Single column is the default.** A side column is allowed only on staff *detail* pages where the side content is about the same entity (a student profile with guardians beside it), never for a grab-bag of widgets.
 
@@ -164,13 +166,15 @@ Buttons say what happens: "Publish homework", "Submit register", "Record payment
 
 ### 4.4 Stat tiles
 
-`components/StatTile.tsx`: label (sm, dimmed) · value (display face, stat size, tabular) · hint (xs, dimmed). Optional colour accent only when the number itself is a status (e.g. "3 registers missing" in saffron). Admin dashboard only (§3.3).
+`components/StatTile.tsx`: label (sm, dimmed) · value (display face, stat size, tabular) · optional "out of" after the value ("€5,000 / €10,000", the second figure at h3 size and dimmed) · hint (xs, dimmed). Optional colour accent only when the number itself is a status (e.g. "3 registers missing" in saffron). Admin dashboard only (§3.3).
 
-`components/Figures.tsx`: the headline numbers of a page or card — label (sm, dimmed), figure (display face, h2 size, tabular), optional hint — in one row of two to four. Fee · Paid · Balance on a fees page; Present · Absent on an attendance summary. Colour only when the figure is a status (outstanding → saffron, in credit → tile). Figures live *inside* a card or under the header and are not tiles; they are how staff pages get a dashboard feel without a grid of cards.
+`components/Figures.tsx`: the headline numbers of a page or card — label (sm, dimmed), figure (display face, h2 size, tabular), optional hint — in one row of two to four, each with an optional `aside` after the figure — a share "(63%)" or an "out of" — at h3 size and dimmed. Fee · Paid (63%) · Outstanding (37%) on a fees page; Present · Absent on an attendance summary. Colour only when the figure is a status (outstanding → saffron, in credit → tile). Figures live *inside* a card or under the header and are not tiles; they are how staff pages get a dashboard feel without a grid of cards. Above a filtered list a figure may be a button (`onClick`) that narrows the list to the rows it counts — "Paid" shows who has paid; the current one is underlined.
 
 ### 4.5 Tables (staff only)
 
 Staff tables are dense: the theme sets `striped`, `verticalSpacing="xs"`, `fz="sm"`, `highlightOnHover`. Header labels sentence case. First column is the entity (name, with the ID or code dimmed beneath), numeric columns right-aligned and tabular, actions in the last column right-aligned. Row-level state uses `StatusBadge` or a `SegmentedControl size="xs"` (as in the register). Filters and search sit in one row above the table, live in the URL and default to what the office asks most (students who are attending, fees still to pay). Columns worth sorting get a clickable header (`SortableTh`) with the current direction shown; totals go *above* the table as `Figures`, never in a footer. Sticky headers on long tables; pagination at 50 rows.
+
+Filtering happens in the browser: the page loads the whole list once and a client component narrows it (`useUrlFilters` writes the filters to the URL with `replaceState`, so the view is still shareable and survives a refresh, but changing a filter never goes back to the server). Only a filter that needs different data — the academic year — navigates. A count of what is shown sits at the end of the filter row, dimmed. Lists the office takes elsewhere have an `ExportButton` ("Export CSV") in the header; the export applies the same URL filters, so what you see is what you get. Places in a class read "6 / 15" through `Places`: saffron when full, clay with a warning icon before the number and a tooltip when over. A row that leads somewhere is a `LinkRow`: the whole row is clickable, with a real link in the first cell for keyboard users. Dates in a sortable column read `2026-09-12 (Sat)` so they order as they read; a register not yet taken shows `? / 12`, keeping the column's shape.
 
 ### 4.6 Lists (family & student)
 
@@ -178,13 +182,15 @@ Staff tables are dense: the theme sets `striped`, `verticalSpacing="xs"`, `fz="s
 
 ### 4.7 Forms
 
-Mantine form components with `@mantine/form`. Labels above fields, required marked with the Mantine asterisk, description *below the input* (set in the theme, so paired fields keep their inputs level), errors inline under the field. Field widths: `Group grow` for pairs, full width otherwise. Dates: `DateField` (a `DateInput` preset to `valueFormat="ddd D MMM YYYY"` that also parses typed "19 Sep 2026", "19/9/2026" and ISO). Money: `NumberInput` with `€` prefix, `decimalScale={2}`, backed by `lib/money.ts`. Selects use `allowDeselect={false}` when a value is required. Multi-step forms (registration wizard) use `Stepper` with a review step.
+Mantine form components with `@mantine/form`. Labels above fields, required marked with the Mantine asterisk, description *below the input* (set in the theme, so paired fields keep their inputs level), errors inline under the field. A server-side "check the highlighted fields" line (`FormError`) clears as soon as any value changes (`onValuesChange`), so it never outlives the mistake. Field widths: `Group grow` for pairs, full width otherwise. Dates: `DateField` (a `DateInput` preset to `valueFormat="ddd D MMM YYYY"` with the placeholder `dd/mm/yyyy`, parsing typed "19/09/2026", "19 Sep 2026" and ISO). Money: `NumberInput` with `€` prefix, `decimalScale={2}`, backed by `lib/money.ts`. Selects use `allowDeselect={false}` when a value is required. Multi-step forms (registration wizard) use `Stepper` with a review step.
 
 Sensitive fields (ethnicity, languages, reasons) are grouped under their own heading with the standard explanation copy (§7) and are always optional with "Prefer not to say".
 
 ### 4.8 Modals and confirmation
 
 `Modal radius="lg"` with an h3 title; actions bottom-end, cancel (`default`) then primary. Destructive confirmations use `modals.openConfirmModal` with the consequence in the body ("This deletes the payment of €100 recorded on 3 Oct. This cannot be undone.") and a clay confirm button.
+
+A modal that places or moves a child ends with a **`ReviewCard`**: a tile-tinted card titled with the verb ("Offering", "Moving to") holding the facts of what is about to happen, so the office checks before it confirms. A choice with facts to weigh (which class) is a drop-down whose search box lives inside the list (`ClassPicker`, on `Combobox`), never a text input holding the chosen value. Only one per modal, only for the outcome; warnings stay `Alert`s above the buttons.
 
 ### 4.9 Feedback
 
@@ -196,7 +202,7 @@ Sensitive fields (ethnicity, languages, reasons) are grouped under their own hea
 
 ### 4.10 Timeline and timetable
 
-Lessons in a day render with Mantine `Timeline`, `bulletSize={26}`, past items in tile, current in saffron with a sun icon, future in gray. Weekly timetables render as a grid where each block's background is the subject tint (shade 0) and its border-inline-start is the subject colour (shade 6), 3px, so it works in both themes and in RTL.
+Lessons in a day render with Mantine `Timeline`, `bulletSize={26}`, past items in tile, current in saffron with a sun icon, future in gray; bullets take the surface colour (dark: `dark.6`), never white, so in dark mode they read as coloured rings. Weekly timetables render as a grid where each block's background is the subject tint (shade 0 in light; in dark a mix of the subject colour into `dark.6`, so it is still that colour and not a grey box) and its border-inline-start is the subject colour (shade 6 light, shade 4 dark), 3px, so it works in both themes and in RTL. A **staff-only slot** (a meeting) is a gray block or item carrying its title and "staff only"; families and students never see one, and their day starts at the first slot they do see.
 
 `WeekTimetable` is that grid for a person's week: one column per day with lessons, each block showing time, class and room, linking to the class. Teachers get it as "My week"; the month calendar stays for term dates and events.
 
@@ -206,11 +212,15 @@ Month calendars (`MonthCalendar`) are a seven-column grid, Monday first: term da
 
 Initials on `tile.0`/`tile.8` for people; `gray` when the person is inactive or absent in the current context. Children in the family switcher get a distinct pastel from a fixed rotation so siblings are told apart at a glance.
 
+### 4.12 Tab marks
+
+A tab may carry a **count** after its label ("Students 12", dimmed) and/or a small **mark** (`LinkTabs` `mark`) that tells the state of what is inside before it is opened: a check (tile) for good, a half circle (saffron) for partial, a cross (clay) for bad, each with a tooltip and `aria-label` in words. Shape and colour together, never colour alone. Used for fee status on a student's Fees tab and a guardian's Payments tab (`feeTabMark` in `lib/fees.ts`); a new use needs a line here.
+
 ---
 
 ## 5. Patterns by role
 
-- **Admin:** dense, tables, filters at the top of lists, bulk actions in a bar that appears on selection. Sensitive information sits in a visually separate card titled "Sensitive information" with a lock icon.
+- **Admin:** dense, tables, filters at the top of lists, bulk actions in a bar that appears on selection. Sensitive information sits in a visually separate card titled "Sensitive information" with a lock icon. Guardians are listed as **families** (guardians who share a child, `lib/families.ts`), one row per family; each guardian keeps their own page. Choosing a class for a child (approval, moving) shows what the office weighs up — teacher, places taken of capacity, applications waiting — and a full class asks for a tick before it is overfilled.
 - **Teacher:** the *Today* page is the home and shows only today's lessons with their inline actions (§3.3 example). Class pages are tabbed — Students · Attendance · Homework · Resources — one block per tab. Notes and resources are added from the student or class they belong to, not from a global launcher.
 - **Family:** `ChildSwitcher` pills under the header on every page, hidden with one child. The child's overview is a short vertical list of "what's next" items (next lesson, homework due, unread note, balance) — a list, not a grid of cards — each linking to its tab. Never show internal vocabulary (enrolment, session id).
 - **Student:** at most five navigation items, one column, big type, `size="md"` or `lg` controls, greetings by first name, due dates in relative words ("tomorrow", "in 3 days").
@@ -236,6 +246,7 @@ Initials on `tile.0`/`tile.8` for people; `gray` when the person is inactive or 
 - Errors say what went wrong and what to do: "We couldn't save the register — check your connection and try again."
 - Dates: "Saturday 19 September" (weekday first, no ordinal); Hijri date shown on calendars and the Today page as a secondary line. Times 24h "10:00".
 - Money: "€250" and "€250.50", never "250.00 EUR".
+- Nothing is never a dash. An empty cell or field says what is missing in a dimmed word — "no teacher", "not placed", "none yet", "no preference" — through `Nothing` (`components/Nothing.tsx`); a count that is zero is "0". Dashes stay in prose ("Good news — …"), never as a value.
 - Standard sensitive-data explanation, used verbatim: *"Optional. Used only for anonymous diversity statistics. It has no effect on any admission or placement decision."*
 
 ---
@@ -251,4 +262,4 @@ Before building anything not covered here:
 
 A pull request that adds a hex value, a bare `style={{ fontSize }}`, a new colour meaning or a one-off component without touching this document is incomplete.
 
-Shared component inventory (created as needed, listed here when they exist). Existing: `Shell` (app shell with the four navigation sets, role switcher, colour-scheme toggle in the header), `AuthPage`, `PageHeader` (with breadcrumbs), `CardTitle`, `StatTile` (links to its page), `Figures`, `SortableTh`, `StatusBadge`, `SubjectBadge`, `EmptyState`, `EntityList`, `ChildSwitcher`, `DirectionalIcon`, `MoneyText` (`lib/money.ts`), `DateText` (server-only; reads the school timezone), `SensitiveSection` (carries the standard sentence), `Field` (read-only label/value pair for profiles and review steps), `LinkTabs` (tabs that are routes), `ClassTimetable` (a class's day as a Timeline, §4.10), `WeekTimetable` (a week of lessons as tinted blocks), `LessonTimeline` (today's lessons with past/now/later states and inline actions), `ResourceForm`/`ShareResourceButton` (file or link with one target), `ResourceList` (files and links as rows), `NotesCard` (staff notes on a student with the add form), `HomeworkList` (homework rows for families and students), `MonthCalendar` + `CalendarPage` (`lib/calendar.ts` month builder), `NotificationList` + `NotificationsPage` (the bell's list), `FormError`, `LinkButton`, `AppLink` (both exist because Server Components can't pass `component={Link}` to Mantine), `toast`, `confirmDestructive`. In Server Components use Mantine's named parts (`TableThead`, `TableTr`…) rather than `Table.Thead`, and `LinkButton`/`AppLink` rather than `component={Link}` — neither crosses the boundary. The `albayan/server-boundary` lint rule enforces both.
+Shared component inventory (created as needed, listed here when they exist). Existing: `Shell` (app shell with the four navigation sets and sub-items, role switcher, colour-scheme toggle in the header), `AuthPage`, `PageHeader` (with breadcrumbs and subtitle), `CardTitle`, `StatTile` (links to its page), `Figures`, `SortableTh`, `LinkRow`, `useUrlFilters`, `ExportButton`, `LinkTabs` (with marks), `ReviewCard`, `FamilyTable`, `ClassFilter`, `SchoolRules`, `MoveStudentModal` and `OfferPlaceModal` (admin, on `ClassPicker`), `StatusBadge`, `SubjectBadge`, `EmptyState`, `EntityList`, `ChildSwitcher`, `DirectionalIcon`, `MoneyText` (`lib/money.ts`), `DateText` (server-only; reads the school timezone), `SensitiveSection` (carries the standard sentence), `Field` (read-only label/value pair for profiles and review steps), `ClassTimetable` (a class's day as a Timeline, §4.10), `WeekTimetable` (a week of lessons as tinted blocks), `LessonTimeline` (today's lessons with past/now/later states and inline actions), `ResourceForm`/`ShareResourceButton` (file or link with one target), `ResourceList` (files and links as rows), `NotesCard` (staff notes on a student with the add form), `HomeworkList` (homework rows for families and students), `MonthCalendar` + `CalendarPage` (`lib/calendar.ts` month builder), `NotificationList` + `NotificationsPage` (the bell's list), `FormError`, `LinkButton`, `AppLink` (both exist because Server Components can't pass `component={Link}` to Mantine), `toast`, `confirmDestructive`. In Server Components use Mantine's named parts (`TableThead`, `TableTr`…) rather than `Table.Thead`, and `LinkButton`/`AppLink` rather than `component={Link}` — neither crosses the boundary. The `albayan/server-boundary` lint rule enforces both.

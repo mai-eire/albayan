@@ -31,8 +31,10 @@ export type Application = {
   siblings: string[];
 };
 
-export async function listApplications(): Promise<Application[]> {
+// Every application waiting, or just the ones asked for (a class's, one student's).
+export async function listApplications(onlyIds?: number[]): Promise<Application[]> {
   const d = await db();
+  if (onlyIds && onlyIds.length === 0) return [];
   const rows = await d
     .select({
       student: students,
@@ -53,7 +55,7 @@ export async function listApplications(): Promise<Application[]> {
     .innerJoin(users, eq(users.id, guardians.userId))
     .leftJoin(schoolSessions, eq(schoolSessions.id, students.preferredSessionId))
     .leftJoin(classes, eq(classes.id, students.preferredClassId))
-    .where(eq(students.status, "applied"))
+    .where(and(eq(students.status, "applied"), onlyIds ? inArray(students.id, onlyIds) : undefined))
     .orderBy(asc(students.appliedAt));
   if (!rows.length) return [];
 
@@ -89,4 +91,37 @@ export async function listApplications(): Promise<Application[]> {
     },
     siblings: attending.filter((a) => a.guardianId === r.guardianId).map((a) => a.firstName),
   }));
+}
+
+export type ClassApplication = {
+  id: number;
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string;
+  appliedAt: string;
+  guardianName: string;
+};
+
+// Children waiting for a decision who asked for this class by name — the office sees who
+// is queuing before moving anyone in or out.
+export async function listApplicationsForClass(classId: number): Promise<ClassApplication[]> {
+  const d = await db();
+  return d
+    .select({
+      id: students.id,
+      firstName: students.firstName,
+      lastName: students.lastName,
+      dateOfBirth: students.dateOfBirth,
+      appliedAt: students.appliedAt,
+      guardianName: users.name,
+    })
+    .from(students)
+    .innerJoin(
+      studentGuardians,
+      and(eq(studentGuardians.studentId, students.id), eq(studentGuardians.isPrimaryContact, true)),
+    )
+    .innerJoin(guardians, eq(guardians.id, studentGuardians.guardianId))
+    .innerJoin(users, eq(users.id, guardians.userId))
+    .where(and(eq(students.status, "applied"), eq(students.preferredClassId, classId)))
+    .orderBy(asc(students.appliedAt));
 }

@@ -116,6 +116,8 @@ export type ClassRow = typeof classes.$inferSelect & {
   sessionName: string;
   classTeacherName: string | null;
   studentCount: number;
+  // Children who asked for this class and are still waiting for a decision.
+  applicationCount: number;
   // The class teacher and every subject teacher, for filtering the list by teacher.
   teacherIds: number[];
 };
@@ -131,6 +133,7 @@ export async function listClasses(academicYearId: string): Promise<ClassRow[]> {
       sessionDay: schoolSessions.dayOfWeek,
       classTeacherName: classTeacherUser.name,
       studentCount: count(enrolments.id),
+      applicationCount: sql<number>`(select count(*) from ${students} where ${students.preferredClassId} = ${classes.id} and ${students.status} = 'applied')`,
     })
     .from(classes)
     .innerJoin(schoolSessions, eq(schoolSessions.id, classes.sessionId))
@@ -156,6 +159,7 @@ export async function listClasses(academicYearId: string): Promise<ClassRow[]> {
     sessionName: r.sessionName,
     classTeacherName: r.classTeacherName,
     studentCount: r.studentCount,
+    applicationCount: r.applicationCount,
     teacherIds: [
       ...new Set(
         [
@@ -270,4 +274,18 @@ export async function listRosterForAdmin(classId: number): Promise<RosterForAdmi
     .innerJoin(students, eq(students.id, enrolments.studentId))
     .where(and(eq(enrolments.classId, classId), eq(enrolments.status, "active")))
     .orderBy(asc(students.firstName), asc(students.lastName));
+}
+
+// The shape the offer and move modals pick from (app/admin/academics/classes/ClassPicker).
+export function classChoice(c: ClassRow) {
+  return {
+    id: c.id,
+    name: c.name,
+    sessionId: c.sessionId,
+    sessionName: c.sessionName,
+    classTeacherName: c.classTeacherName,
+    studentCount: c.studentCount,
+    capacity: c.capacity,
+    applicationCount: c.applicationCount,
+  };
 }

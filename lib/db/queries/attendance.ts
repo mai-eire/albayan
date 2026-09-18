@@ -9,6 +9,7 @@ import {
   sessionPeriods,
   students,
   teachers,
+  teachingAssignments,
   users,
   type AttendanceStatus,
 } from "@/lib/db/schema";
@@ -94,6 +95,7 @@ export type RegisterSummary = {
   studentCount: number;
   recordedCount: number;
   absentCount: number;
+  excusedCount: number;
 };
 
 // Every class running on `date`'s weekday in the year, with how much of its register is in.
@@ -141,6 +143,7 @@ export async function listRegistersForDate(
     studentCount: enrolled.filter((e) => e.classId === r.classId).length,
     recordedCount: recorded.filter((a) => a.classId === r.classId).length,
     absentCount: recorded.filter((a) => a.classId === r.classId && a.status === "absent").length,
+    excusedCount: recorded.filter((a) => a.classId === r.classId && a.status === "excused").length,
   }));
 }
 
@@ -196,6 +199,23 @@ export async function countRegisterRows(
   return new Map(rows.map((r) => [r.date, r.n]));
 }
 
+// How many registers a class has actually had taken in a range — the "n" in "7 / 9".
+export async function countRegistersTaken(
+  classId: number,
+  from: string,
+  to: string,
+): Promise<number> {
+  const [row] = await (
+    await db()
+  )
+    .select({ n: sql<number>`count(distinct ${attendance.date})` })
+    .from(attendance)
+    .where(
+      and(eq(attendance.classId, classId), gte(attendance.date, from), lte(attendance.date, to)),
+    );
+  return row?.n ?? 0;
+}
+
 export type AttendanceEntry = {
   date: string;
   status: AttendanceStatus;
@@ -229,10 +249,15 @@ export type TermRegisterRow = {
   className: string;
   sessionId: number;
   sessionName: string;
+  startTime: string;
+  endTime: string;
   teacherName: string | null;
+  // The class teacher and every subject teacher: the term view filters by any of them.
+  teacherIds: number[];
   studentCount: number;
   recordedCount: number;
   absentCount: number;
+  excusedCount: number;
 };
 
 // Every lesson date × class in the range, newest first, with how much of each register is
@@ -252,6 +277,9 @@ export async function listRegistersForTerm(
       sessionId: schoolSessions.id,
       sessionName: schoolSessions.name,
       dayOfWeek: schoolSessions.dayOfWeek,
+      startTime: schoolSessions.startTime,
+      minutes: sql<number>`coalesce((select sum(${sessionPeriods.durationMinutes}) from ${sessionPeriods} where ${sessionPeriods.sessionId} = ${schoolSessions.id}), 0)`,
+      classTeacherId: classes.classTeacherId,
       teacherName: classTeacherUser.name,
     })
     .from(classes)
@@ -262,18 +290,23 @@ export async function listRegistersForTerm(
     .orderBy(asc(schoolSessions.startTime), asc(classes.name));
   if (!rows.length) return [];
   const classIds = rows.map((r) => r.classId);
-  const [enrolled, recorded] = await Promise.all([
+  const [enrolled, assigned, recorded] = await Promise.all([
     d
       .select({ classId: enrolments.classId, n: count() })
       .from(enrolments)
       .where(and(inArray(enrolments.classId, classIds), eq(enrolments.status, "active")))
       .groupBy(enrolments.classId),
     d
+      .select({ classId: teachingAssignments.classId, teacherId: teachingAssignments.teacherId })
+      .from(teachingAssignments)
+      .where(inArray(teachingAssignments.classId, classIds)),
+    d
       .select({
         classId: attendance.classId,
         date: attendance.date,
         n: count(),
         absent: sql<number>`sum(case when ${attendance.status} = 'absent' then 1 else 0 end)`,
+        excused: sql<number>`sum(case when ${attendance.status} = 'excused' then 1 else 0 end)`,
       })
       .from(attendance)
       .where(
@@ -295,10 +328,19 @@ export async function listRegistersForTerm(
         className: r.className,
         sessionId: r.sessionId,
         sessionName: r.sessionName,
+        startTime: r.startTime,
+        endTime: addMinutes(r.startTime, r.minutes),
         teacherName: r.teacherName,
+        teacherIds: [
+          ...new Set([
+            ...(r.classTeacherId === null ? [] : [r.classTeacherId]),
+            ...assigned.filter((a) => a.classId === r.classId).map((a) => a.teacherId),
+          ]),
+        ],
         studentCount: enrolled.find((e) => e.classId === r.classId)?.n ?? 0,
         recordedCount: taken?.n ?? 0,
         absentCount: taken?.absent ?? 0,
+        excusedCount: taken?.excused ?? 0,
       });
     }
   }

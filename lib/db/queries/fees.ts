@@ -12,6 +12,7 @@ import {
   users,
 } from "@/lib/db/schema";
 import { feeAccounts, outstandingCents, type FeeAccount } from "@/lib/fees";
+import { familyKeyByStudent } from "./students";
 
 // Admin-only fee queries. Balances are derived in lib/fees.ts from enrolments and payments;
 // nothing here is stored.
@@ -94,14 +95,26 @@ export async function listFeeAccounts(academicYearId: string): Promise<FeeAccoun
   return feeAccounts(rows, paid);
 }
 
-// The dashboard tile: what is owed for the year and by how many families.
+// The dashboard tile: what is owed for the year, out of what the year's fees add up to,
+// and by how many families.
 export async function feesOutstanding(
   academicYearId: string,
-): Promise<{ totalCents: number; families: number }> {
+): Promise<{ totalCents: number; feesCents: number; families: number }> {
   const accounts = await listFeeAccounts(academicYearId);
   const owing = accounts.filter((a) => a.balanceCents > 0);
-  const families = new Set(owing.map((a) => a.enrolment.guardianId ?? `s${a.enrolment.studentId}`));
-  return { totalCents: outstandingCents(owing), families: families.size };
+  return {
+    totalCents: outstandingCents(owing),
+    feesCents: accounts.reduce((sum, a) => sum + a.feeCents, 0),
+    families: await countFamilies(owing),
+  };
+}
+
+// How many families the accounts belong to (a student with no guardian counts as one).
+export async function countFamilies(accounts: FeeAccountRow[]): Promise<number> {
+  const keyOf = await familyKeyByStudent();
+  return new Set(
+    accounts.map((a) => keyOf.get(a.enrolment.studentId) ?? `s${a.enrolment.studentId}`),
+  ).size;
 }
 
 export type PaymentRow = {
@@ -252,4 +265,19 @@ export async function listPaymentTargets(academicYearId: string): Promise<Paymen
       .filter((l) => l.studentId === e.studentId)
       .map(({ id, name }) => ({ id, name })),
   }));
+}
+
+// The year's accounts for some students — a family's children — keyed by student.
+export async function feeAccountsForStudents(
+  academicYearId: string,
+  studentIds: number[],
+): Promise<Map<number, FeeAccountRow>> {
+  if (!studentIds.length) return new Map();
+  const wanted = new Set(studentIds);
+  const accounts = await listFeeAccounts(academicYearId);
+  return new Map(
+    accounts
+      .filter((a) => wanted.has(a.enrolment.studentId))
+      .map((a) => [a.enrolment.studentId, a]),
+  );
 }

@@ -14,6 +14,18 @@ import {
 } from "@/lib/db/schema";
 import { addMinutes } from "@/lib/timetable";
 
+export type StaffClass = {
+  id: number;
+  name: string;
+  sessionId: number;
+  sessionName: string;
+  startTime: string;
+  endTime: string;
+  isClassTeacher: boolean;
+  subjectIds: string[];
+  subjects: string[];
+};
+
 export type StaffRow = {
   id: number;
   name: string;
@@ -23,11 +35,13 @@ export type StaffRow = {
   status: "active" | "invited" | "disabled";
   teacher: { id: number; isActive: boolean; deactivatedAt: string | null } | null;
   lastSignInAt: string | null;
+  // The classes they take this year (class teacher or a subject), for the list's filters.
+  classes: StaffClass[];
 };
 
-// Everyone with an admin flag or a teacher row, whatever else they also are. Teachers who
-// have stopped are included only when asked.
-export async function listStaff(includeFormer = false): Promise<StaffRow[]> {
+// Everyone with an admin flag or a teacher row, whatever else they also are, including
+// former teachers; the list hides those in the browser unless asked.
+export async function listStaff(academicYearId: string | null = null): Promise<StaffRow[]> {
   const d = await db();
   const lastSignIn = d
     .select({ userId: sessions.userId, at: sql<string>`max(${sessions.createdAt})`.as("at") })
@@ -50,33 +64,79 @@ export async function listStaff(includeFormer = false): Promise<StaffRow[]> {
     .from(users)
     .leftJoin(teachers, eq(teachers.userId, users.id))
     .leftJoin(lastSignIn, eq(lastSignIn.userId, users.id))
-    .where(
-      and(
-        or(eq(users.isAdmin, true), isNotNull(teachers.id)),
-        includeFormer ? undefined : or(eq(users.isAdmin, true), eq(teachers.isActive, true)),
-      ),
-    )
+    .where(or(eq(users.isAdmin, true), isNotNull(teachers.id)))
     .orderBy(asc(users.name));
+  const taught = academicYearId ? await listClassesTaught(academicYearId) : [];
   return rows.map(({ teacherId, teacherActive, deactivatedAt, ...r }) => ({
     ...r,
     teacher:
       teacherId === null
         ? null
         : { id: teacherId, isActive: teacherActive ?? true, deactivatedAt: deactivatedAt ?? null },
+    classes: teacherId === null ? [] : taught.filter((t) => t.teacherId === teacherId),
   }));
+}
+
+// Every (teacher, class) pair in a year: class teachers and subject teachers alike.
+async function listClassesTaught(
+  academicYearId: string,
+): Promise<(StaffClass & { teacherId: number })[]> {
+  const d = await db();
+  const minutes = sql<number>`coalesce((select sum(${sessionPeriods.durationMinutes}) from ${sessionPeriods} where ${sessionPeriods.sessionId} = ${schoolSessions.id}), 0)`;
+  const [rows, assigned] = await Promise.all([
+    d
+      .select({
+        id: classes.id,
+        name: classes.name,
+        sessionId: schoolSessions.id,
+        sessionName: schoolSessions.name,
+        startTime: schoolSessions.startTime,
+        minutes,
+        classTeacherId: classes.classTeacherId,
+      })
+      .from(classes)
+      .innerJoin(schoolSessions, eq(schoolSessions.id, classes.sessionId))
+      .where(eq(classes.academicYearId, academicYearId))
+      .orderBy(
+        sql`(${schoolSessions.dayOfWeek} + 6) % 7`,
+        asc(schoolSessions.startTime),
+        asc(classes.name),
+      ),
+    d
+      .select({
+        classId: teachingAssignments.classId,
+        teacherId: teachingAssignments.teacherId,
+        subjectId: subjects.id,
+        subjectName: subjects.name,
+      })
+      .from(teachingAssignments)
+      .innerJoin(subjects, eq(subjects.id, teachingAssignments.subjectId))
+      .innerJoin(classes, eq(classes.id, teachingAssignments.classId))
+      .where(eq(classes.academicYearId, academicYearId)),
+  ]);
+  const out: (StaffClass & { teacherId: number })[] = [];
+  for (const { minutes: m, classTeacherId, ...c } of rows) {
+    const teacherIds = new Set([
+      ...(classTeacherId === null ? [] : [classTeacherId]),
+      ...assigned.filter((a) => a.classId === c.id).map((a) => a.teacherId),
+    ]);
+    for (const teacherId of teacherIds) {
+      const mine = assigned.filter((a) => a.classId === c.id && a.teacherId === teacherId);
+      out.push({
+        ...c,
+        teacherId,
+        endTime: addMinutes(c.startTime, m),
+        isClassTeacher: classTeacherId === teacherId,
+        subjectIds: mine.map((a) => a.subjectId),
+        subjects: mine.map((a) => a.subjectName),
+      });
+    }
+  }
+  return out;
 }
 
 export type StaffProfile = StaffRow & {
   createdAt: string;
-  classes: {
-    id: number;
-    name: string;
-    sessionName: string;
-    startTime: string;
-    endTime: string;
-    isClassTeacher: boolean;
-    subjects: string[];
-  }[];
   notes: {
     id: number;
     studentId: number;
@@ -93,49 +153,11 @@ export async function getStaffMember(
   userId: number,
   academicYearId: string | null,
 ): Promise<StaffProfile | null> {
-  const [row] = (await listStaff(true)).filter((s) => s.id === userId);
+  const [row] = (await listStaff(academicYearId)).filter((s) => s.id === userId);
   if (!row) return null;
   const d = await db();
-  const user = await d.query.users.findFirst({
-    columns: { createdAt: true },
-    where: eq(users.id, userId),
-  });
-  const minutes = sql<number>`coalesce((select sum(${sessionPeriods.durationMinutes}) from ${sessionPeriods} where ${sessionPeriods.sessionId} = ${schoolSessions.id}), 0)`;
-  const [taught, assigned, notes, [{ noteCount }]] = await Promise.all([
-    row.teacher && academicYearId
-      ? d
-          .select({
-            id: classes.id,
-            name: classes.name,
-            sessionName: schoolSessions.name,
-            startTime: schoolSessions.startTime,
-            minutes,
-            classTeacherId: classes.classTeacherId,
-          })
-          .from(classes)
-          .innerJoin(schoolSessions, eq(schoolSessions.id, classes.sessionId))
-          .where(
-            and(
-              eq(classes.academicYearId, academicYearId),
-              or(
-                eq(classes.classTeacherId, row.teacher.id),
-                sql`exists (select 1 from ${teachingAssignments} where ${teachingAssignments.classId} = ${classes.id} and ${teachingAssignments.teacherId} = ${row.teacher.id})`,
-              ),
-            ),
-          )
-          .orderBy(
-            sql`(${schoolSessions.dayOfWeek} + 6) % 7`,
-            asc(schoolSessions.startTime),
-            asc(classes.name),
-          )
-      : [],
-    row.teacher
-      ? d
-          .select({ classId: teachingAssignments.classId, subjectName: subjects.name })
-          .from(teachingAssignments)
-          .innerJoin(subjects, eq(subjects.id, teachingAssignments.subjectId))
-          .where(eq(teachingAssignments.teacherId, row.teacher.id))
-      : [],
+  const [user, notes, [{ noteCount }]] = await Promise.all([
+    d.query.users.findFirst({ columns: { createdAt: true }, where: eq(users.id, userId) }),
     d
       .select({
         id: studentNotes.id,
@@ -149,7 +171,7 @@ export async function getStaffMember(
       .innerJoin(students, eq(students.id, studentNotes.studentId))
       .where(and(eq(studentNotes.authorUserId, userId), isNull(studentNotes.deletedAt)))
       .orderBy(desc(studentNotes.createdAt))
-      .limit(10),
+      .limit(20),
     d
       .select({ noteCount: sql<number>`count(*)` })
       .from(studentNotes)
@@ -158,12 +180,6 @@ export async function getStaffMember(
   return {
     ...row,
     createdAt: user ? new Date(user.createdAt).toISOString() : "",
-    classes: taught.map(({ minutes: m, classTeacherId, ...c }) => ({
-      ...c,
-      endTime: addMinutes(c.startTime, m),
-      isClassTeacher: classTeacherId === row.teacher?.id,
-      subjects: assigned.filter((a) => a.classId === c.id).map((a) => a.subjectName),
-    })),
     notes,
     noteCount,
   };

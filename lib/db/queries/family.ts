@@ -1,6 +1,7 @@
 import { and, asc, eq } from "drizzle-orm";
 import { alias } from "drizzle-orm/sqlite-core";
 import { db } from "@/lib/db";
+import { familyStart, forFamilies } from "@/lib/timetable";
 import {
   classes,
   enrolments,
@@ -69,6 +70,7 @@ async function loadPlace(
         subjectName: subjects.name,
         title: sessionPeriods.title,
         durationMinutes: sessionPeriods.durationMinutes,
+        staffOnly: sessionPeriods.staffOnly,
       })
       .from(sessionPeriods)
       .leftJoin(subjects, eq(subjects.id, sessionPeriods.subjectId))
@@ -91,12 +93,18 @@ async function loadPlace(
       room: row.room,
       sessionName: row.sessionName,
       dayOfWeek: row.dayOfWeek,
-      startTime: row.startTime,
+      // Staff-only slots are left out and the day starts at the first slot the family sees.
+      startTime: familyStart(row.startTime, periods),
       classTeacherName: row.classTeacherName,
-      periods: periods.map((p) => ({
-        ...p,
-        teacherName: assignments.find((a) => a.subjectId === p.subjectId)?.teacherName ?? null,
-      })),
+      periods: forFamilies(periods).map(
+        ({ staffOnly: _s, ...p }) => (
+          void _s,
+          {
+            ...p,
+            teacherName: assignments.find((a) => a.subjectId === p.subjectId)?.teacherName ?? null,
+          }
+        ),
+      ),
     },
   };
 }
@@ -117,6 +125,8 @@ export type StudentForGuardian = {
   status: Student["status"];
   preferredSessionName: string | null;
   declinedReason: string | null;
+  // The office's word when the place offered wasn't the one asked for.
+  offerNote: string | null;
   place: Place | null;
   fee: { cents: number; note: string | null } | null;
 };
@@ -137,6 +147,7 @@ export async function getStudentForGuardian(id: number): Promise<StudentForGuard
       medicalNotes: students.medicalNotes,
       status: students.status,
       declinedReason: students.declinedReason,
+      offerNote: students.offerNote,
       preferredSessionName: schoolSessions.name,
     })
     .from(students)

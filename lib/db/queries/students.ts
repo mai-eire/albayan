@@ -1,6 +1,7 @@
-import { and, asc, desc, eq, inArray, like, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/sqlite-core";
 import { db } from "@/lib/db";
+import { groupFamilies } from "@/lib/families";
 import {
   classes,
   enrolments,
@@ -65,13 +66,6 @@ export async function lastRelationshipFor(guardianId: number): Promise<string | 
 
 // ---- Admin ----------------------------------------------------------------------------
 
-export type StudentFilters = {
-  status?: Student["status"];
-  sessionId?: number;
-  classId?: number;
-  q?: string;
-};
-
 export type StudentListRow = {
   id: number;
   studentId: string | null;
@@ -79,30 +73,22 @@ export type StudentListRow = {
   lastName: string;
   dateOfBirth: string;
   status: Student["status"];
+  classId: number | null;
   className: string | null;
+  sessionId: number | null;
   sessionName: string | null;
   guardianName: string | null;
+  guardianEmail: string | null;
+  guardianPhone: string | null;
 };
 
 // The active enrolment's class and session, joined once for lists and profiles.
 const activeEnrolment = and(eq(enrolments.studentId, students.id), eq(enrolments.status, "active"));
 
-export async function listStudentsForAdmin(
-  filters: StudentFilters = {},
-): Promise<StudentListRow[]> {
+// Every student, whatever their status: the list filters in the browser (app/admin/students/filters.ts).
+export async function listStudentsForAdmin(): Promise<StudentListRow[]> {
   const d = await db();
   const guardianUser = alias(users, "guardian_user");
-  const where = [
-    filters.status ? eq(students.status, filters.status) : undefined,
-    filters.classId ? eq(classes.id, filters.classId) : undefined,
-    filters.sessionId ? eq(schoolSessions.id, filters.sessionId) : undefined,
-    filters.q
-      ? or(
-          like(sql`${students.firstName} || ' ' || ${students.lastName}`, `%${filters.q}%`),
-          like(students.studentId, `%${filters.q}%`),
-        )
-      : undefined,
-  ];
   return d
     .select({
       id: students.id,
@@ -111,9 +97,13 @@ export async function listStudentsForAdmin(
       lastName: students.lastName,
       dateOfBirth: students.dateOfBirth,
       status: students.status,
+      classId: classes.id,
       className: classes.name,
+      sessionId: schoolSessions.id,
       sessionName: schoolSessions.name,
       guardianName: guardianUser.name,
+      guardianEmail: guardianUser.email,
+      guardianPhone: guardianUser.phone,
     })
     .from(students)
     .leftJoin(enrolments, activeEnrolment)
@@ -125,7 +115,6 @@ export async function listStudentsForAdmin(
     )
     .leftJoin(guardians, eq(guardians.id, studentGuardians.guardianId))
     .leftJoin(guardianUser, eq(guardianUser.id, guardians.userId))
-    .where(and(...where))
     .orderBy(asc(students.lastName), asc(students.firstName));
 }
 
@@ -241,38 +230,83 @@ export async function getStudentForAdmin(id: number): Promise<StudentForAdmin | 
   };
 }
 
+export type GuardianChild = {
+  id: number;
+  studentId: string | null;
+  firstName: string;
+  lastName: string;
+  status: Student["status"];
+  classId: number | null;
+  className: string | null;
+  sessionId: number | null;
+  sessionName: string | null;
+};
+
 export type GuardianListRow = {
   id: number;
   name: string;
   email: string;
   phone: string | null;
-  children: string[];
+  gender: GuardianGender | null;
+  relationship: string | null;
+  // First contact for at least one child: the family name rule needs an order.
+  isPrimary: boolean;
+  children: GuardianChild[];
 };
 
-export async function listGuardiansForAdmin(q?: string): Promise<GuardianListRow[]> {
+// Every guardian with their children and each child's place; lib/families.ts groups them
+// and app/admin/guardians/filters.ts narrows them, both in the browser.
+export async function listGuardiansForAdmin(): Promise<GuardianListRow[]> {
   const d = await db();
   const rows = await d
-    .select({ id: guardians.id, name: users.name, email: users.email, phone: users.phone })
+    .select({
+      id: guardians.id,
+      name: users.name,
+      email: users.email,
+      phone: users.phone,
+      gender: guardians.gender,
+    })
     .from(guardians)
     .innerJoin(users, eq(users.id, guardians.userId))
-    .where(q ? or(like(users.name, `%${q}%`), like(users.email, `%${q}%`)) : undefined)
     .orderBy(asc(users.name));
   if (!rows.length) return [];
   const kids = await d
-    .select({ guardianId: studentGuardians.guardianId, firstName: students.firstName })
+    .select({
+      guardianId: studentGuardians.guardianId,
+      relationship: studentGuardians.relationship,
+      isPrimary: studentGuardians.isPrimaryContact,
+      id: students.id,
+      studentId: students.studentId,
+      firstName: students.firstName,
+      lastName: students.lastName,
+      status: students.status,
+      classId: classes.id,
+      className: classes.name,
+      sessionId: schoolSessions.id,
+      sessionName: schoolSessions.name,
+    })
     .from(studentGuardians)
     .innerJoin(students, eq(students.id, studentGuardians.studentId))
-    .where(
-      inArray(
-        studentGuardians.guardianId,
-        rows.map((r) => r.id),
-      ),
-    )
+    .leftJoin(enrolments, activeEnrolment)
+    .leftJoin(classes, eq(classes.id, enrolments.classId))
+    .leftJoin(schoolSessions, eq(schoolSessions.id, classes.sessionId))
     .orderBy(asc(students.dateOfBirth));
-  return rows.map((r) => ({
-    ...r,
-    children: kids.filter((k) => k.guardianId === r.id).map((k) => k.firstName),
-  }));
+  return rows.map((r) => {
+    const mine = kids.filter((k) => k.guardianId === r.id);
+    return {
+      ...r,
+      relationship: mine[0]?.relationship ?? null,
+      isPrimary: mine.some((k) => k.isPrimary),
+      children: mine.map(
+        ({ guardianId: _g, relationship: _r, isPrimary: _p, ...c }) => (
+          void _g,
+          void _r,
+          void _p,
+          c
+        ),
+      ),
+    };
+  });
 }
 
 export type GuardianProfile = {
@@ -293,6 +327,7 @@ export type GuardianProfile = {
     status: Student["status"];
     relationship: string;
     className: string | null;
+    sessionName: string | null;
   }[];
   sensitive: {
     address: string | null;
@@ -324,11 +359,13 @@ export async function getGuardianForAdmin(id: number): Promise<GuardianProfile |
       status: students.status,
       relationship: studentGuardians.relationship,
       className: classes.name,
+      sessionName: schoolSessions.name,
     })
     .from(studentGuardians)
     .innerJoin(students, eq(students.id, studentGuardians.studentId))
     .leftJoin(enrolments, activeEnrolment)
     .leftJoin(classes, eq(classes.id, enrolments.classId))
+    .leftJoin(schoolSessions, eq(schoolSessions.id, classes.sessionId))
     .where(eq(studentGuardians.guardianId, id))
     .orderBy(asc(students.dateOfBirth));
   const { guardian, user } = row;
@@ -384,10 +421,12 @@ export async function countEnrolledSiblings(studentId: number): Promise<number> 
 
 export type SiblingRow = {
   id: number;
+  studentId: string | null;
   firstName: string;
   lastName: string;
   status: Student["status"];
   className: string | null;
+  sessionName: string | null;
 };
 
 // Other children sharing a guardian with this student, oldest first.
@@ -397,10 +436,12 @@ export async function listSiblingsForAdmin(studentId: number): Promise<SiblingRo
   return d
     .selectDistinct({
       id: students.id,
+      studentId: students.studentId,
       firstName: students.firstName,
       lastName: students.lastName,
       status: students.status,
       className: classes.name,
+      sessionName: schoolSessions.name,
       dateOfBirth: students.dateOfBirth,
     })
     .from(studentGuardians)
@@ -408,9 +449,58 @@ export async function listSiblingsForAdmin(studentId: number): Promise<SiblingRo
     .innerJoin(students, eq(students.id, sibling.studentId))
     .leftJoin(enrolments, activeEnrolment)
     .leftJoin(classes, eq(classes.id, enrolments.classId))
+    .leftJoin(schoolSessions, eq(schoolSessions.id, classes.sessionId))
     .where(
       and(eq(studentGuardians.studentId, studentId), sql`${sibling.studentId} <> ${studentId}`),
     )
     .orderBy(asc(students.dateOfBirth))
     .then((rows) => rows.map(({ dateOfBirth: _dob, ...r }) => (void _dob, r)));
+}
+
+// Which family each student belongs to (lib/families.ts), for counting families rather
+// than guardians — "12 families still to pay".
+export async function familyKeyByStudent(): Promise<Map<number, number>> {
+  const families = groupFamilies<GuardianChild, GuardianListRow>(await listGuardiansForAdmin());
+  const out = new Map<number, number>();
+  for (const f of families) for (const c of f.children) out.set(c.id, f.key);
+  return out;
+}
+
+export type CoGuardian = {
+  id: number;
+  name: string;
+  gender: GuardianGender | null;
+  // What they are to the children they share with this guardian ("Father"), and which.
+  relationship: string;
+  childNames: string[];
+};
+
+// The other guardians of this guardian's children — the other parent, a grandparent.
+export async function listCoGuardians(guardianId: number): Promise<CoGuardian[]> {
+  const d = await db();
+  const other = alias(studentGuardians, "other");
+  const rows = await d
+    .select({
+      id: guardians.id,
+      name: users.name,
+      gender: guardians.gender,
+      relationship: other.relationship,
+      childName: students.firstName,
+    })
+    .from(studentGuardians)
+    .innerJoin(other, eq(other.studentId, studentGuardians.studentId))
+    .innerJoin(guardians, eq(guardians.id, other.guardianId))
+    .innerJoin(users, eq(users.id, guardians.userId))
+    .innerJoin(students, eq(students.id, other.studentId))
+    .where(
+      and(eq(studentGuardians.guardianId, guardianId), sql`${other.guardianId} <> ${guardianId}`),
+    )
+    .orderBy(asc(users.name), asc(students.dateOfBirth));
+  const out: CoGuardian[] = [];
+  for (const r of rows) {
+    const g = out.find((o) => o.id === r.id);
+    if (g) g.childNames.push(r.childName);
+    else out.push({ ...r, childNames: [r.childName] });
+  }
+  return out;
 }

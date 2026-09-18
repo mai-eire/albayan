@@ -110,6 +110,7 @@ export type ClassForTeacher = {
     subjectName: string | null;
     title: string | null;
     durationMinutes: number;
+    staffOnly: boolean;
     teacherName: string | null;
   }[];
   roster: RosterRow[];
@@ -145,6 +146,7 @@ export async function getClassForTeacher(classId: number): Promise<ClassForTeach
         subjectName: subjects.name,
         title: sessionPeriods.title,
         durationMinutes: sessionPeriods.durationMinutes,
+        staffOnly: sessionPeriods.staffOnly,
       })
       .from(sessionPeriods)
       .leftJoin(subjects, eq(subjects.id, sessionPeriods.subjectId))
@@ -271,13 +273,29 @@ export type Lesson = {
   canTakeRegister: boolean;
 };
 
+// A staff-only slot of a session I teach in (a meeting, a briefing): on my day and week.
+export type StaffSlot = {
+  sessionName: string;
+  title: string;
+  startTime: string;
+  endTime: string;
+};
+
 // My lessons on a weekday, in time order: every period of a session running that day whose
-// subject I teach in a class of that session.
+// subject I teach in a class of that session, plus the session's staff-only slots.
 export async function listLessonsForTeacher(
   teacherId: number,
   academicYearId: string,
   dayOfWeek: number,
 ): Promise<Lesson[]> {
+  return (await listDayForTeacher(teacherId, academicYearId, dayOfWeek)).lessons;
+}
+
+export async function listDayForTeacher(
+  teacherId: number,
+  academicYearId: string,
+  dayOfWeek: number,
+): Promise<{ lessons: Lesson[]; staffSlots: StaffSlot[] }> {
   const d = await db();
   const sessions = await d
     .select({
@@ -293,7 +311,7 @@ export async function listLessonsForTeacher(
         eq(schoolSessions.isActive, true),
       ),
     );
-  if (!sessions.length) return [];
+  if (!sessions.length) return { lessons: [], staffSlots: [] };
   const sessionIds = sessions.map((s) => s.id);
   const [periods, myClasses, assignments] = await Promise.all([
     d
@@ -303,6 +321,7 @@ export async function listLessonsForTeacher(
         subjectName: subjects.name,
         title: sessionPeriods.title,
         durationMinutes: sessionPeriods.durationMinutes,
+        staffOnly: sessionPeriods.staffOnly,
       })
       .from(sessionPeriods)
       .leftJoin(subjects, eq(subjects.id, sessionPeriods.subjectId))
@@ -324,14 +343,17 @@ export async function listLessonsForTeacher(
       .where(eq(teachingAssignments.teacherId, teacherId)),
   ]);
   const lessons: Lesson[] = [];
+  const staffSlots: StaffSlot[] = [];
   for (const session of sessions) {
     const timed = timePeriods(
       session.startTime,
       periods.filter((p) => p.sessionId === session.id),
     );
     const firstSubject = timed.find((p) => p.subjectId)?.subjectId ?? null;
+    let inSession = false;
     for (const cls of myClasses.filter((c) => c.sessionId === session.id)) {
       const mine = assignments.filter((a) => a.classId === cls.id).map((a) => a.subjectId);
+      if (cls.classTeacherId === teacherId || mine.length) inSession = true;
       const canTakeRegister =
         cls.classTeacherId === teacherId || (firstSubject !== null && mine.includes(firstSubject));
       for (const p of timed) {
@@ -349,6 +371,20 @@ export async function listLessonsForTeacher(
         });
       }
     }
+    if (inSession) {
+      for (const p of timed) {
+        if (!p.staffOnly) continue;
+        staffSlots.push({
+          sessionName: session.name,
+          title: p.title ?? "Staff",
+          startTime: p.startTime,
+          endTime: p.endTime,
+        });
+      }
+    }
   }
-  return lessons.sort((a, b) => a.startTime.localeCompare(b.startTime));
+  return {
+    lessons: lessons.sort((a, b) => a.startTime.localeCompare(b.startTime)),
+    staffSlots: staffSlots.sort((a, b) => a.startTime.localeCompare(b.startTime)),
+  };
 }

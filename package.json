@@ -26,6 +26,7 @@
     "cf-typegen": "wrangler types --env-interface CloudflareEnv --include-runtime=false --strict-vars=false ./cloudflare-env.d.ts"
   },
   "dependencies": {
+    "@hello-pangea/dnd": "^18.0.1",
     "@mantine/core": "^9.6.1",
     "@mantine/dates": "^9.6.1",
     "@mantine/form": "^9.6.1",

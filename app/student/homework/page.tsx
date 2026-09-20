@@ -1,3 +1,4 @@
+import { clock } from "@/lib/clock";
 import { Card, Stack, Text } from "@mantine/core";
 import { HomeworkList } from "@/components/HomeworkList";
 import { PageHeader } from "@/components/PageHeader";
@@ -13,6 +14,7 @@ export default async function StudentHomeworkPage() {
   const [user, { timezone }] = await Promise.all([requireArea("student"), getSchoolSettings()]);
   const me = user.student ? await getStudentForStudent(user.student.id) : null;
   const rows = me?.place ? await listPublishedHomeworkForClass(me.place.classId) : [];
+  const today = todayIn(timezone, await clock());
   return (
     <Stack gap="lg" maw={720} mx="auto">
       <PageHeader title="Homework" />
@@ -20,7 +22,7 @@ export default async function StudentHomeworkPage() {
         {rows.length === 0 ? (
           <Text c="dimmed">No homework. Enjoy the weekend.</Text>
         ) : (
-          <HomeworkList rows={rows} today={todayIn(timezone)} timezone={timezone} />
+          <HomeworkList rows={rows} today={today} timezone={timezone} />
         )}
       </Card>
     </Stack>

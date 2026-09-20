@@ -26,7 +26,7 @@ export default function UiGallery() {
       area="admin"
       schoolName="Al-Bayan"
       user={{ name: "Amina Khan" }}
-      roles={["admin", "teach"]}
+      roles={["admin", "teacher"]}
     >
       <Stack gap="xl" maw={960} mx="auto">
         <PageHeader

@@ -1,5 +1,6 @@
 "use server";
 
+import { clock } from "@/lib/clock";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { requireGuardian } from "@/lib/access";
@@ -19,7 +20,7 @@ export const submitApplication = action(applicationSchema, async (input, { user,
   if (!user.emailVerified) throw new ActionError("Confirm your email address first.");
 
   const { timezone } = await getSchoolSettings();
-  const today = todayIn(timezone);
+  const today = todayIn(timezone, await clock());
   const age = ageOn(input.dateOfBirth, today);
   if (input.dateOfBirth > today || age > 18) {
     throw new ActionError("Check the date of birth — we take children up to 18.");

@@ -1,3 +1,4 @@
+import { clock } from "@/lib/clock";
 import { Card, Stack } from "@mantine/core";
 import { IconBook } from "@tabler/icons-react";
 import { EmptyState } from "@/components/EmptyState";
@@ -21,8 +22,8 @@ export default async function StudentHome() {
     getSchoolSettings(),
   ]);
   const me = user.student ? await getStudentForStudent(user.student.id) : null;
-  const now = new Date();
-  const today = todayIn(timezone);
+  const now = await clock();
+  const today = todayIn(timezone, now);
   const next = me?.place ? nextDateOn(me.place.dayOfWeek, today) : null;
   const [homework, recent, notes] = me
     ? await Promise.all([

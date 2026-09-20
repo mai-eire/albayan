@@ -65,7 +65,7 @@ const teacher: CurrentUser = {
   id: 2,
   guardian: null,
   teacher: { id: 1, isActive: true },
-  areas: ["teach"],
+  areas: ["teacher"],
 };
 const level1Parent: CurrentUser = { ...base, id: 3, guardian: { id: 1 }, areas: ["family"] };
 const level2Parent: CurrentUser = { ...base, id: 4, guardian: { id: 2 }, areas: ["family"] };

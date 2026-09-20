@@ -1,3 +1,4 @@
+import { clock } from "@/lib/clock";
 import { Card, Text } from "@mantine/core";
 import { EntityList } from "@/components/EntityList";
 import { MoneyText } from "@/components/MoneyText";
@@ -15,7 +16,7 @@ type Props = { params: Promise<{ id: string }> };
 // "What's next" for one child (§5): a short list, each row linking to its tab.
 export default async function ChildOverviewPage({ params }: Props) {
   const [child, { timezone }] = await Promise.all([loadChild(params), getSchoolSettings()]);
-  const today = todayIn(timezone);
+  const today = todayIn(timezone, await clock());
   const [recent, homework, notes] = await Promise.all([
     listAttendanceForStudent(child.id, 1),
     child.place ? listPublishedHomeworkForClass(child.place.classId) : [],

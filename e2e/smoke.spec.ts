@@ -5,7 +5,7 @@ async function signIn(page: Page, identifier: string, password = "password") {
   await page.getByLabel("Email or student ID").fill(identifier);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign in" }).click();
-  await page.waitForURL(/\/(admin|teach|family|student)/);
+  await page.waitForURL(/\/(admin|teacher|family|student)/);
 }
 
 test("admin signs in and sees the dashboard shell", async ({ page }) => {
@@ -18,12 +18,12 @@ test("admin signs in and sees the dashboard shell", async ({ page }) => {
 
 test("a teacher-parent can switch areas and is kept out of admin", async ({ page }) => {
   await signIn(page, "teacher1@example.com");
-  await expect(page).toHaveURL(/\/teach$/);
+  await expect(page).toHaveURL(/\/teacher$/);
   await page.getByRole("button", { name: "Teacher" }).click();
   await page.getByRole("menuitem", { name: "Family" }).click();
   await expect(page).toHaveURL(/\/family$/);
   await page.goto("/admin");
-  await expect(page).toHaveURL(/\/teach$/);
+  await expect(page).toHaveURL(/\/teacher$/);
 });
 
 test("a student signs in with their student ID", async ({ page }) => {

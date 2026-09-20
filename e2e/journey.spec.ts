@@ -107,7 +107,7 @@ test("register → apply → approve → student signs in; teacher kept out", as
 
   // A Saturday teacher cannot open Hamza's page.
   await signIn(page, "teacher2@example.com");
-  await expect(page).toHaveURL(/\/teach$/);
-  const blocked = await page.goto(`/teach/students/${childHref!.split("/").pop()}`);
+  await expect(page).toHaveURL(/\/teacher$/);
+  const blocked = await page.goto(`/teacher/students/${childHref!.split("/").pop()}`);
   expect(blocked?.status()).toBe(404);
 });

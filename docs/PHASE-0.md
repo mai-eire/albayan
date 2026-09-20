@@ -12,7 +12,7 @@ Definition of done for the phase: a new contributor can `git clone && pnpm insta
   DoD: `pnpm dev` serves a page offline; `pnpm build && wrangler dev` serves the same page.
 
 - [x] **2. UI base** — Mantine 9 implementing `docs/DESIGN.md` §2–3: `lib/theme.ts` (colour tuples, type scale, radius, component defaults), fonts via `next/font`, PostCSS preset, `ColorSchemeScript` + scheme toggle, `AppShell` per §3.1 (sidebar + top bar, drawer on mobile, bottom tabs for the student area), and the first shared components: `PageHeader`, `StatTile`, `StatusBadge`, `SubjectBadge`, `EmptyState`. Both colour schemes checked.
-  DoD: placeholder pages at `/admin`, `/teach`, `/family`, `/student` render inside the shell.
+  DoD: placeholder pages at `/admin`, `/teacher`, `/family`, `/student` render inside the shell.
 
 - [x] **3. Drizzle + local D1** — `lib/db/schema/*.ts`, `drizzle.config.ts`, `pnpm db:generate` (drizzle-kit → SQL migrations), `pnpm db:migrate:local` (`wrangler d1 migrations apply --local`), typed `db()` accessor from the OpenNext binding.
   DoD: a migration applies to the local SQLite file; a smoke query runs from a Server Component.
@@ -30,7 +30,7 @@ Definition of done for the phase: a new contributor can `git clone && pnpm insta
 - [x] **7. Bootstrap admin** — `pnpm bootstrap-admin --email … --name …` creates the first admin (idempotent). No public admin signup exists anywhere.
   DoD: fresh DB → script → login as admin.
 
-- [x] **8. Role derivation + routing** — `getCurrentUser()` loads user + optional guardian/teacher/student rows once per request; `/` redirects to the user's (first) area; route-group layouts guard `/admin`, `/teach`, `/family`, `/student`; role switcher in the top bar for multi-role users.
+- [x] **8. Role derivation + routing** — `getCurrentUser()` loads user + optional guardian/teacher/student rows once per request; `/` redirects to the user's (first) area; route-group layouts guard `/admin`, `/teacher`, `/family`, `/student`; role switcher in the top bar for multi-role users.
   DoD: a teacher hitting `/admin` is redirected; a teacher-parent sees the switcher and both areas.
 
 - [x] **9. `lib/access.ts`** — `requireAdmin/Teacher/Guardian/Student`, `canViewStudent`, `teachesClass`, `teachesSubjectIn`, `isGuardianOf`. Pure functions over loaded data where possible; DB lookups isolated.

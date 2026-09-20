@@ -88,7 +88,7 @@ One Next.js app running as a Cloudflare Worker, bound to one D1 database and one
 Browser ──► Cloudflare Worker (Next.js via OpenNext)
               ├── app/(auth)        login, register, reset, invite
               ├── app/admin/...     admin area
-              ├── app/teach/...     teacher area
+              ├── app/teacher/...     teacher area
               ├── app/family/...    guardian area
               ├── app/student/...   student area
               ├── server actions    all writes (Zod → access check → write → audit → notify)
@@ -301,7 +301,7 @@ No `roles`/`permissions`, `campuses`, `class_subjects`, `fee_charges`/`invoices`
 
 ## 6. Authorisation / role model
 
-Roles: **admin, teacher, guardian, student**, derived per §3. Multi-role users get a role switcher; the URL prefix (`/admin`, `/teach`, `/family`, `/student`) decides which hat is on.
+Roles: **admin, teacher, guardian, student**, derived per §3. Multi-role users get a role switcher; the URL prefix (`/admin`, `/teacher`, `/family`, `/student`) decides which hat is on.
 
 `lib/access.ts`, plain functions:
 
@@ -354,15 +354,16 @@ Field policy: ethnicity (guardian and student), spoken languages and registratio
 /admin/reports            Diversity & demographics: ethnicity, languages, postal area,
                           gender, age band, session, Arabic proficiency, registration reasons
 /admin/audit              Audit log
+/admin/rules              School rules (rich text, shown in every area)
 /admin/settings           School details, timezone, ID prefix, bank details
 
-/teach                    Today: my lessons (by session), registers to take, homework due
-/teach/classes            My classes → /[classId]: roster, timetable, attendance, homework, resources
-/teach/students/[id]      Limited profile incl. allergies/medical + emergency contact
-/teach/attendance         Take register (class, date)
-/teach/homework           Mine across classes; create/edit
-/teach/resources          Mine
-/teach/calendar
+/teacher                  Today: my schedule, the register to take (class teacher), homework due
+/teacher/classes          My classes → /[classId]: roster, timetable, attendance, homework, resources
+/teacher/students/[id]    Limited profile incl. allergies/medical + emergency contact
+/teacher/attendance       This term's registers for my classes; /[classId]?date= takes one
+/teacher/homework         Mine across classes; create/edit
+/teacher/resources        Mine
+/teacher/timetable        My week
 
 /family                   Child switcher + overview
 /family/[studentId]/timetable | attendance | homework | notes | resources | fees | events | details

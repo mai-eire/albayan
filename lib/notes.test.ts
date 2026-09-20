@@ -51,9 +51,14 @@ const teacher: CurrentUser = {
   id: 2,
   name: "Omar",
   teacher: { id: 1, isActive: true },
-  areas: ["teach"],
+  areas: ["teacher"],
 };
-const other: CurrentUser = { ...base, id: 3, teacher: { id: 2, isActive: true }, areas: ["teach"] };
+const other: CurrentUser = {
+  ...base,
+  id: 3,
+  teacher: { id: 2, isActive: true },
+  areas: ["teacher"],
+};
 const admin: CurrentUser = { ...base, id: 1, isAdmin: true, teacher: null, areas: ["admin"] };
 
 beforeAll(async () => {

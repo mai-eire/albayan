@@ -24,6 +24,8 @@ export type TeacherClassRow = {
   id: number;
   name: string;
   room: string | null;
+  capacity: number | null;
+  sessionId: number;
   sessionName: string;
   startTime: string;
   studentCount: number;
@@ -41,7 +43,9 @@ export async function listClassesForTeacher(
       id: classes.id,
       name: classes.name,
       room: classes.room,
+      capacity: classes.capacity,
       classTeacherId: classes.classTeacherId,
+      sessionId: schoolSessions.id,
       sessionName: schoolSessions.name,
       startTime: schoolSessions.startTime,
       studentCount: count(enrolments.id),
@@ -101,6 +105,7 @@ export type ClassForTeacher = {
   id: number;
   name: string;
   room: string | null;
+  capacity: number | null;
   academicYearId: string;
   session: { name: string; startTime: string; dayOfWeek: number };
   classTeacherName: string | null;
@@ -125,6 +130,7 @@ export async function getClassForTeacher(classId: number): Promise<ClassForTeach
       id: classes.id,
       name: classes.name,
       room: classes.room,
+      capacity: classes.capacity,
       academicYearId: classes.academicYearId,
       sessionId: classes.sessionId,
       sessionName: schoolSessions.name,
@@ -177,6 +183,7 @@ export async function getClassForTeacher(classId: number): Promise<ClassForTeach
     id: cls.id,
     name: cls.name,
     room: cls.room,
+    capacity: cls.capacity,
     academicYearId: cls.academicYearId,
     session: { name: cls.sessionName, startTime: cls.startTime, dayOfWeek: cls.dayOfWeek },
     classTeacherName: cls.classTeacherName,
@@ -269,8 +276,6 @@ export type Lesson = {
   subjectName: string;
   startTime: string;
   endTime: string;
-  // The teacher can take this class's register: class teacher, or teaches its first period.
-  canTakeRegister: boolean;
 };
 
 // A staff-only slot of a session I teach in (a meeting, a briefing): on my day and week.
@@ -291,11 +296,15 @@ export async function listLessonsForTeacher(
   return (await listDayForTeacher(teacherId, academicYearId, dayOfWeek)).lessons;
 }
 
+// A class meeting today whose register is mine to take — I'm its class teacher, whether
+// or not I teach a subject in it (decision 2026-09-19: the register is the class teacher's).
+export type RegisterDuty = { classId: number; className: string };
+
 export async function listDayForTeacher(
   teacherId: number,
   academicYearId: string,
   dayOfWeek: number,
-): Promise<{ lessons: Lesson[]; staffSlots: StaffSlot[] }> {
+): Promise<{ lessons: Lesson[]; staffSlots: StaffSlot[]; registers: RegisterDuty[] }> {
   const d = await db();
   const sessions = await d
     .select({
@@ -311,7 +320,7 @@ export async function listDayForTeacher(
         eq(schoolSessions.isActive, true),
       ),
     );
-  if (!sessions.length) return { lessons: [], staffSlots: [] };
+  if (!sessions.length) return { lessons: [], staffSlots: [], registers: [] };
   const sessionIds = sessions.map((s) => s.id);
   const [periods, myClasses, assignments] = await Promise.all([
     d
@@ -344,18 +353,19 @@ export async function listDayForTeacher(
   ]);
   const lessons: Lesson[] = [];
   const staffSlots: StaffSlot[] = [];
+  const registers: RegisterDuty[] = myClasses
+    .filter((c) => c.classTeacherId === teacherId)
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map((c) => ({ classId: c.id, className: c.name }));
   for (const session of sessions) {
     const timed = timePeriods(
       session.startTime,
       periods.filter((p) => p.sessionId === session.id),
     );
-    const firstSubject = timed.find((p) => p.subjectId)?.subjectId ?? null;
     let inSession = false;
     for (const cls of myClasses.filter((c) => c.sessionId === session.id)) {
       const mine = assignments.filter((a) => a.classId === cls.id).map((a) => a.subjectId);
       if (cls.classTeacherId === teacherId || mine.length) inSession = true;
-      const canTakeRegister =
-        cls.classTeacherId === teacherId || (firstSubject !== null && mine.includes(firstSubject));
       for (const p of timed) {
         if (!p.subjectId || !mine.includes(p.subjectId)) continue;
         lessons.push({
@@ -367,7 +377,6 @@ export async function listDayForTeacher(
           subjectName: p.subjectName ?? p.subjectId,
           startTime: p.startTime,
           endTime: p.endTime,
-          canTakeRegister,
         });
       }
     }
@@ -386,5 +395,6 @@ export async function listDayForTeacher(
   return {
     lessons: lessons.sort((a, b) => a.startTime.localeCompare(b.startTime)),
     staffSlots: staffSlots.sort((a, b) => a.startTime.localeCompare(b.startTime)),
+    registers,
   };
 }

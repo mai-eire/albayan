@@ -49,6 +49,7 @@ import {
   type Icon,
 } from "@tabler/icons-react";
 import type { Area } from "@/lib/current-user";
+import { DevClock } from "./DevClock";
 import classes from "./Shell.module.css";
 
 type NavItem = {
@@ -83,17 +84,17 @@ const nav: Record<Area, NavItem[]> = {
     { label: "Events", href: "/admin/events", icon: IconCalendarEvent },
     { label: "Resources", href: "/admin/resources", icon: IconFolder },
     { label: "Reports", href: "/admin/reports", icon: IconChartBar },
+    { label: "School rules", href: "/admin/rules", icon: IconBook2 },
     { label: "Settings", href: "/admin/settings", icon: IconSettings },
   ],
-  teach: [
-    { label: "Today", href: "/teach", icon: IconSun },
-    { label: "My classes", href: "/teach/classes", icon: IconUsers },
-    { label: "Attendance", href: "/teach/attendance", icon: IconClipboardCheck },
-    { label: "Homework", href: "/teach/homework", icon: IconBook },
-    { label: "Resources", href: "/teach/resources", icon: IconFolder },
-    { label: "Timetable", href: "/teach/timetable", icon: IconCalendarTime },
-    { label: "Calendar", href: "/teach/calendar", icon: IconCalendar },
-    { label: "School rules", href: "/teach/rules", icon: IconBook2 },
+  teacher: [
+    { label: "Today", href: "/teacher", icon: IconSun },
+    { label: "My classes", href: "/teacher/classes", icon: IconUsers },
+    { label: "Attendance", href: "/teacher/attendance", icon: IconClipboardCheck },
+    { label: "Homework", href: "/teacher/homework", icon: IconBook },
+    { label: "Resources", href: "/teacher/resources", icon: IconFolder },
+    { label: "Timetable", href: "/teacher/timetable", icon: IconCalendarTime },
+    { label: "School rules", href: "/teacher/rules", icon: IconBook2 },
   ],
   family: [
     { label: "Overview", href: "/family", icon: IconHome },
@@ -113,7 +114,7 @@ const nav: Record<Area, NavItem[]> = {
 
 const areaLabel: Record<Area, string> = {
   admin: "Admin",
-  teach: "Teacher",
+  teacher: "Teacher",
   family: "Family",
   student: "Student",
 };
@@ -165,6 +166,7 @@ export function Shell({ area, schoolName, user, roles, unread = 0, children }: P
             </Title>
           </Group>
           <Group gap="sm" wrap="nowrap">
+            {process.env.NODE_ENV !== "production" && <DevClock />}
             {roles.length > 1 && <RoleSwitcher current={area} roles={roles} />}
             <Indicator
               color="saffron"

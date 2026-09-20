@@ -114,6 +114,8 @@ export type HomeworkTarget = {
   classId: number;
   className: string;
   sessionName: string;
+  // The class's lesson day, for "due next lesson".
+  dayOfWeek: number;
   subjectId: string;
   subjectName: string;
 };
@@ -127,6 +129,7 @@ export async function listHomeworkTargets(
       classId: classes.id,
       className: classes.name,
       sessionName: schoolSessions.name,
+      dayOfWeek: schoolSessions.dayOfWeek,
       subjectId: subjects.id,
       subjectName: subjects.name,
     })

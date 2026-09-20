@@ -17,3 +17,14 @@ h1 {
 [data-mantine-color-scheme="dark"] .mantine-Timeline-item[data-line-active]::before {
   border-color: color-mix(in srgb, var(--tli-color, var(--tl-color)) 55%, white);
 }
+
+/* Weekend days in calendars are the school's days, so they take the theme colour rather
+   than Mantine's red (DESIGN §4.7). */
+button[data-weekend]:not([data-selected]):not([data-disabled]):not([data-outside]) {
+  color: var(--mantine-color-tile-6);
+  font-weight: 600;
+}
+[data-mantine-color-scheme="dark"]
+  button[data-weekend]:not([data-selected]):not([data-disabled]):not([data-outside]) {
+  color: var(--mantine-color-tile-3);
+}

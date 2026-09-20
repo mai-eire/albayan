@@ -114,7 +114,7 @@ export function canViewStudent(user: CurrentUser, student: StudentFacts): boolea
 
 // Registers: a teacher of the class may take or correct any register up to today — a missed
 // Saturday can be filled in on Monday. Changes after the day are audited (decision 2026-09-17,
-// docs/FEEDBACK.md); the future is nobody's.
+// docs/feedback/2026-09-17-first-walkthrough.md); the future is nobody's.
 export function canEditRegister(
   user: CurrentUser,
   cls: ClassFacts,
@@ -132,6 +132,8 @@ export type ResourceFacts = {
   isSchoolWide: boolean;
   classId: number | null;
   studentId: number | null;
+  // Attached to homework that isn't published yet: staff only until it is.
+  isDraft?: boolean;
 };
 
 // What a viewer is connected to: classes they teach, their children's classes or their
@@ -152,6 +154,7 @@ export function canViewResource(
   const staff = isStaff(user);
   if (resource.audience === "staff_only" && !staff) return false;
   if (resource.audience === "guardians_only" && !staff && !user.guardian) return false;
+  if (resource.isDraft && !staff) return false;
   if (user.isAdmin || resource.isSchoolWide) return true;
   if (resource.classId !== null) return viewer.classIds.includes(resource.classId);
   if (resource.studentId !== null) return viewer.studentIds.includes(resource.studentId);

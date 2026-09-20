@@ -76,7 +76,10 @@ export async function listResourcesForClass(classId: number): Promise<ResourceRo
       eq(resources.classId, classId),
       inArray(
         resources.homeworkId,
-        d.select({ id: homework.id }).from(homework).where(eq(homework.classId, classId)),
+        d
+          .select({ id: homework.id })
+          .from(homework)
+          .where(and(eq(homework.classId, classId), isNotNull(homework.publishedAt))),
       ),
     ),
   );
@@ -109,6 +112,7 @@ export async function getResourceFactsByKey(
       isSchoolWide: resources.isSchoolWide,
       classId: resources.classId,
       homeworkClassId: homework.classId,
+      homeworkPublishedAt: homework.publishedAt,
       studentId: resources.studentId,
       uploadedByUserId: resources.uploadedByUserId,
     })
@@ -122,12 +126,13 @@ export async function getResourceFactsByKey(
     isSchoolWide: row.isSchoolWide,
     classId: row.classId ?? row.homeworkClassId,
     studentId: row.studentId,
+    isDraft: row.homeworkClassId !== null && row.homeworkPublishedAt === null,
     uploadedByUserId: row.uploadedByUserId,
   };
 }
 
 // What one child's family (or the child) may open: school-wide, their class's (including
-// homework attachments) and anything shared with them alone, filtered by audience.
+// attachments to published homework) and anything shared with them alone, by audience.
 export async function listResourcesForChild(
   studentId: number,
   classId: number | null,
@@ -144,7 +149,10 @@ export async function listResourcesForChild(
       eq(resources.classId, classId),
       inArray(
         resources.homeworkId,
-        d.select({ id: homework.id }).from(homework).where(eq(homework.classId, classId)),
+        d
+          .select({ id: homework.id })
+          .from(homework)
+          .where(and(eq(homework.classId, classId), isNotNull(homework.publishedAt))),
       ),
     );
   }

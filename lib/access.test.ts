@@ -60,7 +60,7 @@ const left: StudentFacts = { id: 32, userId: null, guardianIds: [20], activeClas
 describe("areasFor", () => {
   it("derives areas in landing order", () => {
     expect(admin.areas).toEqual(["admin"]);
-    expect(teacherParent.areas).toEqual(["teach", "family"]);
+    expect(teacherParent.areas).toEqual(["teacher", "family"]);
     expect(formerTeacher.areas).toEqual([]);
     expect(nobody.areas).toEqual([]);
     expect(self.areas).toEqual(["student"]);

@@ -86,67 +86,6 @@ export async function getRegister(classId: number, date: string): Promise<Regist
   };
 }
 
-export type RegisterSummary = {
-  classId: number;
-  className: string;
-  sessionName: string;
-  startTime: string;
-  endTime: string;
-  studentCount: number;
-  recordedCount: number;
-  absentCount: number;
-  excusedCount: number;
-};
-
-// Every class running on `date`'s weekday in the year, with how much of its register is in.
-export async function listRegistersForDate(
-  academicYearId: string,
-  date: string,
-  dayOfWeek: number,
-  onlyClassIds?: number[],
-): Promise<RegisterSummary[]> {
-  const d = await db();
-  const rows = await d
-    .select({
-      classId: classes.id,
-      className: classes.name,
-      sessionName: schoolSessions.name,
-      startTime: schoolSessions.startTime,
-      minutes: sql<number>`coalesce((select sum(${sessionPeriods.durationMinutes}) from ${sessionPeriods} where ${sessionPeriods.sessionId} = ${schoolSessions.id}), 0)`,
-    })
-    .from(classes)
-    .innerJoin(schoolSessions, eq(schoolSessions.id, classes.sessionId))
-    .where(
-      and(
-        eq(classes.academicYearId, academicYearId),
-        eq(schoolSessions.dayOfWeek, dayOfWeek),
-        eq(schoolSessions.isActive, true),
-        onlyClassIds ? inArray(classes.id, onlyClassIds.length ? onlyClassIds : [-1]) : undefined,
-      ),
-    )
-    .orderBy(asc(schoolSessions.startTime), asc(classes.name));
-  if (!rows.length) return [];
-  const classIds = rows.map((r) => r.classId);
-  const [enrolled, recorded] = await Promise.all([
-    d
-      .select({ classId: enrolments.classId })
-      .from(enrolments)
-      .where(and(inArray(enrolments.classId, classIds), eq(enrolments.status, "active"))),
-    d
-      .select({ classId: attendance.classId, status: attendance.status })
-      .from(attendance)
-      .where(and(inArray(attendance.classId, classIds), eq(attendance.date, date))),
-  ]);
-  return rows.map(({ minutes, ...r }) => ({
-    ...r,
-    endTime: addMinutes(r.startTime, minutes),
-    studentCount: enrolled.filter((e) => e.classId === r.classId).length,
-    recordedCount: recorded.filter((a) => a.classId === r.classId).length,
-    absentCount: recorded.filter((a) => a.classId === r.classId && a.status === "absent").length,
-    excusedCount: recorded.filter((a) => a.classId === r.classId && a.status === "excused").length,
-  }));
-}
-
 export type AttendanceSummary = {
   studentId: number;
   present: number;
@@ -181,22 +120,6 @@ export async function summariseAttendance(
     byStudent.set(row.studentId, s);
   }
   return [...byStudent.values()];
-}
-
-// How many rows each register of a class has, by date, for the dates given.
-export async function countRegisterRows(
-  classId: number,
-  dates: string[],
-): Promise<Map<string, number>> {
-  if (!dates.length) return new Map();
-  const rows = await (
-    await db()
-  )
-    .select({ date: attendance.date, n: count() })
-    .from(attendance)
-    .where(and(eq(attendance.classId, classId), inArray(attendance.date, dates)))
-    .groupBy(attendance.date);
-  return new Map(rows.map((r) => [r.date, r.n]));
 }
 
 // How many registers a class has actually had taken in a range — the "n" in "7 / 9".

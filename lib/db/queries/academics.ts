@@ -173,6 +173,8 @@ export async function listClasses(academicYearId: string): Promise<ClassRow[]> {
 
 export type ClassDetail = typeof classes.$inferSelect & {
   session: typeof schoolSessions.$inferSelect;
+  // The class teacher as a person, for the header (the staff page is keyed by user id).
+  classTeacher: { userId: number; name: string } | null;
   periods: (typeof sessionPeriods.$inferSelect & { subjectName: string | null })[];
   assignments: { subjectId: string; teacherId: number }[];
   // Same teacher, same subject, another class in this session: they'd be in two rooms at once.
@@ -188,7 +190,7 @@ export async function getClass(id: number): Promise<ClassDetail | null> {
     where: eq(schoolSessions.id, cls.sessionId),
   });
   if (!session) return null;
-  const [periods, assignments, siblings, [{ studentCount }]] = await Promise.all([
+  const [periods, assignments, siblings, [{ studentCount }], [classTeacher]] = await Promise.all([
     d
       .select({ period: sessionPeriods, subjectName: subjects.name })
       .from(sessionPeriods)
@@ -215,10 +217,18 @@ export async function getClass(id: number): Promise<ClassDetail | null> {
       .select({ studentCount: count() })
       .from(enrolments)
       .where(and(eq(enrolments.classId, id), eq(enrolments.status, "active"))),
+    cls.classTeacherId === null
+      ? Promise.resolve([])
+      : d
+          .select({ userId: users.id, name: users.name })
+          .from(teachers)
+          .innerJoin(users, eq(users.id, teachers.userId))
+          .where(eq(teachers.id, cls.classTeacherId)),
   ]);
   return {
     ...cls,
     session,
+    classTeacher: classTeacher ?? null,
     periods: periods.map((p) => ({ ...p.period, subjectName: p.subjectName })),
     assignments,
     clashes: siblings.filter((s) =>

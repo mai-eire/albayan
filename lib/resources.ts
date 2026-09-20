@@ -59,7 +59,8 @@ export const createResource = action(schema, async (input, { user, db }) => {
   if (!isStaff(user)) throw new ActionError("Only staff can share resources.");
   if (!input.file === !input.url) throw new ActionError("Share either a file or a link.");
 
-  // Who may attach to what; also resolves the class to notify.
+  // Who may attach to what; also resolves the class to notify (not for a draft: the
+  // homework's own announcement covers its attachments when it is published).
   let classId: number | null = null;
   const t = input.target;
   if (t.kind === "school") requireAdmin(user);
@@ -79,7 +80,7 @@ export const createResource = action(schema, async (input, { user, db }) => {
     if (!facts || (!user.isAdmin && !teachesSubjectIn(user, facts, hw.subjectId))) {
       throw new ActionError("You can only attach files to your own homework.");
     }
-    classId = hw.classId;
+    if (hw.publishedAt) classId = hw.classId;
   }
   if (t.kind === "student") {
     const facts = await loadStudentFacts(t.studentId);
@@ -139,7 +140,7 @@ export const createResource = action(schema, async (input, { user, db }) => {
     }
   }
   revalidatePath("/admin/resources");
-  revalidatePath("/teach");
+  revalidatePath("/teacher");
   revalidatePath("/family");
   revalidatePath("/student");
   return { id: created.id };
@@ -163,7 +164,7 @@ export const deleteResource = action(
       changes: { deleted: [existing.title, null] },
     });
     revalidatePath("/admin/resources");
-    revalidatePath("/teach");
+    revalidatePath("/teacher");
     revalidatePath("/family");
     revalidatePath("/student");
   },

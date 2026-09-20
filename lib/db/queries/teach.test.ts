@@ -25,8 +25,13 @@ vi.mock("@/lib/db", async (importOriginal) => ({
   db: async () => db,
 }));
 
-const { getClassForTeacher, getStudentForTeacher, listClassesForTeacher, listLessonsForTeacher } =
-  await import("./teach");
+const {
+  getClassForTeacher,
+  getStudentForTeacher,
+  listClassesForTeacher,
+  listDayForTeacher,
+  listLessonsForTeacher,
+} = await import("./teach");
 
 // Every column a teacher must never see (CLAUDE.md "Privacy is structural"), by table.
 const hidden = {
@@ -202,22 +207,24 @@ describe("listLessonsForTeacher", () => {
         subjectName: "Quran",
         startTime: "10:00",
         endTime: "10:50",
-        canTakeRegister: true,
       }),
     ]);
-    // Teacher 2 teaches Arabic in both classes but leads neither and Arabic isn't first.
+    // The register is the class teacher's, lessons or not.
+    expect((await listDayForTeacher(1, "2026-27", 6)).registers).toEqual([
+      { classId: 1, className: "Level 1" },
+    ]);
+    expect((await listDayForTeacher(2, "2026-27", 6)).registers).toEqual([]);
+    // Teacher 2 teaches Arabic in both classes but leads neither.
     expect(await listLessonsForTeacher(2, "2026-27", 6)).toEqual([
       expect.objectContaining({
         className: "Level 1",
         subjectName: "Arabic",
         startTime: "11:00",
-        canTakeRegister: false,
       }),
       expect.objectContaining({
         className: "Level 2",
         subjectName: "Arabic",
         startTime: "11:00",
-        canTakeRegister: false,
       }),
     ]);
     expect(await listLessonsForTeacher(1, "2026-27", 3)).toEqual([]);

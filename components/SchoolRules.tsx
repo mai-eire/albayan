@@ -1,32 +1,27 @@
-import { Card, Stack, Text } from "@mantine/core";
+import { Card, Stack, Typography } from "@mantine/core";
 import { IconBook2 } from "@tabler/icons-react";
+import { cleanRulesHtml } from "@/lib/rules";
 import { EmptyState } from "./EmptyState";
 import { PageHeader } from "./PageHeader";
 
-// The school's rules as the office wrote them (Settings), paragraph by paragraph. One page
-// for every area; the text is the same for everyone.
+// The school's rules as the office wrote them (Admin › School rules). One page for every
+// area; the text is the same for everyone. The HTML is cleaned through the rules schema
+// on the way in and again here, so only text and structure ever reach the page.
 export function SchoolRules({ rules }: { rules: string | null }) {
-  const paragraphs = (rules ?? "")
-    .split(/\n\s*\n/)
-    .map((p) => p.trim())
-    .filter(Boolean);
+  const html = cleanRulesHtml(rules);
   return (
     <Stack gap="lg" maw={720} mx="auto">
       <PageHeader title="School rules" />
-      {paragraphs.length === 0 ? (
+      {!html ? (
         <EmptyState
           icon={<IconBook2 size={20} stroke={1.75} />}
           message="The school hasn't written its rules here yet."
         />
       ) : (
         <Card>
-          <Stack gap="md" maw={640}>
-            {paragraphs.map((p, i) => (
-              <Text key={i} style={{ whiteSpace: "pre-line" }}>
-                {p}
-              </Text>
-            ))}
-          </Stack>
+          <Typography maw={640}>
+            <div dangerouslySetInnerHTML={{ __html: html }} />
+          </Typography>
         </Card>
       )}
     </Stack>

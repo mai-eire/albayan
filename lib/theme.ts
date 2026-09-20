@@ -46,10 +46,28 @@ export const theme = createTheme({
   },
 });
 
+const palette = { tile, saffron, clay, lapis, plum };
+
+function alpha(hex: string, a: number): string {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${n >> 16}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
+}
+
+// In dark mode Mantine's `light` variant is the colour's darkest shade, darkened again —
+// a near-black block that reads as disabled. Ours is the colour's shade 4 laid over the
+// surface at 18% (28% on hover) with shade-2 text (DESIGN §4.1), for every palette colour.
+const darkLightVariants = Object.fromEntries(
+  Object.entries(palette).flatMap(([name, shades]) => [
+    [`--mantine-color-${name}-light`, alpha(shades[4], 0.18)],
+    [`--mantine-color-${name}-light-hover`, alpha(shades[4], 0.28)],
+    [`--mantine-color-${name}-light-color`, shades[2]],
+  ]),
+);
+
 // App-level variables Mantine has no token for: the page ground behind surfaces,
 // and the stat-tile number size. Referenced from CSS modules as var(--app-*).
 export const cssVariablesResolver: CSSVariablesResolver = () => ({
   variables: { "--app-font-size-stat": "2.25rem" },
   light: { "--app-ground": "#f4f8f6" },
-  dark: { "--app-ground": "var(--mantine-color-dark-8)" },
+  dark: { "--app-ground": "var(--mantine-color-dark-8)", ...darkLightVariants },
 });

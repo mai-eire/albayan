@@ -5,7 +5,7 @@ import { auth } from "./auth";
 import { db } from "./db";
 import { guardians, students, teachers, users } from "./db/schema";
 
-export type Area = "admin" | "teach" | "family" | "student";
+export type Area = "admin" | "teacher" | "family" | "student";
 
 export type CurrentUser = {
   id: number;
@@ -26,7 +26,7 @@ export type CurrentUser = {
 export function areasFor(user: Omit<CurrentUser, "areas">): Area[] {
   const areas: Area[] = [];
   if (user.isAdmin) areas.push("admin");
-  if (user.teacher?.isActive) areas.push("teach");
+  if (user.teacher?.isActive) areas.push("teacher");
   if (user.guardian) areas.push("family");
   if (user.student) areas.push("student");
   return areas;

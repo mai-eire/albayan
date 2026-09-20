@@ -20,6 +20,7 @@ const typedFormats = [
 
 // Shows "Sat 19 Sep 2026" (§4.7), says what to type (dd/mm/yyyy) and accepts whatever
 // people do type: "19/09/2026", "19 Sep 2026", "2026-09-19". Value is a YYYY-MM-DD string.
+// The calendar rings today; Saturday and Sunday are tile, not red (globals.css).
 function parseTyped(input: string): string | null {
   // A leading weekday ("Sat 19 Sep 2026", as the field itself displays) is ignored.
   const text = input.trim().replace(/^[A-Za-z]{3,9}\s+(?=\d)/, "");
@@ -36,6 +37,7 @@ export function DateField(props: DateInputProps) {
       valueFormat="ddd D MMM YYYY"
       dateParser={parseTyped}
       placeholder="dd/mm/yyyy"
+      highlightToday
       {...props}
     />
   );

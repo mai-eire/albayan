@@ -67,7 +67,7 @@ export const addNote = action(
         });
       }
     }
-    revalidatePath(`/teach/students/${input.studentId}`);
+    revalidatePath(`/teacher/students/${input.studentId}`);
     revalidatePath(`/admin/students/${input.studentId}`);
     revalidatePath("/family");
     return { id: note.id };
@@ -96,7 +96,7 @@ export const deleteNote = action(
       entityId: input.id,
       changes: { deleted: [existing.body, null] },
     });
-    revalidatePath(`/teach/students/${existing.studentId}`);
+    revalidatePath(`/teacher/students/${existing.studentId}`);
     revalidatePath(`/admin/students/${existing.studentId}`);
     revalidatePath("/family");
   },

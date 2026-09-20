@@ -20,10 +20,12 @@ import { FormError } from "@/components/FormError";
 import { toast } from "@/components/toast";
 import { resourceAudiences, type ResourceAudience } from "@/lib/db/schema";
 import { audienceLabels } from "./ResourceList";
+import { uploadFile, type UploadedFile } from "./uploadFile";
 import { createResource, type ResourceTarget } from "@/lib/resources";
 
 // Share a file (uploaded through /api/files first) or a link with one target. The target
 // is decided by the page that opens the form; the person picks title, audience and content.
+// Homework attachments have their own form (app/teacher/homework/AttachmentForm.tsx).
 export function ResourceForm({
   target,
   onDone,
@@ -56,30 +58,15 @@ export function ResourceForm({
   const submit = form.onSubmit(async (values) => {
     setSaving(true);
     setError(null);
-    let file: { storageKey: string; mimeType: string; sizeBytes: number } | null = null;
+    let file: UploadedFile | null = null;
     if (values.kind === "file" && values.file) {
-      const response = await fetch("/api/files", {
-        method: "POST",
-        headers: {
-          "Content-Type": values.file.type || "application/octet-stream",
-          "X-File-Name": values.file.name,
-        },
-        body: values.file,
-      });
-      if (!response.ok) {
-        const body = (await response.json().catch(() => null)) as { error?: string } | null;
-        setError(
-          body?.error ?? "We couldn't upload the file — check your connection and try again.",
-        );
+      const uploaded = await uploadFile(values.file);
+      if (!uploaded.ok) {
+        setError(uploaded.error);
         setSaving(false);
         return;
       }
-      const uploaded = (await response.json()) as {
-        key: string;
-        size: number;
-        contentType: string;
-      };
-      file = { storageKey: uploaded.key, mimeType: uploaded.contentType, sizeBytes: uploaded.size };
+      file = uploaded.file;
     }
     const result = await createResource({
       title: values.title || values.file?.name || "",

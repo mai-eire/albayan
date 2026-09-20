@@ -1,8 +1,9 @@
 import { Breadcrumbs, Group, Stack, Text, Title } from "@mantine/core";
-import { IconChevronLeft } from "@tabler/icons-react";
+import { IconArrowUpRight, IconChevronLeft } from "@tabler/icons-react";
 import type { ReactNode } from "react";
 import { AppLink } from "./AppLink";
 import { DirectionalIcon } from "./DirectionalIcon";
+import { LinkButton } from "./LinkButton";
 
 export type Crumb = { label: string; href: string };
 
@@ -17,11 +18,22 @@ type Props = {
   subtitle?: ReactNode;
   // The entity's status badge, beside the name (a student's "Applied", a staff account's "Invited").
   badge?: ReactNode;
+  // Another page about the same thing, reached from here but not above it in the URL
+  // ("Level 4's attendance" from a register): a subtle link before the actions (§3.2).
+  related?: Crumb;
   actions?: ReactNode;
 };
 
 // The top of every page: the trail here, the context line, the one h1, the page's actions.
-export function PageHeader({ title, breadcrumbs, eyebrow, subtitle, badge, actions }: Props) {
+export function PageHeader({
+  title,
+  breadcrumbs,
+  eyebrow,
+  subtitle,
+  badge,
+  related,
+  actions,
+}: Props) {
   return (
     <Group justify="space-between" align="flex-end" wrap="wrap" gap="md">
       <Stack gap={4}>
@@ -52,7 +64,21 @@ export function PageHeader({ title, breadcrumbs, eyebrow, subtitle, badge, actio
           </Text>
         )}
       </Stack>
-      {actions && <Group gap="xs">{actions}</Group>}
+      {(related || actions) && (
+        <Group gap="xs">
+          {related && (
+            <LinkButton
+              href={related.href}
+              variant="subtle"
+              size="sm"
+              rightSection={<IconArrowUpRight size={14} stroke={1.75} />}
+            >
+              {related.label}
+            </LinkButton>
+          )}
+          {actions}
+        </Group>
+      )}
     </Group>
   );
 }

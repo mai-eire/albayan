@@ -82,7 +82,7 @@ export default async function ClassAttendancePage({ params }: Props) {
           />
         )}
       </Card>
-      {summary.length > 0 && (
+      {cls.roster.length > 0 && (
         <Card>
           <CardTitle>
             <Group gap="xs">

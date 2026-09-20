@@ -35,7 +35,7 @@ export default async function ClassAttendancePage({ params }: Props) {
             {period && (
               <Text size="sm" c="dimmed">
                 {period.label} ·{" "}
-                {missing.length ? `${missing.length} still to come` : "all registers in"}
+                {missing.length ? `${missing.length} not taken` : "all registers in"}
               </Text>
             )}
             {rows.length > 0 && <TodayButton today={today} size="sm" />}

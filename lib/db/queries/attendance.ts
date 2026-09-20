@@ -272,7 +272,7 @@ export async function listRegistersForTerm(
 }
 
 // How a class stands on registers this term: lessons so far and how many registers are
-// still to come — the mark on a class's Attendance tab.
+// not taken — the mark on a class's Attendance tab.
 export async function registersStanding(
   academicYearId: string,
   classId: number,

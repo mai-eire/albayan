@@ -15,12 +15,28 @@ export const isTaken = (r: Counts) => r.studentCount > 0 && r.recordedCount >= r
 
 // "7 / 8" once the register is in, "? / 8" until then — the same cell in both views, with
 // the "/" in the same place on every row. Excused counts as not present. An empty class
-// has nothing to count.
-export function PresentCell({ r }: { r: Counts }) {
+// has nothing to count. On a class's own tab the size is known, so `outOf` is off and the
+// cell is just the number.
+export function PresentCell({ r, outOf = true }: { r: Counts; outOf?: boolean }) {
   if (r.studentCount === 0) {
     return (
       <TableTd ta="end">
         <Nothing>no students</Nothing>
+      </TableTd>
+    );
+  }
+  if (!outOf) {
+    return (
+      <TableTd ta="end" className={tabular.tabular}>
+        {r.recordedCount ? (
+          <Text component="span" c={r.absentCount + r.excusedCount ? "clay" : undefined} fw={500}>
+            {r.recordedCount - r.absentCount - r.excusedCount}
+          </Text>
+        ) : (
+          <Text component="span" c="dimmed">
+            ?
+          </Text>
+        )}
       </TableTd>
     );
   }

@@ -36,7 +36,7 @@ export default async function ClassLayout({
       mark: registers.missing
         ? {
             kind: "warning" as const,
-            label: `${registers.missing} of ${registers.total} registers still to come`,
+            label: `${registers.missing} of ${registers.total} registers not taken`,
           }
         : null,
     },

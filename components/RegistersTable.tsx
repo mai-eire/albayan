@@ -171,7 +171,7 @@ export function RegistersTable({
                 {showClass && showTeacher && (
                   <Table.Td>{r.teacherName ?? <Nothing>no teacher</Nothing>}</Table.Td>
                 )}
-                <PresentCell r={r} />
+                <PresentCell r={r} outOf={showClass} />
                 <RegisterCell r={r} />
               </LinkRow>
             );

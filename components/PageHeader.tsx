@@ -14,7 +14,7 @@ type Props = {
   breadcrumbs?: Crumb[];
   eyebrow?: ReactNode;
   // One line under the title for the page's standing summary ("Autumn term · 3 registers
-  // still to come"); it stays put when the page's view changes.
+  // not taken"); it stays put when the page's view changes.
   subtitle?: ReactNode;
   // The entity's status badge, beside the name (a student's "Applied", a staff account's "Invited").
   badge?: ReactNode;

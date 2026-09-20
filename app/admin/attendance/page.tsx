@@ -43,7 +43,7 @@ export default async function AdminAttendancePage() {
           period
             ? `${period.label} · ${
                 missing.length
-                  ? `${missing.length} of ${rows.length} registers still to come`
+                  ? `${missing.length} of ${rows.length} registers not taken`
                   : `all ${rows.length} registers in`
               }`
             : undefined

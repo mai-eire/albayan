@@ -15,7 +15,7 @@ export const baseTab = "_base";
 
 // A small state mark on a tab (§4.12): the fee status on a Fees tab, so what's inside is
 // visible before opening it. Shape and colour together, never colour alone.
-// "warning" is something to do (registers still to come), not a state of what's inside.
+// "warning" is something to do (registers not taken), not a state of what's inside.
 export type TabMark = "good" | "partial" | "bad" | "warning";
 
 const marks: Record<TabMark, { icon: typeof IconCircleCheck; color: string }> = {

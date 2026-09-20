@@ -51,7 +51,7 @@ export default async function TeacherAttendancePage({ searchParams }: Props) {
           period
             ? `${period.label} · ${
                 missing.length
-                  ? `${missing.length} of ${rows.length} registers still to come`
+                  ? `${missing.length} of ${rows.length} registers not taken`
                   : `all ${rows.length} registers in`
               }`
             : undefined

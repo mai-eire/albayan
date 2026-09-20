@@ -1,7 +1,12 @@
 "use client";
 
 import { Tabs, Text, Tooltip } from "@mantine/core";
-import { IconCircleCheck, IconCircleHalf2, IconCircleX } from "@tabler/icons-react";
+import {
+  IconAlertTriangle,
+  IconCircleCheck,
+  IconCircleHalf2,
+  IconCircleX,
+} from "@tabler/icons-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -10,12 +15,14 @@ export const baseTab = "_base";
 
 // A small state mark on a tab (§4.12): the fee status on a Fees tab, so what's inside is
 // visible before opening it. Shape and colour together, never colour alone.
-export type TabMark = "good" | "partial" | "bad";
+// "warning" is something to do (registers still to come), not a state of what's inside.
+export type TabMark = "good" | "partial" | "bad" | "warning";
 
 const marks: Record<TabMark, { icon: typeof IconCircleCheck; color: string }> = {
   good: { icon: IconCircleCheck, color: "var(--mantine-color-tile-6)" },
   partial: { icon: IconCircleHalf2, color: "var(--mantine-color-saffron-6)" },
   bad: { icon: IconCircleX, color: "var(--mantine-color-clay-6)" },
+  warning: { icon: IconAlertTriangle, color: "var(--mantine-color-saffron-6)" },
 };
 
 type Tab = {

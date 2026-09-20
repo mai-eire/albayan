@@ -4,7 +4,11 @@ import { AppLink } from "@/components/AppLink";
 import { baseTab, LinkTabs } from "@/components/LinkTabs";
 import { Nothing } from "@/components/Nothing";
 import { PageHeader } from "@/components/PageHeader";
+import { clock } from "@/lib/clock";
 import { listApplicationsForClass } from "@/lib/db/queries/applications";
+import { registersStanding } from "@/lib/db/queries/attendance";
+import { getSchoolSettings } from "@/lib/db/queries/settings";
+import { todayIn } from "@/lib/time";
 import { DeleteClassButton } from "./DeleteClassButton";
 import { loadClass } from "./load";
 
@@ -13,7 +17,11 @@ export default async function ClassLayout({
   children,
 }: LayoutProps<"/admin/academics/classes/[id]">) {
   const cls = await loadClass(params);
-  const applications = await listApplicationsForClass(cls.id);
+  const { timezone } = await getSchoolSettings();
+  const [applications, registers] = await Promise.all([
+    listApplicationsForClass(cls.id),
+    registersStanding(cls.academicYearId, cls.id, todayIn(timezone, await clock())),
+  ]);
   const tabs = [
     { value: baseTab, label: "Details" },
     { value: "teachers", label: "Teachers" },
@@ -22,7 +30,16 @@ export default async function ClassLayout({
       label: "Students",
       count: cls.capacity === null ? cls.studentCount : `${cls.studentCount} / ${cls.capacity}`,
     },
-    { value: "attendance", label: "Attendance" },
+    {
+      value: "attendance",
+      label: "Attendance",
+      mark: registers.missing
+        ? {
+            kind: "warning" as const,
+            label: `${registers.missing} of ${registers.total} registers still to come`,
+          }
+        : null,
+    },
     { value: "applications", label: "Applications", count: applications.length },
   ];
   return (
@@ -33,7 +50,7 @@ export default async function ClassLayout({
         ]}
         eyebrow={`${cls.academicYearId} · ${cls.session.name}`}
         title={cls.name}
-        subtitle={
+        aside={
           <>
             Class teacher{" "}
             {cls.classTeacher ? (

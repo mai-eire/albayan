@@ -18,6 +18,9 @@ type Props = {
   subtitle?: ReactNode;
   // The entity's status badge, beside the name (a student's "Applied", a staff account's "Invited").
   badge?: ReactNode;
+  // A short dimmed line on the title's baseline ("Class teacher Maryam Ahmed"); wraps under
+  // the title on a phone.
+  aside?: ReactNode;
   // Another page about the same thing, reached from here but not above it in the URL
   // ("Level 4's attendance" from a register): a subtle link before the actions (§3.2).
   related?: Crumb;
@@ -31,6 +34,7 @@ export function PageHeader({
   eyebrow,
   subtitle,
   badge,
+  aside,
   related,
   actions,
 }: Props) {
@@ -54,9 +58,14 @@ export function PageHeader({
             {eyebrow}
           </Text>
         )}
-        <Group gap="sm" align="center" wrap="nowrap">
+        <Group gap="sm" align="baseline" wrap={aside ? "wrap" : "nowrap"}>
           <Title order={1}>{title}</Title>
           {badge}
+          {aside && (
+            <Text size="sm" c="dimmed">
+              {aside}
+            </Text>
+          )}
         </Group>
         {subtitle && (
           <Text size="sm" c="dimmed">

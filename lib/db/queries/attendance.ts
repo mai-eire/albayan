@@ -14,6 +14,7 @@ import {
   type AttendanceStatus,
 } from "@/lib/db/schema";
 import { lessonDatesBetween } from "@/lib/calendar";
+import { currentPeriod } from "./academics";
 import { addMinutes } from "@/lib/timetable";
 
 export type RegisterRow = {
@@ -268,4 +269,22 @@ export async function listRegistersForTerm(
     }
   }
   return out.sort((a, b) => (a.date === b.date ? 0 : a.date > b.date ? -1 : 1));
+}
+
+// How a class stands on registers this term: lessons so far and how many registers are
+// still to come — the mark on a class's Attendance tab.
+export async function registersStanding(
+  academicYearId: string,
+  classId: number,
+  today: string,
+): Promise<{ total: number; missing: number }> {
+  const period = await currentPeriod(today);
+  if (!period) return { total: 0, missing: 0 };
+  const rows = (
+    await listRegistersForTerm(academicYearId, period.from, period.to < today ? period.to : today)
+  ).filter((r) => r.classId === classId && r.studentCount > 0);
+  return {
+    total: rows.length,
+    missing: rows.filter((r) => r.recordedCount < r.studentCount).length,
+  };
 }

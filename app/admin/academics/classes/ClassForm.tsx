@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Group, Modal, NumberInput, Select, Stack, TextInput } from "@mantine/core";
+import { Button, Group, Modal, NumberInput, Select, Stack, Text, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
@@ -19,6 +19,8 @@ type Existing = {
   room: string | null;
   capacity: number | null;
   classTeacherId: number | null;
+  // What the class teacher teaches in this class, for the hand-over question.
+  classTeacherSubjects: string[];
 };
 type Props = {
   sessions: SessionOption[];
@@ -31,6 +33,8 @@ export function ClassForm({ sessions, teachers, existing, onDone }: Props) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  // Values waiting on the hand-over answer when the class teacher changes.
+  const [pending, setPending] = useState<ClassInput | null>(null);
   const form = useForm<ClassInput>({
     initialValues: {
       sessionId: existing?.sessionId ?? sessions[0]?.id,
@@ -41,11 +45,26 @@ export function ClassForm({ sessions, teachers, existing, onDone }: Props) {
     },
   });
 
-  const submit = form.onSubmit(async (values) => {
+  const teacherName = (id: ClassInput["classTeacherId"]) =>
+    teachers.find((t) => String(t.id) === String(id))?.name ?? "the new class teacher";
+  const teacherChanged = (values: ClassInput) =>
+    !!existing &&
+    existing.classTeacherId !== null &&
+    values.classTeacherId !== null &&
+    String(values.classTeacherId) !== String(existing.classTeacherId) &&
+    existing.classTeacherSubjects.length > 0;
+
+  const submit = form.onSubmit((values) => {
+    if (teacherChanged(values)) setPending(values);
+    else void save(values);
+  });
+
+  const save = async (values: ClassInput, handOverSubjects?: boolean) => {
+    setPending(null);
     setSaving(true);
     setError(null);
     const result = existing
-      ? await updateClass({ id: existing.id, ...values })
+      ? await updateClass({ id: existing.id, ...values, handOverSubjects })
       : await createClass(values);
     setSaving(false);
     if (!result.ok) {
@@ -59,10 +78,39 @@ export function ClassForm({ sessions, teachers, existing, onDone }: Props) {
     const created = result.data;
     if (!existing && created) router.push(`/admin/academics/classes/${created.id}`);
     else router.refresh();
-  });
+  };
 
   return (
     <form onSubmit={submit}>
+      <Modal
+        opened={pending !== null}
+        onClose={() => setPending(null)}
+        title="Hand over the subjects too?"
+        size="lg"
+      >
+        {pending && existing && (
+          <Stack gap="md">
+            <Text size="sm">
+              {teacherName(existing.classTeacherId)} teaches{" "}
+              {existing.classTeacherSubjects.join(", ")} in this class. Give{" "}
+              {existing.classTeacherSubjects.length === 1 ? "it" : "them"} to{" "}
+              {teacherName(pending.classTeacherId)} as well?
+            </Text>
+            <Group justify="flex-end">
+              <Button variant="default" onClick={() => setPending(null)}>
+                Cancel
+              </Button>
+              <Button variant="light" onClick={() => save(pending, false)}>
+                Keep as they are
+              </Button>
+              <Button onClick={() => save(pending, true)}>
+                Give {existing.classTeacherSubjects.length === 1 ? "it" : "them"} to{" "}
+                {teacherName(pending.classTeacherId).split(" ")[0]}
+              </Button>
+            </Group>
+          </Stack>
+        )}
+      </Modal>
       <Stack gap="md">
         <Group grow>
           <TextInput
@@ -83,7 +131,11 @@ export function ClassForm({ sessions, teachers, existing, onDone }: Props) {
         </Group>
         <Select
           label="Class teacher"
-          description="Takes the register and is the family's first contact"
+          description={
+            existing
+              ? "Takes the register and is the family's first contact"
+              : "Takes the register and is the family's first contact; starts with every subject"
+          }
           data={teachers
             .filter((t) => t.isActive || t.id === existing?.classTeacherId)
             .map((t) => ({ value: String(t.id), label: t.name }))}

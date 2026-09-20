@@ -1,3 +1,4 @@
+import { clock } from "@/lib/clock";
 import { SimpleGrid, Stack } from "@mantine/core";
 import { PageHeader } from "@/components/PageHeader";
 import { StatTile } from "@/components/StatTile";
@@ -24,7 +25,8 @@ export default async function AdminDashboard() {
     getSchoolSettings(),
     getCurrentYear(),
   ]);
-  const today = todayIn(timezone);
+  const now = await clock();
+  const today = todayIn(timezone, now);
   const period = year ? await currentPeriod(today) : null;
   const [registers, fees] = year
     ? await Promise.all([
@@ -39,7 +41,7 @@ export default async function AdminDashboard() {
   const thisWeek = missing.filter((r) => r.date >= weekStart(today)).length;
   return (
     <Stack gap="lg" maw={960} mx="auto">
-      <PageHeader eyebrow={formatDate(new Date(), timezone)} title="Dashboard" />
+      <PageHeader eyebrow={formatDate(now, timezone)} title="Dashboard" />
       <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
         <StatTile
           label="Registers missing"

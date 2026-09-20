@@ -8,6 +8,7 @@ import {
   TableTr,
   Text,
 } from "@mantine/core";
+import { clock } from "@/lib/clock";
 import { AppLink } from "@/components/AppLink";
 import { CardTitle } from "@/components/CardTitle";
 import { LinkButton } from "@/components/LinkButton";
@@ -38,7 +39,7 @@ export default async function ClassApplicationsPage({ params }: Props) {
     listApplications(ids),
     familyOverviewFor(ids, cls.academicYearId),
   ]);
-  const today = todayIn(timezone);
+  const today = todayIn(timezone, await clock());
   const choices = allClasses.map(classChoice);
   const places =
     cls.capacity === null

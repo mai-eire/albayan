@@ -1,3 +1,4 @@
+import { clock } from "@/lib/clock";
 import { notFound } from "next/navigation";
 import { currentPeriod, getCurrentYear } from "@/lib/db/queries/academics";
 import { listRegistersForTerm } from "@/lib/db/queries/attendance";
@@ -14,7 +15,7 @@ export async function loadStaffMember(params: Promise<{ id: string }>) {
   ]);
   const person = await getStaffMember(Number(id), year?.id ?? null);
   if (!person) notFound();
-  const today = todayIn(settings.timezone);
+  const today = todayIn(settings.timezone, await clock());
   const period = year ? await currentPeriod(today) : null;
   const rows =
     year && period && person.classes.length

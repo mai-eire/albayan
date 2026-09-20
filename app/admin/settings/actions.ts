@@ -37,7 +37,6 @@ const schema = z.object({
   bankIban: optional(34).transform((v) => v?.replace(/\s+/g, "").toUpperCase() ?? null),
   bankBic: optional(11).transform((v) => v?.toUpperCase() ?? null),
   absenceEmails: z.boolean(),
-  rules: optional(8000).optional(),
 });
 
 export type SettingsInput = z.input<typeof schema>;

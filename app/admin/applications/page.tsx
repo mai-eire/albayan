@@ -1,3 +1,4 @@
+import { clock } from "@/lib/clock";
 import { Stack } from "@mantine/core";
 import { IconInbox } from "@tabler/icons-react";
 import { EmptyState } from "@/components/EmptyState";
@@ -25,6 +26,7 @@ export default async function ApplicationsPage() {
       year?.id ?? null,
     ),
   ]);
+  const today = todayIn(timezone, await clock());
   return (
     <Stack gap="lg" maw={1180}>
       <PageHeader
@@ -43,7 +45,7 @@ export default async function ApplicationsPage() {
           sessions={sessions.map((s) => ({ id: s.id, name: s.name }))}
           families={Object.fromEntries(families)}
           standardFeeCents={year?.standardFeeCents ?? 0}
-          today={todayIn(timezone)}
+          today={today}
         />
       )}
     </Stack>

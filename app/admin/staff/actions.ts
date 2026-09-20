@@ -1,5 +1,6 @@
 "use server";
 
+import { clock } from "@/lib/clock";
 import { and, eq, like } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -126,7 +127,7 @@ export const setTeacherActive = action(
   async (input, { user, db }) => {
     requireAdmin(user);
     const { timezone } = await getSchoolSettings();
-    const deactivatedAt = input.isActive ? null : todayIn(timezone);
+    const deactivatedAt = input.isActive ? null : todayIn(timezone, await clock());
     await db
       .update(teachers)
       .set({ isActive: input.isActive, deactivatedAt })

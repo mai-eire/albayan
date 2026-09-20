@@ -1,13 +1,21 @@
 "use server";
 
-import { and, count, eq } from "drizzle-orm";
+import { clock } from "@/lib/clock";
+import { and, count, eq, isNotNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/access";
 import { action, ActionError } from "@/lib/actions";
 import { audit, diff } from "@/lib/audit";
 import { getSchoolSettings } from "@/lib/db/queries/settings";
-import { classes, enrolments, schoolSessions, teachingAssignments } from "@/lib/db/schema";
+import type { Db } from "@/lib/db";
+import {
+  classes,
+  enrolments,
+  schoolSessions,
+  sessionPeriods,
+  teachingAssignments,
+} from "@/lib/db/schema";
 import { todayIn } from "@/lib/time";
 
 const classSchema = z.object({
@@ -25,6 +33,17 @@ const classSchema = z.object({
 
 export type ClassInput = z.input<typeof classSchema>;
 
+// The subjects in a session's schedule, each once.
+async function sessionSubjects(db: Db, sessionId: number): Promise<string[]> {
+  const rows = await db
+    .select({ subjectId: sessionPeriods.subjectId })
+    .from(sessionPeriods)
+    .where(and(eq(sessionPeriods.sessionId, sessionId), isNotNull(sessionPeriods.subjectId)));
+  return [...new Set(rows.flatMap((r) => r.subjectId ?? []))];
+}
+
+// A new class starts with its class teacher teaching every subject (decision 2026-09-19);
+// the office changes the ones it wants to.
 export const createClass = action(classSchema, async (input, { user, db }) => {
   requireAdmin(user);
   const session = await db.query.schoolSessions.findFirst({
@@ -35,6 +54,14 @@ export const createClass = action(classSchema, async (input, { user, db }) => {
     .insert(classes)
     .values({ ...input, academicYearId: session.academicYearId })
     .returning({ id: classes.id });
+  if (input.classTeacherId !== null) {
+    const teacherId = input.classTeacherId;
+    const subjectIds = await sessionSubjects(db, session.id);
+    if (subjectIds.length)
+      await db
+        .insert(teachingAssignments)
+        .values(subjectIds.map((subjectId) => ({ classId: row.id, subjectId, teacherId })));
+  }
   await audit(db, {
     actorUserId: user.id,
     action: "class.create",
@@ -46,9 +73,11 @@ export const createClass = action(classSchema, async (input, { user, db }) => {
   return { id: row.id };
 });
 
+// With a new class teacher, `handOverSubjects` also gives them every subject the old
+// class teacher taught in the class.
 export const updateClass = action(
-  classSchema.safeExtend({ id: z.number() }),
-  async ({ id, ...input }, { user, db }) => {
+  classSchema.safeExtend({ id: z.number(), handOverSubjects: z.boolean().optional() }),
+  async ({ id, handOverSubjects, ...input }, { user, db }) => {
     requireAdmin(user);
     const before = await db.query.classes.findFirst({ where: eq(classes.id, id) });
     if (!before) throw new ActionError("That class no longer exists.");
@@ -58,12 +87,27 @@ export const updateClass = action(
     if (!session || session.academicYearId !== before.academicYearId)
       throw new ActionError("Choose a session in the same year.");
     await db.update(classes).set(input).where(eq(classes.id, id));
+    const from = before.classTeacherId;
+    const to = input.classTeacherId;
+    let handedOver: string[] = [];
+    if (handOverSubjects && from !== null && to !== null && from !== to) {
+      handedOver = (
+        await db
+          .update(teachingAssignments)
+          .set({ teacherId: to })
+          .where(and(eq(teachingAssignments.classId, id), eq(teachingAssignments.teacherId, from)))
+          .returning({ subjectId: teachingAssignments.subjectId })
+      ).map((r) => r.subjectId);
+    }
     await audit(db, {
       actorUserId: user.id,
       action: "class.update",
       entityType: "class",
       entityId: id,
-      changes: diff(before, input),
+      changes: {
+        ...diff(before, input),
+        ...(handedOver.length ? { handedOver: [from, handedOver] } : {}),
+      },
     });
     revalidatePath("/admin/academics");
   },
@@ -182,7 +226,7 @@ export const moveStudent = action(
         );
     }
     const { timezone } = await getSchoolSettings();
-    const today = todayIn(timezone);
+    const today = todayIn(timezone, await clock());
     await db
       .update(enrolments)
       .set({ status: "left", endDate: today })
@@ -206,7 +250,7 @@ export const moveStudent = action(
     });
     revalidatePath("/admin/academics");
     revalidatePath("/admin/students");
-    revalidatePath("/teach");
+    revalidatePath("/teacher");
     revalidatePath("/family");
   },
 );

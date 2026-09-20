@@ -1,4 +1,5 @@
 import {
+  Badge,
   Card,
   Table,
   TableTbody,
@@ -67,9 +68,12 @@ export default async function StaffClassesPage({ params }: Props) {
                     {c.sessionName} {c.startTime}–{c.endTime}
                   </TableTd>
                   <TableTd>
-                    {[c.isClassTeacher && "Class teacher", ...c.subjects]
-                      .filter(Boolean)
-                      .join(" · ")}
+                    {c.subjects.join(", ")}
+                    {c.isClassTeacher && (
+                      <Badge variant="outline" color="gray" ms={c.subjects.length ? "xs" : 0}>
+                        Class teacher
+                      </Badge>
+                    )}
                   </TableTd>
                   <TableTd ta="end" className={tabular.tabular}>
                     {r.due ? (

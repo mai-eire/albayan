@@ -34,7 +34,7 @@ const teacher: CurrentUser = {
   id: 2,
   isAdmin: false,
   teacher: { id: 1, isActive: true },
-  areas: ["teach"],
+  areas: ["teacher"],
 };
 
 const valid = {

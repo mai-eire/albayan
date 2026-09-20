@@ -4,6 +4,7 @@ import {
   listClasses,
   listRosterForAdmin,
 } from "@/lib/db/queries/academics";
+import { clock } from "@/lib/clock";
 import { countRegistersTaken, summariseAttendance } from "@/lib/db/queries/attendance";
 import { familyOverviewFor } from "@/lib/db/queries/families";
 import { getSchoolSettings } from "@/lib/db/queries/settings";
@@ -20,7 +21,7 @@ export default async function ClassStudentsPage({ params }: Props) {
     listClasses(cls.academicYearId),
     getSchoolSettings(),
   ]);
-  const today = todayIn(timezone);
+  const today = todayIn(timezone, await clock());
   const period = await currentPeriod(today);
   const to = period ? (period.to < today ? period.to : today) : today;
   const [attendance, registersTaken, families] = await Promise.all([

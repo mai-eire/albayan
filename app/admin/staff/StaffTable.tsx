@@ -1,7 +1,19 @@
 "use client";
 
-import { Badge, Button, Group, Menu, Select, Stack, Switch, Table, Text } from "@mantine/core";
-import { IconDots, IconUser } from "@tabler/icons-react";
+import {
+  Badge,
+  Button,
+  Group,
+  Menu,
+  Select,
+  Stack,
+  Switch,
+  Table,
+  Text,
+  TextInput,
+} from "@mantine/core";
+import { useDebouncedCallback } from "@mantine/hooks";
+import { IconDots, IconSearch, IconUser } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { AppLink } from "@/components/AppLink";
 import { Nothing } from "@/components/Nothing";
@@ -36,6 +48,7 @@ export function StaffTable({ staff, sessions, classes, subjects, currentUserId, 
   const filters = parseStaffFilters(query);
   const shown = applyStaffFilters(staff, filters);
   const session = params.get("session");
+  const search = useDebouncedCallback((value: string) => set({ q: value }), 300);
   const former = staff.filter((s) => s.teacher && !s.teacher.isActive && !s.isAdmin).length;
   const { sort, toggle, sorted } = useSort<Key, StaffRow>(
     shown,
@@ -54,6 +67,14 @@ export function StaffTable({ staff, sessions, classes, subjects, currentUserId, 
   return (
     <>
       <Group gap="sm" wrap="wrap">
+        <TextInput
+          aria-label="Search"
+          placeholder="Name or email"
+          leftSection={<IconSearch size={16} stroke={1.75} />}
+          defaultValue={params.get("q") ?? ""}
+          onChange={(e) => search(e.currentTarget.value)}
+          w={{ base: "100%", xs: 220 }}
+        />
         <Select
           aria-label="Session"
           placeholder="Any session"

@@ -1,8 +1,11 @@
-import { Group, Stack } from "@mantine/core";
+import { clock } from "@/lib/clock";
+import { Stack } from "@mantine/core";
 import { IconClipboardCheck } from "@tabler/icons-react";
 import { EmptyState } from "@/components/EmptyState";
-import { LinkButton } from "@/components/LinkButton";
 import { PageHeader } from "@/components/PageHeader";
+import { isTaken } from "@/components/RegisterCells";
+import { RegistersTable } from "@/components/RegistersTable";
+import { TodayButton } from "@/components/TodayButton";
 import {
   currentPeriod,
   getCurrentYear,
@@ -10,77 +13,17 @@ import {
   listSessions,
   listTeachers,
 } from "@/lib/db/queries/academics";
-import { listRegistersForDate, listRegistersForTerm } from "@/lib/db/queries/attendance";
+import { listRegistersForTerm } from "@/lib/db/queries/attendance";
 import { getSchoolSettings } from "@/lib/db/queries/settings";
-import { formatDate, todayIn } from "@/lib/time";
-import { DatePicker } from "./DatePicker";
-import { DayTable } from "./DayTable";
-import { isTaken } from "./RegisterCells";
-import { TermTable } from "./TermTable";
+import { todayIn } from "@/lib/time";
 
 export const metadata = { title: "Attendance" };
 
-type Props = { searchParams: Promise<{ date?: string; view?: string }> };
-
-// Term view answers "who keeps missing the register?"; day view "who hasn't taken today's?".
-// Both share one header: the title, the standing summary under it, and the view switch in
-// the same place; only the day view has a date to pick.
-export default async function AdminAttendancePage({ searchParams }: Props) {
-  const [{ date: requested, view }, { timezone }, year] = await Promise.all([
-    searchParams,
-    getSchoolSettings(),
-    getCurrentYear(),
-  ]);
-  const today = todayIn(timezone);
-  const date = requested && /^\d{4}-\d{2}-\d{2}$/.test(requested) ? requested : today;
-  const byDay = view === "day";
-  const controls = (
-    <Group gap="sm">
-      {byDay && <DatePicker value={date} />}
-      <Group gap={4}>
-        <LinkButton
-          href="/admin/attendance?view=day"
-          variant={byDay ? "light" : "subtle"}
-          size="sm"
-        >
-          By day
-        </LinkButton>
-        <LinkButton href="/admin/attendance" variant={byDay ? "subtle" : "light"} size="sm">
-          This term
-        </LinkButton>
-      </Group>
-    </Group>
-  );
-
-  if (byDay) {
-    const dayOfWeek = new Date(`${date}T12:00:00Z`).getUTCDay();
-    const registers = year ? await listRegistersForDate(year.id, date, dayOfWeek) : [];
-    const missing = registers.filter((r) => r.studentCount > 0 && !isTaken(r)).length;
-    return (
-      <Stack gap="lg" maw={1180}>
-        <PageHeader
-          title="Attendance"
-          subtitle={`${formatDate(date, timezone)} · ${
-            registers.length === 0
-              ? "no classes"
-              : missing
-                ? `${missing} of ${registers.length} registers still to come`
-                : "all registers in"
-          }`}
-          actions={controls}
-        />
-        {registers.length === 0 ? (
-          <EmptyState
-            icon={<IconClipboardCheck size={20} stroke={1.75} />}
-            message={`No classes on ${formatDate(date, timezone)}.`}
-          />
-        ) : (
-          <DayTable registers={registers} date={date} />
-        )}
-      </Stack>
-    );
-  }
-
+// This term's registers, one row per lesson × class, filtered in the browser: the date
+// filter narrows to a day, a month or a weekday, "Today" to today's.
+export default async function AdminAttendancePage() {
+  const [{ timezone }, year] = await Promise.all([getSchoolSettings(), getCurrentYear()]);
+  const today = todayIn(timezone, await clock());
   const period = year ? await currentPeriod(today) : null;
   const [rows, sessions, classes, teachers] =
     year && period
@@ -105,7 +48,7 @@ export default async function AdminAttendancePage({ searchParams }: Props) {
               }`
             : undefined
         }
-        actions={controls}
+        actions={rows.length > 0 && <TodayButton today={today} />}
       />
       {rows.length === 0 ? (
         <EmptyState
@@ -113,8 +56,9 @@ export default async function AdminAttendancePage({ searchParams }: Props) {
           message="No lessons yet this term."
         />
       ) : (
-        <TermTable
+        <RegistersTable
           rows={rows}
+          hrefBase="/admin/attendance"
           teachers={teachers
             .filter((t) => rows.some((r) => r.teacherIds.includes(t.id)))
             .map((t) => ({ id: t.id, name: t.name }))}

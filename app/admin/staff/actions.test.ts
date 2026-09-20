@@ -156,6 +156,12 @@ describe("setTeacherActive and deleteInvite", () => {
       applyStaffFilters(staff, { showFormer: false }).map((s) => s.id);
     expect(shown(await listStaff())).not.toContain(2);
     expect((await listStaff()).map((s) => s.id)).toContain(2);
+    // The search matches name or email, case-insensitively.
+    const all = await listStaff();
+    expect(applyStaffFilters(all, { showFormer: true, q: "tariq" }).map((s) => s.email)).toEqual([
+      "tariq@example.com",
+    ]);
+    expect(applyStaffFilters(all, { showFormer: true, q: "nobody" })).toEqual([]);
     expect(await setTeacherActive({ teacherId: teacher!.id, isActive: true })).toMatchObject({
       ok: true,
     });

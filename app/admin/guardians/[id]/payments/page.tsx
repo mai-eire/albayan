@@ -1,3 +1,4 @@
+import { clock } from "@/lib/clock";
 import { notFound } from "next/navigation";
 import { getCurrentYear } from "@/lib/db/queries/academics";
 import { listFeeAccounts, listPaymentsForGuardian } from "@/lib/db/queries/fees";
@@ -22,12 +23,13 @@ export default async function GuardianPaymentsPage({ params }: Props) {
   const accounts = year
     ? (await listFeeAccounts(year.id)).filter((a) => childIds.has(a.enrolment.studentId))
     : [];
+  const today = todayIn(timezone, await clock());
   return (
     <FamilyPayments
       year={year?.id ?? null}
       accounts={accounts}
       payments={payments}
-      today={todayIn(timezone)}
+      today={today}
       timezone={timezone}
     />
   );

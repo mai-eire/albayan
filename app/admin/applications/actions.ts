@@ -1,5 +1,6 @@
 "use server";
 
+import { clock } from "@/lib/clock";
 import { and, count, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -93,7 +94,7 @@ export const approveApplication = action(
       .values({
         studentId: student.id,
         classId: placement.cls.id,
-        startDate: todayIn(settings.timezone),
+        startDate: todayIn(settings.timezone, await clock()),
         feeCents: input.fee,
         feeNote: input.feeNote || null,
       })

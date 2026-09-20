@@ -1,10 +1,12 @@
-import { Card, Text } from "@mantine/core";
+import { clock } from "@/lib/clock";
+import { Card, Group, Text } from "@mantine/core";
 import { CardTitle } from "@/components/CardTitle";
+import { RegistersTable } from "@/components/RegistersTable";
+import { TodayButton } from "@/components/TodayButton";
 import { currentPeriod } from "@/lib/db/queries/academics";
 import { listRegistersForTerm } from "@/lib/db/queries/attendance";
 import { getSchoolSettings } from "@/lib/db/queries/settings";
 import { todayIn } from "@/lib/time";
-import { TermTable } from "@/app/admin/attendance/TermTable";
 import { loadClass } from "../load";
 
 type Props = { params: Promise<{ id: string }> };
@@ -13,7 +15,7 @@ type Props = { params: Promise<{ id: string }> };
 // only the register-status filter.
 export default async function ClassAttendancePage({ params }: Props) {
   const [cls, { timezone }] = await Promise.all([loadClass(params), getSchoolSettings()]);
-  const today = todayIn(timezone);
+  const today = todayIn(timezone, await clock());
   const period = await currentPeriod(today);
   const rows = period
     ? (
@@ -29,12 +31,15 @@ export default async function ClassAttendancePage({ params }: Props) {
     <Card>
       <CardTitle
         context={
-          period && (
-            <Text size="sm" c="dimmed">
-              {period.label} ·{" "}
-              {missing.length ? `${missing.length} still to come` : "all registers in"}
-            </Text>
-          )
+          <Group gap="sm">
+            {period && (
+              <Text size="sm" c="dimmed">
+                {period.label} ·{" "}
+                {missing.length ? `${missing.length} still to come` : "all registers in"}
+              </Text>
+            )}
+            {rows.length > 0 && <TodayButton today={today} size="sm" />}
+          </Group>
         }
       >
         Registers
@@ -44,7 +49,12 @@ export default async function ClassAttendancePage({ params }: Props) {
           No lessons yet this term.
         </Text>
       ) : (
-        <TermTable rows={rows} filters={["register"]} showClass={false} />
+        <RegistersTable
+          rows={rows}
+          hrefBase="/admin/attendance"
+          filters={["date", "register"]}
+          showClass={false}
+        />
       )}
     </Card>
   );

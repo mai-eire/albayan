@@ -11,6 +11,7 @@ import {
   TableTr,
   Text,
 } from "@mantine/core";
+import { clock } from "@/lib/clock";
 import { AppLink } from "@/components/AppLink";
 import { CardTitle } from "@/components/CardTitle";
 import { ClassTimetable } from "@/components/ClassTimetable";
@@ -58,7 +59,7 @@ export default async function StudentClassPage({ params }: Props) {
       </Card>
     );
   }
-  const today = todayIn(timezone);
+  const today = todayIn(timezone, await clock());
   const [siblings, cls, teachers, allClasses, period, recent, families] = await Promise.all([
     countEnrolledSiblings(student.id),
     getClass(e.classId),

@@ -1,6 +1,8 @@
 import { Alert, Stack } from "@mantine/core";
 import { IconAlertTriangle } from "@tabler/icons-react";
+import { AppLink } from "@/components/AppLink";
 import { baseTab, LinkTabs } from "@/components/LinkTabs";
+import { Nothing } from "@/components/Nothing";
 import { PageHeader } from "@/components/PageHeader";
 import { listApplicationsForClass } from "@/lib/db/queries/applications";
 import { DeleteClassButton } from "./DeleteClassButton";
@@ -31,6 +33,18 @@ export default async function ClassLayout({
         ]}
         eyebrow={`${cls.academicYearId} · ${cls.session.name}`}
         title={cls.name}
+        subtitle={
+          <>
+            Class teacher{" "}
+            {cls.classTeacher ? (
+              <AppLink href={`/admin/staff/${cls.classTeacher.userId}`} size="sm" fw={500}>
+                {cls.classTeacher.name}
+              </AppLink>
+            ) : (
+              <Nothing>none yet</Nothing>
+            )}
+          </>
+        }
         actions={<DeleteClassButton id={cls.id} name={cls.name} studentCount={cls.studentCount} />}
       />
       {cls.capacity !== null && cls.studentCount > cls.capacity && (

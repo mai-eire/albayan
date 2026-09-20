@@ -9,7 +9,11 @@ import {
   enrolments,
   guardians,
   schoolSessions,
+  sessionPeriods,
   students,
+  subjects,
+  teachers,
+  teachingAssignments,
   users,
 } from "@/lib/db/schema";
 import { testDb } from "@/test/db";
@@ -28,7 +32,7 @@ vi.mock("@/lib/db/queries/settings", () => ({
 }));
 vi.mock("next/cache", () => ({ revalidatePath: () => {} }));
 
-const { moveStudent } = await import("./actions");
+const { createClass, moveStudent, updateClass } = await import("./actions");
 
 const admin: CurrentUser = {
   id: 1,
@@ -50,8 +54,18 @@ beforeAll(async () => {
   await db.insert(users).values([
     { id: 1, name: "Admin", email: "a@example.com", isAdmin: true },
     { id: 2, name: "Parent", email: "p@example.com" },
+    { id: 3, name: "Maryam", email: "m@example.com" },
+    { id: 4, name: "Omar", email: "o@example.com" },
   ]);
   await db.insert(guardians).values({ id: 1, userId: 2 });
+  await db.insert(teachers).values([
+    { id: 1, userId: 3 },
+    { id: 2, userId: 4 },
+  ]);
+  await db.insert(subjects).values([
+    { id: "quran", name: "Quran" },
+    { id: "arabic", name: "Arabic" },
+  ]);
   await db.insert(academicYears).values([
     { id: "2026-27", startDate: "2026-09-01", endDate: "2027-06-30", isCurrent: true },
     { id: "2027-28", startDate: "2027-09-01", endDate: "2028-06-30" },
@@ -167,5 +181,60 @@ describe("moveStudent", () => {
     expect(
       await moveStudent({ enrolmentId: amira.id, classId: 1, overCapacity: true }),
     ).toMatchObject({ ok: true });
+  });
+});
+
+describe("createClass and updateClass", () => {
+  it("starts a class with its class teacher on every subject, then hands them over", async () => {
+    current = admin;
+    await db.insert(sessionPeriods).values([
+      { sessionId: 1, sortOrder: 1, subjectId: "quran", durationMinutes: 50 },
+      { sessionId: 1, sortOrder: 2, title: "Break", durationMinutes: 20 },
+      { sessionId: 1, sortOrder: 3, subjectId: "arabic", durationMinutes: 50 },
+      { sessionId: 1, sortOrder: 4, subjectId: "quran", durationMinutes: 30 },
+    ]);
+    const created = await createClass({
+      sessionId: 1,
+      name: "Level 3",
+      room: null,
+      capacity: 15,
+      classTeacherId: 1,
+    });
+    if (!created.ok) throw new Error(created.error);
+    const classId = created.data.id;
+    const taught = () =>
+      db
+        .select({
+          subjectId: teachingAssignments.subjectId,
+          teacherId: teachingAssignments.teacherId,
+        })
+        .from(teachingAssignments)
+        .where(eq(teachingAssignments.classId, classId))
+        .orderBy(teachingAssignments.subjectId);
+    expect(await taught()).toEqual([
+      { subjectId: "arabic", teacherId: 1 },
+      { subjectId: "quran", teacherId: 1 },
+    ]);
+
+    // Arabic goes to Omar by hand; then Omar becomes class teacher and takes over what
+    // Maryam still taught.
+    await db
+      .update(teachingAssignments)
+      .set({ teacherId: 2 })
+      .where(eq(teachingAssignments.subjectId, "arabic"));
+    const base = { id: classId, sessionId: 1, name: "Level 3", room: null, capacity: 15 };
+    expect(await updateClass({ ...base, classTeacherId: 2 })).toMatchObject({ ok: true });
+    expect(await taught()).toEqual([
+      { subjectId: "arabic", teacherId: 2 },
+      { subjectId: "quran", teacherId: 1 },
+    ]);
+    expect(await updateClass({ ...base, classTeacherId: 1 })).toMatchObject({ ok: true });
+    expect(await updateClass({ ...base, classTeacherId: 2, handOverSubjects: true })).toMatchObject(
+      { ok: true },
+    );
+    expect(await taught()).toEqual([
+      { subjectId: "arabic", teacherId: 2 },
+      { subjectId: "quran", teacherId: 2 },
+    ]);
   });
 });

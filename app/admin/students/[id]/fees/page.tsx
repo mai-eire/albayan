@@ -10,6 +10,7 @@ import {
   TableTr,
   Text,
 } from "@mantine/core";
+import { clock } from "@/lib/clock";
 import { AppLink } from "@/components/AppLink";
 import { CardTitle } from "@/components/CardTitle";
 import { MoneyText } from "@/components/MoneyText";
@@ -36,7 +37,7 @@ export default async function StudentFeesPage({ params }: Props) {
     listFeesForStudent(student.id),
     listSiblingsForAdmin(student.id),
   ]);
-  const today = todayIn(timezone);
+  const today = todayIn(timezone, await clock());
   const thisYear = student.enrolment?.academicYearId;
   const siblingAccounts = thisYear
     ? await feeAccountsForStudents(

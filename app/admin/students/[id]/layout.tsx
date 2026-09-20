@@ -1,3 +1,4 @@
+import { clock } from "@/lib/clock";
 import { Stack } from "@mantine/core";
 import { notFound } from "next/navigation";
 import { baseTab, LinkTabs } from "@/components/LinkTabs";
@@ -30,7 +31,7 @@ async function offerProps(studentId: number) {
     classes: classes.map(classChoice),
     family: families.get(studentId) ?? [],
     standardFeeCents: year.standardFeeCents,
-    today: todayIn(timezone),
+    today: todayIn(timezone, await clock()),
   };
 }
 

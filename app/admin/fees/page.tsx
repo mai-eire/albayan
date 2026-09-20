@@ -1,3 +1,4 @@
+import { clock } from "@/lib/clock";
 import { Stack } from "@mantine/core";
 import { IconBuildingBank } from "@tabler/icons-react";
 import { EmptyState } from "@/components/EmptyState";
@@ -45,6 +46,7 @@ export default async function FeesPage({ searchParams }: Props) {
   ]);
   const owing = accounts.filter((a) => a.balanceCents > 0);
   const families = await countFamilies(owing);
+  const today = todayIn(timezone, await clock());
 
   return (
     <Stack gap="lg" maw={1180}>
@@ -60,7 +62,7 @@ export default async function FeesPage({ searchParams }: Props) {
         actions={
           <>
             {accounts.length > 0 && <ExportButton href={`/admin/fees/export?year=${year.id}`} />}
-            <RecordPaymentButton targets={targets} today={todayIn(timezone)} />
+            <RecordPaymentButton targets={targets} today={today} />
           </>
         }
       />

@@ -1,3 +1,4 @@
+import { clock } from "@/lib/clock";
 import { Stack } from "@mantine/core";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
@@ -5,7 +6,7 @@ import { requireArea } from "@/lib/access";
 import { getRegister } from "@/lib/db/queries/attendance";
 import { getSchoolSettings } from "@/lib/db/queries/settings";
 import { formatDate, todayIn } from "@/lib/time";
-import { RegisterEditor } from "@/app/teach/attendance/[classId]/RegisterEditor";
+import { RegisterEditor } from "@/app/teacher/attendance/[classId]/RegisterEditor";
 
 type Props = { params: Promise<{ classId: string }>; searchParams: Promise<{ date?: string }> };
 
@@ -17,7 +18,7 @@ export default async function AdminRegisterPage({ params, searchParams }: Props)
     getSchoolSettings(),
   ]);
   await requireArea("admin");
-  const today = todayIn(timezone);
+  const today = todayIn(timezone, await clock());
   const date = requested && /^\d{4}-\d{2}-\d{2}$/.test(requested) ? requested : today;
   if (date > today) notFound();
   const register = await getRegister(Number(classId), date);
@@ -25,14 +26,18 @@ export default async function AdminRegisterPage({ params, searchParams }: Props)
   return (
     <Stack gap="lg" maw={720}>
       <PageHeader
-        breadcrumbs={[{ label: "Attendance", href: `/admin/attendance?view=day&date=${date}` }]}
+        breadcrumbs={[{ label: "Attendance", href: `/admin/attendance?date=${date}` }]}
         eyebrow={`${register.className} · ${register.sessionName}`}
         title={formatDate(date, timezone, true)}
+        related={{
+          label: `${register.className}'s attendance`,
+          href: `/admin/academics/classes/${classId}/attendance`,
+        }}
       />
       <RegisterEditor
         register={register}
         editable
-        backHref={`/admin/attendance?view=day&date=${date}`}
+        backHref={`/admin/attendance?date=${date}`}
         studentHrefBase="/admin/students"
       />
     </Stack>

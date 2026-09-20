@@ -1,3 +1,4 @@
+import { clock } from "@/lib/clock";
 import { Stack } from "@mantine/core";
 import { PageHeader } from "@/components/PageHeader";
 import { ExportButton } from "@/components/ExportButton";
@@ -18,6 +19,7 @@ export default async function StudentsPage() {
   const [sessions, classes] = year
     ? await Promise.all([listSessions(year.id), listClasses(year.id)])
     : [[], []];
+  const today = todayIn(timezone, await clock());
   return (
     <Stack gap="lg" maw={1180}>
       <PageHeader title="Students" actions={<ExportButton href="/admin/students/export" />} />
@@ -30,7 +32,7 @@ export default async function StudentsPage() {
           sessionId: c.sessionId,
           sessionName: c.sessionName,
         }))}
-        today={todayIn(timezone)}
+        today={today}
       />
     </Stack>
   );

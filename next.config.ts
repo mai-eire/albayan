@@ -6,6 +6,12 @@ const nextConfig: NextConfig = {
   agentRules: false,
   // The e2e server runs beside `pnpm dev`, so it needs its own build directory.
   distDir: process.env.WRANGLER_STATE ? ".next-e2e" : ".next",
+  // The teacher area was /teach until 2026-09-19; links in old notifications and emails
+  // still point there.
+  redirects: async () => [
+    { source: "/teach", destination: "/teacher", permanent: true },
+    { source: "/teach/:path*", destination: "/teacher/:path*", permanent: true },
+  ],
 };
 
 export default nextConfig;

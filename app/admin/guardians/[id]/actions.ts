@@ -193,7 +193,7 @@ export const addChildForGuardian = action(
       },
     });
     revalidatePath(`/admin/guardians/${guardianId}`);
-    revalidatePath("/admin/applications");
+    revalidatePath("/admin", "layout");
     return { studentId: student.id };
   },
 );

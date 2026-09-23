@@ -133,7 +133,8 @@ export const approveApplication = action(
           settings.name,
         ),
     });
-    revalidatePath("/admin");
+    // The nav carries the pending count, so the whole area is revalidated.
+    revalidatePath("/admin", "layout");
     revalidatePath("/family");
     return { studentId };
   },
@@ -168,7 +169,7 @@ export const declineApplication = action(
       email: () =>
         sendDeclined(contact, { childName: student.firstName, reason: input.reason }, schoolName),
     });
-    revalidatePath("/admin");
+    revalidatePath("/admin", "layout");
     revalidatePath("/family");
   },
 );

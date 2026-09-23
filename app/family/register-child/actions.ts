@@ -91,6 +91,7 @@ export const submitApplication = action(applicationSchema, async (input, { user,
     changes: { created: [null, { firstName: input.firstName, preferredSessionId: session.id }] },
   });
   revalidatePath("/family");
-  revalidatePath("/admin");
+  // The nav carries the pending count, so the whole area is revalidated.
+  revalidatePath("/admin", "layout");
   return { id: student.id };
 });

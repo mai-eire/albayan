@@ -100,7 +100,7 @@ Mantine defaults (150ms ease). No entrance animations, no parallax, no skeleton 
 
 ### 3.1 App shell
 
-`AppShell` with header 64px and a 240px sidebar on `sm+`; below `sm` the sidebar becomes a drawer behind a burger. A sidebar item may hold **sub-items** (Academics › Years & terms · Subjects · Sessions · Classes): the parent only opens the group, each sub-item is the page, and the group opens itself whenever one of them is current. Sub-items are for a set of setup pages that belong together; nothing else nests. Header: school mark + name on the start side; role switcher (multi-role users only), notifications bell with `Indicator color="saffron"`, avatar on the end side. Sidebar and header are surface-coloured; the main area is ground-coloured.
+`AppShell` with header 64px and a 240px sidebar on `sm+`; below `sm` the sidebar becomes a drawer behind a burger. A sidebar item may hold **sub-items** (Academics › Years & terms · Subjects · Sessions · Classes): the parent only opens the group, each sub-item is the page, and the group opens itself whenever one of them is current. Sub-items are for a set of setup pages that belong together; nothing else nests. A nav item whose page has work waiting carries the number in brackets — "Applications (6)" — and drops the brackets at zero; the count comes from the area's layout, so every page shows the same figure. Header: school mark + name on the start side; role switcher (multi-role users only), notifications bell with `Indicator color="saffron"`, avatar on the end side. Sidebar and header are surface-coloured; the main area is ground-coloured.
 
 **Student area** replaces the sidebar with a bottom tab bar on phones (5 tabs: Home, Timetable, Homework, Resources, Calendar) and keeps the sidebar on desktop.
 

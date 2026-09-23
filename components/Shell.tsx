@@ -126,10 +126,12 @@ type Props = {
   // Areas this user can switch between; the switcher shows only when there are several.
   roles: Area[];
   unread?: number;
+  // How many things are waiting behind a nav item, by href: "Applications (6)".
+  counts?: Record<string, number>;
   children: React.ReactNode;
 };
 
-export function Shell({ area, schoolName, user, roles, unread = 0, children }: Props) {
+export function Shell({ area, schoolName, user, roles, unread = 0, counts, children }: Props) {
   const pathname = usePathname();
   const [opened, { toggle, close }] = useDisclosure();
   const items = nav[area];
@@ -213,7 +215,7 @@ export function Shell({ area, schoolName, user, roles, unread = 0, children }: P
               key={href}
               component={Link}
               href={href}
-              label={label}
+              label={counts?.[href] ? `${label} (${counts[href]})` : label}
               active={isActive(href)}
               leftSection={<Icon size={18} stroke={1.75} />}
               className={classes.navLink}

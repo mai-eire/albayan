@@ -253,6 +253,46 @@ export async function seed(db: Db, auth: Auth) {
     }
   }
 
+  // Six families have a second parent on the record, so co-guardians, "Mother of Amira and
+  // Yusuf" and an invite that hasn't been taken up yet all have something to show.
+  for (let f = 0; f < 6; f++) {
+    const guardianId = 41 + f;
+    const first = guardians[f];
+    const theirKids = studentGuardians.filter((sg) => sg.guardianId === f + 1);
+    const lastName = students.find((st) => st.id === theirKids[0]?.studentId)?.lastName;
+    if (!theirKids.length || !lastName) continue;
+    const isMother = first.gender !== "female";
+    guardians.push({
+      id: guardianId,
+      gender: isMother ? "female" : "male",
+      userId: user({
+        name: `${pick(isMother ? firstNamesF : firstNamesM)} ${lastName}`,
+        email: `parent${41 + f}@example.com`,
+        phone: `08${pad(5500000 + f * 4321, 7)}`,
+        // The last two haven't set a password yet: their row reads "Invited".
+        status: f >= 4 ? "invited" : "active",
+      }),
+      addressLine1: first.addressLine1,
+      city: first.city,
+      postalCode: first.postalCode,
+      area: first.area,
+      emergencyContactName: first.emergencyContactName,
+      emergencyContactPhone: first.emergencyContactPhone,
+      emergencyContactRelationship: first.emergencyContactRelationship,
+      spokenLanguages: first.spokenLanguages,
+      ethnicity: first.ethnicity,
+      registrationReasons: first.registrationReasons,
+    });
+    for (const link of theirKids) {
+      studentGuardians.push({
+        studentId: link.studentId,
+        guardianId,
+        relationship: isMother ? "mother" : "father",
+        isPrimaryContact: false,
+      });
+    }
+  }
+
   await reset(db);
   await bulk(db, t.schoolSettings, [
     {
@@ -299,6 +339,108 @@ export async function seed(db: Db, auth: Auth) {
   await bulk(db, t.students, students);
   await bulk(db, t.studentGuardians, studentGuardians);
   await bulk(db, t.enrolments, enrolments);
+
+  // Registers for every session day of the term so far bar the most recent, which is left
+  // for the "registers not taken" warnings. Attendance is what a family's "3 / 6" counts.
+  const lessonDates = (dayOfWeek: number) => {
+    const dates: string[] = [];
+    for (const d = new Date("2026-09-05T12:00:00Z"); d <= now; d.setUTCDate(d.getUTCDate() + 1)) {
+      if (d.getUTCDay() === dayOfWeek) dates.push(d.toISOString().slice(0, 10));
+    }
+    return dates;
+  };
+  // Every lesson day so far bar the most recent, which is the register still to be taken.
+  const sessionDates = (dayOfWeek: number) => lessonDates(dayOfWeek).slice(0, -1);
+  const attendance: (typeof t.attendance.$inferInsert)[] = [];
+  for (const e of enrolments) {
+    const cls = classes.find((k) => k.id === e.classId)!;
+    const session = sessions.find((x) => x.id === cls.sessionId)!;
+    for (const date of sessionDates(session.dayOfWeek)) {
+      const roll = random();
+      attendance.push({
+        studentId: e.studentId,
+        classId: e.classId,
+        date,
+        status: roll < 0.82 ? "present" : roll < 0.9 ? "late" : roll < 0.96 ? "absent" : "excused",
+        note: roll >= 0.9 && roll < 0.96 ? "No message from home" : null,
+        recordedByUserId: teachers[0].userId,
+      });
+    }
+  }
+  await bulk(db, t.attendance, attendance);
+
+  // Two published pieces of homework per class: one already due, one due this coming lesson.
+  const homeworkTitles: Record<string, string[]> = {
+    quran: ["Memorise Surah Al-Asr", "Revise last week's ayat"],
+    arabic: ["Write the alphabet ا to ع", "Ten new words with their meanings"],
+    islamic_studies: ["Draw the five pillars", "Read about the Prophet's birth"],
+  };
+  const homework: (typeof t.homework.$inferInsert)[] = [];
+  for (const cls of classes) {
+    const session = sessions.find((x) => x.id === cls.sessionId)!;
+    const days = lessonDates(session.dayOfWeek);
+    const subjectId = pick(["quran", "arabic", "islamic_studies"] as const);
+    const teacher = assignments.find((a) => a.classId === cls.id && a.subjectId === subjectId)!;
+    const teacherUserId = teachers.find((x) => x.id === teacher.teacherId)!.userId;
+    for (const [i, due] of [days.at(-2), days.at(-1)].entries()) {
+      if (!due) continue;
+      homework.push({
+        classId: cls.id,
+        subjectId,
+        title: homeworkTitles[subjectId][i],
+        description: "Bring it to the next lesson.",
+        dueDate: due,
+        publishedAt: `${due}T09:00:00.000Z`,
+        createdByUserId: teacherUserId,
+      });
+    }
+  }
+  await bulk(db, t.homework, homework);
+
+  // What the families were told about it, so the bell and the notifications page have rows.
+  const subjectNames: Record<string, string> = {
+    quran: "Quran",
+    arabic: "Arabic",
+    islamic_studies: "Islamic Studies",
+  };
+  const notifications: (typeof t.notifications.$inferInsert)[] = [];
+  const guardianUserOf = (studentId: number) => {
+    const link = studentGuardians.find((sg) => sg.studentId === studentId && sg.isPrimaryContact);
+    return link ? guardians.find((g) => g.id === link.guardianId)?.userId : undefined;
+  };
+  for (const hw of homework) {
+    const cls = classes.find((k) => k.id === hw.classId)!;
+    for (const e of enrolments.filter((x) => x.classId === cls.id).slice(0, 3)) {
+      const userId = guardianUserOf(e.studentId);
+      if (!userId) continue;
+      notifications.push({
+        userId,
+        type: "homework.published",
+        title: `New homework: ${hw.title}`,
+        body: `${subjectNames[hw.subjectId]} for ${cls.name}: ${hw.title}.`,
+        href: `/family/${e.studentId}/homework`,
+        subjectId: hw.subjectId,
+        studentId: e.studentId,
+        readAt: random() < 0.4 ? `${hw.dueDate}T18:00:00.000Z` : null,
+        createdAt: `${hw.publishedAt}`,
+      });
+    }
+  }
+  for (const a of attendance.filter((x) => x.status === "absent").slice(0, 12)) {
+    const userId = guardianUserOf(a.studentId);
+    const name = students.find((x) => x.id === a.studentId)?.firstName;
+    if (!userId || !name) continue;
+    notifications.push({
+      userId,
+      type: "attendance.absent",
+      title: `${name} was marked absent`,
+      body: `${classes.find((k) => k.id === a.classId)?.name} on ${a.date}.`,
+      href: `/family/${a.studentId}`,
+      studentId: a.studentId,
+      createdAt: `${a.date}T12:00:00.000Z`,
+    });
+  }
+  await bulk(db, t.notifications, notifications);
   // Most families have paid in full, some half, a few nothing yet — so the fees page and
   // the dashboard tile have something to show.
   const placed = await db

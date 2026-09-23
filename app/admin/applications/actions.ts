@@ -131,6 +131,7 @@ export const approveApplication = action(
       title: `${student.firstName} has a place in ${placement.cls.name}`,
       body: `Student ID ${studentId}. The first password is in the email we sent you.${offerNote ? ` ${offerNote}` : ""}`,
       href: `/family/${student.id}`,
+      studentId: student.id,
       email: () =>
         sendApproved(
           contact,
@@ -182,6 +183,7 @@ export const declineApplication = action(
       title: `About ${student.firstName}'s application`,
       body: input.reason,
       href: `/family/${student.id}`,
+      studentId: student.id,
       email: () =>
         sendDeclined(contact, { childName: student.firstName, reason: input.reason }, schoolName),
     });

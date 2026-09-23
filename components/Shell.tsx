@@ -9,7 +9,6 @@ import {
   Burger,
   Button,
   Group,
-  Indicator,
   Menu,
   NavLink,
   ThemeIcon,
@@ -21,7 +20,6 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { useState } from "react";
 import {
-  IconBell,
   IconBook,
   IconBook2,
   IconBuildingBank,
@@ -49,7 +47,9 @@ import {
   type Icon,
 } from "@tabler/icons-react";
 import type { Area } from "@/lib/current-user";
+import type { NotificationRow } from "@/lib/db/queries/notifications";
 import { DevClock } from "./DevClock";
+import { NotificationBell } from "./NotificationBell";
 import classes from "./Shell.module.css";
 
 type NavItem = {
@@ -99,6 +99,7 @@ const nav: Record<Area, NavItem[]> = {
   family: [
     { label: "Overview", href: "/family", icon: IconHome },
     { label: "Register a child", href: "/family/register-child", icon: IconUserPlus },
+    { label: "Fees", href: "/family/fees", icon: IconBuildingBank },
     { label: "Calendar", href: "/family/calendar", icon: IconCalendar },
     { label: "School rules", href: "/family/rules", icon: IconBook2 },
     { label: "Your account", href: "/family/account", icon: IconUser },
@@ -126,12 +127,23 @@ type Props = {
   // Areas this user can switch between; the switcher shows only when there are several.
   roles: Area[];
   unread?: number;
+  // The newest unread, for the bell's popover.
+  recent?: NotificationRow[];
   // How many things are waiting behind a nav item, by href: "Applications (6)".
   counts?: Record<string, number>;
   children: React.ReactNode;
 };
 
-export function Shell({ area, schoolName, user, roles, unread = 0, counts, children }: Props) {
+export function Shell({
+  area,
+  schoolName,
+  user,
+  roles,
+  unread = 0,
+  recent = [],
+  counts,
+  children,
+}: Props) {
   const pathname = usePathname();
   const [opened, { toggle, close }] = useDisclosure();
   const items = nav[area];
@@ -170,24 +182,7 @@ export function Shell({ area, schoolName, user, roles, unread = 0, counts, child
           <Group gap="sm" wrap="nowrap">
             {process.env.NODE_ENV !== "production" && <DevClock />}
             {roles.length > 1 && <RoleSwitcher current={area} roles={roles} />}
-            <Indicator
-              color="saffron"
-              size={16}
-              offset={4}
-              label={unread > 9 ? "9+" : unread}
-              disabled={unread === 0}
-            >
-              <ActionIcon
-                component={Link}
-                href={`/${area}/notifications`}
-                variant="subtle"
-                color="gray"
-                size="lg"
-                aria-label={unread ? `${unread} unread notifications` : "Notifications"}
-              >
-                <IconBell size={20} stroke={1.75} />
-              </ActionIcon>
-            </Indicator>
+            <NotificationBell area={area} unread={unread} recent={recent} />
             <SchemeToggle />
             <UserMenu name={user.name} />
           </Group>

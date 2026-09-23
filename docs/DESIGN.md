@@ -100,7 +100,7 @@ Mantine defaults (150ms ease). No entrance animations, no parallax, no skeleton 
 
 ### 3.1 App shell
 
-`AppShell` with header 64px and a 240px sidebar on `sm+`; below `sm` the sidebar becomes a drawer behind a burger. A sidebar item may hold **sub-items** (Academics › Years & terms · Subjects · Sessions · Classes): the parent only opens the group, each sub-item is the page, and the group opens itself whenever one of them is current. Sub-items are for a set of setup pages that belong together; nothing else nests. A nav item whose page has work waiting carries the number in brackets — "Applications (6)" — and drops the brackets at zero; the count comes from the area's layout, so every page shows the same figure. Header: school mark + name on the start side; role switcher (multi-role users only), notifications bell with `Indicator color="saffron"`, avatar on the end side. Sidebar and header are surface-coloured; the main area is ground-coloured.
+`AppShell` with header 64px and a 240px sidebar on `sm+`; below `sm` the sidebar becomes a drawer behind a burger. A sidebar item may hold **sub-items** (Academics › Years & terms · Subjects · Sessions · Classes): the parent only opens the group, each sub-item is the page, and the group opens itself whenever one of them is current. Sub-items are for a set of setup pages that belong together; nothing else nests. A nav item whose page has work waiting carries the number in brackets — "Applications (6)" — and drops the brackets at zero; the count comes from the area's layout, so every page shows the same figure. Header: school mark + name on the start side; role switcher (multi-role users only), notifications bell with `Indicator color="saffron"`, avatar on the end side. The **bell opens a popover** (`NotificationBell`) rather than navigating: the newest unread by title, each with what it is about, then "Mark all as read" and "See all notifications". Opening one from there marks it read and follows its link, the same as on the page. Sidebar and header are surface-coloured; the main area is ground-coloured.
 
 **Student area** replaces the sidebar with a bottom tab bar on phones (5 tabs: Home, Timetable, Homework, Resources, Calendar) and keeps the sidebar on desktop.
 
@@ -206,6 +206,7 @@ A modal that places or moves a child ends with a **`ReviewCard`**: a tile-tinted
 - Inline errors for form validation; toasts for server failures.
 - Notices that stay on the page (an unverified email, a double-booked teacher): `Alert variant="light" color="saffron"` with a Tabler icon at 16, one sentence and, if there is something to do, one `light` button inside it. Never for success — that is a toast — and never more than one per page.
 - Loading: `Skeleton` for page-level loads; `loading` on the button for actions. Never block the whole screen with an overlay.
+- Notifications carry **what they are about** when they are about one thing: the subject as its `SubjectBadge` and the child by first name, dimmed, beside the title — a parent of three should not have to read the sentence to know which child it concerns. Never a badge for the child; the name is enough and a row can already carry a subject badge.
 - Empty states: `components/EmptyState.tsx` — Tabler icon in a light `ThemeIcon`, one sentence, one action. ("No homework due. Enjoy the weekend.")
 
 ### 4.10 Timeline and timetable

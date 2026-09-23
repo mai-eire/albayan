@@ -1,31 +1,24 @@
 "use client";
 
-import { Button, Card, Group, Stack, Text, UnstyledButton } from "@mantine/core";
+import { Card, Group, Stack, Text, UnstyledButton } from "@mantine/core";
 import { IconBellOff } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 import { EmptyState } from "@/components/EmptyState";
+import { SubjectBadge } from "@/components/SubjectBadge";
 import type { NotificationRow } from "@/lib/db/queries/notifications";
-import { markAllNotificationsRead, markNotificationRead } from "@/lib/notifications";
+import { markNotificationRead } from "@/lib/notifications";
 import classes from "./NotificationList.module.css";
 
-// The bell's list: unread rows are bold with a saffron dot; opening one marks it read and
-// follows its link. The bell count is in the layout, so router.refresh() updates it.
+// The notifications page: unread rows are bold with a saffron dot; opening one marks it
+// read and follows its link. The bell count is in the layout, so router.refresh() updates
+// it. "Mark all as read" is the page action, not a button in here.
 export function NotificationList({ items }: { items: NotificationRow[] }) {
   const router = useRouter();
-  const [clearing, setClearing] = useState(false);
-  const unread = items.filter((n) => !n.readAt).length;
 
   const open = async (n: NotificationRow) => {
     if (!n.readAt) await markNotificationRead({ id: n.id });
     if (n.href) router.push(n.href);
-    router.refresh();
-  };
-  const clear = async () => {
-    setClearing(true);
-    await markAllNotificationsRead({});
-    setClearing(false);
     router.refresh();
   };
 
@@ -34,13 +27,6 @@ export function NotificationList({ items }: { items: NotificationRow[] }) {
   }
   return (
     <Card>
-      {unread > 0 && (
-        <Group justify="flex-end" mb="sm">
-          <Button variant="subtle" size="xs" loading={clearing} onClick={clear}>
-            Mark all as read
-          </Button>
-        </Group>
-      )}
       <Stack gap={0}>
         {items.map((n) => (
           <UnstyledButton
@@ -52,7 +38,10 @@ export function NotificationList({ items }: { items: NotificationRow[] }) {
             <Group wrap="nowrap" gap="sm" align="flex-start">
               <span className={classes.dot} aria-hidden />
               <div className={classes.body}>
-                <Text fw={n.readAt ? 400 : 600}>{n.title}</Text>
+                <Group gap="xs" align="center">
+                  <Text fw={n.readAt ? 400 : 600}>{n.title}</Text>
+                  <NotificationTags n={n} />
+                </Group>
                 {n.body && (
                   <Text size="sm" c="dimmed">
                     {n.body}
@@ -67,5 +56,23 @@ export function NotificationList({ items }: { items: NotificationRow[] }) {
         ))}
       </Stack>
     </Card>
+  );
+}
+
+// What it is about: the subject as its badge, the child by name. Both are optional — a
+// school-wide notice carries neither.
+export function NotificationTags({ n }: { n: NotificationRow }) {
+  if (!n.subjectId && !n.studentName) return null;
+  return (
+    <>
+      {n.subjectId && n.subjectName && (
+        <SubjectBadge subjectId={n.subjectId} name={n.subjectName} size="xs" />
+      )}
+      {n.studentName && (
+        <Text size="xs" c="dimmed">
+          {n.studentName}
+        </Text>
+      )}
+    </>
   );
 }

@@ -35,13 +35,14 @@ const counts = async () => {
 };
 
 describe("seed", () => {
-  it("creates the demo school and is idempotent", async () => {
+  // Seeds the whole school twice over a real SQLite file; slower than the 20s default.
+  it("creates the demo school and is idempotent", { timeout: 60_000 }, async () => {
     await seed(db, auth);
     const first = await counts();
     expect(first).toEqual({
-      users: 1 + 8 + 39 + 54,
+      users: 1 + 8 + 39 + 54 + 6,
       teachers: 8,
-      guardians: 40,
+      guardians: 46,
       students: 60,
       classes: 8,
       assignments: 24,

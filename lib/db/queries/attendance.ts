@@ -167,6 +167,24 @@ export async function listAttendanceForStudent(
     .limit(limit);
 }
 
+// "3 / 6" on a family's Attendance tab: of the registers taken for this child so far,
+// how many they were there for. Late counts as there; excused does not — the class still
+// happened and the family should see it in the total.
+export async function attendanceTally(
+  studentId: number,
+): Promise<{ present: number; total: number }> {
+  const [row] = await (
+    await db()
+  )
+    .select({
+      present: sql<number>`sum(case when ${attendance.status} in ('present', 'late') then 1 else 0 end)`,
+      total: sql<number>`count(*)`,
+    })
+    .from(attendance)
+    .where(eq(attendance.studentId, studentId));
+  return { present: row?.present ?? 0, total: row?.total ?? 0 };
+}
+
 export type TermRegisterRow = {
   date: string;
   classId: number;

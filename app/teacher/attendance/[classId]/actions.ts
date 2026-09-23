@@ -135,6 +135,7 @@ export const saveRegister = action(schema, async (input, { user, db }) => {
         title: `${c.firstName} was marked absent`,
         body: `${details.className} on ${date}.`,
         href: `/family/${c.studentId}`,
+        studentId: c.studentId,
         email: settings.absenceEmails ? () => sendAbsence(c, details, settings.name) : undefined,
       });
     }

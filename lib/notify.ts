@@ -10,6 +10,10 @@ type Notification = {
   title: string;
   body?: string;
   href?: string;
+  // What it is about, when it is about one of those: shown as a subject badge and the
+  // child's name, so a parent of three can tell at a glance which child it concerns.
+  subjectId?: string;
+  studentId?: number;
   // Sends the matching email. Runs after the response, and only if the person wants email.
   email?: () => Promise<void>;
 };
@@ -23,6 +27,8 @@ export async function notify(db: Db, n: Notification) {
     title: n.title,
     body: n.body ?? null,
     href: n.href ?? null,
+    subjectId: n.subjectId ?? null,
+    studentId: n.studentId ?? null,
   });
   if (!n.email) return;
   const user = await db.query.users.findFirst({

@@ -63,6 +63,8 @@ async function announce(
       title: `New homework: ${hw.title}`,
       body,
       href,
+      subjectId: hw.subjectId,
+      studentId: person.role === "guardian" ? person.studentId : undefined,
       email: () =>
         sendNotice(person, { title: `New homework: ${hw.title}`, body, url }, settings.name),
     });

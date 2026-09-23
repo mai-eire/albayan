@@ -62,6 +62,7 @@ export const addNote = action(
           title,
           body: `${user.name} wrote: ${input.body.slice(0, 140)}`,
           href,
+          studentId: input.studentId,
           email: () =>
             sendNotice(c, { title, body: `${user.name} wrote: ${input.body}`, url }, settings.name),
         });

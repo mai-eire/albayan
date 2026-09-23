@@ -1,6 +1,15 @@
 import { and, asc, eq } from "drizzle-orm";
 import { alias } from "drizzle-orm/sqlite-core";
 import { db } from "@/lib/db";
+import { getCurrentYear } from "@/lib/db/queries/academics";
+import {
+  feeAccountsForStudents,
+  listFeesForStudent,
+  listPaymentsForGuardian,
+  type FeeAccountRow,
+  type PaymentRow,
+  type StudentFeeYear,
+} from "@/lib/db/queries/fees";
 import { familyStart, forFamilies } from "@/lib/timetable";
 import {
   classes,
@@ -197,4 +206,30 @@ export async function getStudentForStudent(id: number): Promise<StudentForStuden
     .where(eq(students.id, id));
   if (!student) return null;
   return { ...student, place: (await loadPlace(id))?.place ?? null };
+}
+
+// Fees are the family's own money: a guardian may see every figure the office keeps about
+// their children, and nothing about anyone else's. These two wrap the fee queries so the
+// viewer is part of the call and no page reaches for the office's version by accident.
+
+// One child's fee for the year they are in now, with the payments recorded against it.
+export async function feeForChild(studentId: number): Promise<StudentFeeYear | null> {
+  const [current] = await listFeesForStudent(studentId);
+  return current ?? null;
+}
+
+export type FamilyFees = {
+  year: string | null;
+  children: FeeAccountRow[];
+  payments: PaymentRow[];
+};
+
+// Where the whole family stands this year, and every payment made for any of the children.
+export async function feesForGuardian(guardianId: number, childIds: number[]): Promise<FamilyFees> {
+  const [year, payments] = await Promise.all([
+    getCurrentYear(),
+    listPaymentsForGuardian(guardianId),
+  ]);
+  const accounts = year ? await feeAccountsForStudents(year.id, childIds) : new Map();
+  return { year: year?.id ?? null, children: [...accounts.values()], payments };
 }

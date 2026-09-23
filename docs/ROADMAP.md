@@ -19,11 +19,12 @@ Phase scope and rationale: [PLAN.md §17](PLAN.md). Definition of done for the c
 
 ## Now
 
-Review passes by area, feedback under `docs/feedback/<area>/`: admin passes 2–6 and teacher passes 1–3 are in. Next:
+Review passes by area, feedback under `docs/feedback/<area>/`: admin passes 2–6, teacher passes 1–3 and family pass 1 are in. Next:
 
-1. Salah reviews the **family (guardian) area**, then the student area; fix what comes back.
-2. Task 2, trimmed — a notification to every guardian when the office records a payment. No family fees page.
-3. Then events (tasks 3–4) and reports (task 5), parked until the reviews are through.
+1. Finish family pass 1 — the application wizard (country of origin, allergies, homeschooling, sectioned school years, languages) is the remaining half.
+2. Then the student area; fix what comes back.
+3. Task 2 — a notification to every guardian when the office records a payment.
+4. Then events (tasks 3–4) and reports (task 5), parked until the reviews are through.
 
 ## Blocked / undecided
 
@@ -33,6 +34,8 @@ Review passes by area, feedback under `docs/feedback/<area>/`: admin passes 2–
 - Eircode confirmed as the postal code format? — affects the postal-area report only.
 
 ## Recently done
+
+- 2026-09-23 — Family review pass 1, part one ([feedback/family/2026-09-23-review-1.md](feedback/family/2026-09-23-review-1.md)): the bell opens a popover with the unread ones and "Mark all as read" is a page action everywhere; a notification carries what it is about (migration 0008 — subject badge, child's name); the family overview lists the other parents; child pages gain breadcrumbs, counts on the tabs, "3 / 6" attendance and a **Fees** tab, and the Overview tab is gone (Details is first); new `/family/fees` for the household. The seed now has registers, homework, notifications and six two-parent families so all of this can be seen.
 
 - 2026-09-23 — Applications are kept and searchable (Phase 3 task 2b): the year applied for and the decision date are on the record (migration 0007); the office's list covers every outcome with year, session, class, name and status filters; an Application tab on the student page for the office, the family (editable while it waits) and the teacher (facts only). Also: record a payment from a family's Fees tab, every guardian on the students list, tables without stripes, "Applications (6)" in the nav.
 - 2026-09-20 — Teacher review pass 3 ([feedback/teacher/2026-09-20-review-3.md](feedback/teacher/2026-09-20-review-3.md)): homework due today as its own card (and a hydration error fixed there); paperclip on the attach toggle; weekends in tile on calendars; dev clock day arrows.

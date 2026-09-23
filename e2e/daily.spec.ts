@@ -26,7 +26,9 @@ test("register → family sees the absence → office corrects it", async ({ pag
   await expect(page.getByText("Register submitted")).toBeVisible();
 
   await signIn(page, "parent17@example.com");
-  await expect(page.getByRole("link", { name: /1 unread notification/ })).toBeVisible();
+  // The bell counts every unread the seed left too, so check the notification itself.
+  await page.goto("/family/notifications", { waitUntil: "networkidle" });
+  await expect(page.getByText("Aisha was marked absent").first()).toBeVisible();
   await page.goto("/family/34/attendance", { waitUntil: "networkidle" });
   await expect(page.getByText("Absent")).toBeVisible();
 

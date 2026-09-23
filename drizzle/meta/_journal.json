@@ -57,6 +57,13 @@
       "when": 1790125287336,
       "tag": "0007_application_year_decision",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1790152397443,
+      "tag": "0008_notification_subject_student",
+      "breakpoints": true
     }
   ]
 }

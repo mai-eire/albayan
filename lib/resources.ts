@@ -126,6 +126,8 @@ export const createResource = action(schema, async (input, { user, db }) => {
         title: `New resource: ${input.title}`,
         body: input.description ?? "Your teacher shared something new.",
         href,
+        subjectId: t.kind === "class" ? (t.subjectId ?? undefined) : undefined,
+        studentId: person.role === "guardian" ? person.studentId : undefined,
         email: () =>
           sendNotice(
             person,

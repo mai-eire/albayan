@@ -491,9 +491,13 @@ export type CoGuardian = {
   // What they are to the children they share with this guardian ("Father"), and which.
   relationship: string;
   childNames: string[];
+  // Whether they have set a password yet, so an invite that needs chasing is visible.
+  signedIn: boolean;
 };
 
 // The other guardians of this guardian's children — the other parent, a grandparent.
+// Names and relationships only, no contact details, so the family's own overview shows
+// the same rows: in a separated family one parent's phone number is not the other's to give.
 export async function listCoGuardians(guardianId: number): Promise<CoGuardian[]> {
   const d = await db();
   const other = alias(studentGuardians, "other");
@@ -504,6 +508,7 @@ export async function listCoGuardians(guardianId: number): Promise<CoGuardian[]>
       gender: guardians.gender,
       relationship: other.relationship,
       childName: students.firstName,
+      signedIn: sql<number>`${users.status} <> 'invited'`,
     })
     .from(studentGuardians)
     .innerJoin(other, eq(other.studentId, studentGuardians.studentId))
@@ -518,7 +523,7 @@ export async function listCoGuardians(guardianId: number): Promise<CoGuardian[]>
   for (const r of rows) {
     const g = out.find((o) => o.id === r.id);
     if (g) g.childNames.push(r.childName);
-    else out.push({ ...r, childNames: [r.childName] });
+    else out.push({ ...r, childNames: [r.childName], signedIn: Boolean(r.signedIn) });
   }
   return out;
 }

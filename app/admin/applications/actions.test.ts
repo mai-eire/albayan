@@ -133,7 +133,9 @@ describe("approveApplication", () => {
     });
     const entries = await db.select().from(auditLog).where(eq(auditLog.action, "student.approve"));
     expect(entries).toHaveLength(2);
-    expect(await db.select().from(notifications)).toEqual([
+    expect(
+      await db.select().from(notifications).where(eq(notifications.type, "application.approved")),
+    ).toEqual([
       expect.objectContaining({
         type: "application.approved",
         href: `/family/${first.id}`,

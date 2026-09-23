@@ -1,6 +1,8 @@
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { bool, nowIso, timestamps } from "../columns";
+import { subjects } from "./academics";
 import { users } from "./auth";
+import { students } from "./students";
 
 // A single row (id = 1). School-level configuration; there is no key-value settings table.
 export const schoolSettings = sqliteTable("school_settings", {
@@ -28,6 +30,10 @@ export const notifications = sqliteTable(
     title: text().notNull(),
     body: text(),
     href: text(),
+    // What the notification is about, when it is about one of those: the subject is shown
+    // as a badge, the child by name, so a parent of three knows which one it concerns.
+    subjectId: text().references(() => subjects.id),
+    studentId: integer().references(() => students.id, { onDelete: "cascade" }),
     readAt: text(),
     ...timestamps,
   },

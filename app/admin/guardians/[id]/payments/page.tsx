@@ -1,7 +1,11 @@
 import { clock } from "@/lib/clock";
 import { notFound } from "next/navigation";
 import { getCurrentYear } from "@/lib/db/queries/academics";
-import { listFeeAccounts, listPaymentsForGuardian } from "@/lib/db/queries/fees";
+import {
+  listFeeAccounts,
+  listPaymentsForGuardian,
+  listPaymentTargets,
+} from "@/lib/db/queries/fees";
 import { getSchoolSettings } from "@/lib/db/queries/settings";
 import { getGuardianForAdmin } from "@/lib/db/queries/students";
 import { todayIn } from "@/lib/time";
@@ -20,14 +24,21 @@ export default async function GuardianPaymentsPage({ params }: Props) {
   ]);
   if (!guardian) notFound();
   const childIds = new Set(guardian.children.map((c) => c.id));
-  const accounts = year
-    ? (await listFeeAccounts(year.id)).filter((a) => childIds.has(a.enrolment.studentId))
-    : [];
+  const [accounts, targets] = year
+    ? await Promise.all([
+        listFeeAccounts(year.id).then((rows) =>
+          rows.filter((a) => childIds.has(a.enrolment.studentId)),
+        ),
+        // Only this family's children, so the modal opens on the right people.
+        listPaymentTargets(year.id).then((rows) => rows.filter((t) => childIds.has(t.studentId))),
+      ])
+    : [[], []];
   const today = todayIn(timezone, await clock());
   return (
     <FamilyPayments
       year={year?.id ?? null}
       accounts={accounts}
+      targets={targets}
       payments={payments}
       today={today}
       timezone={timezone}

@@ -10,15 +10,22 @@ import { PaymentModal } from "./PaymentModal";
 export function RecordPaymentButton({
   targets,
   today,
+  size,
 }: {
   targets: PaymentTarget[];
   today: string;
+  // "xs" inside a card title; the default on a page header.
+  size?: string;
 }) {
   const [opened, setOpened] = useState(false);
   if (targets.length === 0) return null;
   return (
     <>
-      <Button leftSection={<IconPlus size={16} stroke={1.75} />} onClick={() => setOpened(true)}>
+      <Button
+        leftSection={<IconPlus size={16} stroke={1.75} />}
+        size={size}
+        onClick={() => setOpened(true)}
+      >
         Record payment
       </Button>
       {opened && (

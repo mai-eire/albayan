@@ -7,20 +7,23 @@ import { CardTitle } from "@/components/CardTitle";
 import { Figures } from "@/components/Figures";
 import { MoneyText } from "@/components/MoneyText";
 import { StatusBadge } from "@/components/StatusBadge";
-import type { FeeAccountRow, PaymentRow } from "@/lib/db/queries/fees";
+import type { FeeAccountRow, PaymentRow, PaymentTarget } from "@/lib/db/queries/fees";
 import { formatEuros } from "@/lib/money";
 import { PaymentsTable } from "@/app/admin/fees/PaymentsTable";
+import { RecordPaymentButton } from "@/app/admin/fees/RecordPaymentButton";
 
 type Props = {
   year: string | null;
   accounts: FeeAccountRow[];
+  // This family's children, for the "Record payment" modal.
+  targets: PaymentTarget[];
   payments: PaymentRow[];
   today: string;
   timezone: string;
 };
 
 // What the family owes this year, child by child, then every payment they've made.
-export function FamilyPayments({ year, accounts, payments, today, timezone }: Props) {
+export function FamilyPayments({ year, accounts, targets, payments, today, timezone }: Props) {
   const [child, setChild] = useState<string | null>(null);
   const shown = child ? payments.filter((p) => String(p.studentId) === child) : payments;
   const children = [...new Map(payments.map((p) => [p.studentId, p.studentName]))].map(
@@ -34,7 +37,9 @@ export function FamilyPayments({ year, accounts, payments, today, timezone }: Pr
     <Stack gap="lg">
       {year && accounts.length > 0 && (
         <Card>
-          <CardTitle>Fees for {year}</CardTitle>
+          <CardTitle context={<RecordPaymentButton targets={targets} today={today} size="xs" />}>
+            Fees for {year}
+          </CardTitle>
           <Figures
             items={[
               {

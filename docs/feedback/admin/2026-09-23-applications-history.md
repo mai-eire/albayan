@@ -19,3 +19,9 @@ Salah asked to see previous applications and decisions, and for the application 
 
 - ☑ Migration 0007: `students.application_year_id` (indexed, references `academic_years`) and `students.declined_at`. Backfilled — the year from the session the family named, else the current year; the decline date from the row's last change.
 - ☑ Every path that creates an application records the year: the family wizard, the office's "Add a child", the seed.
+
+## Follow-ups
+
+- ☑ A declined application keeps its "Offer a place after all" button — the office changes its mind, or a place opens. The offer modal opens with an amber note saying when and why it was declined; accepting clears the refusal (the audit log keeps it) and emails the family as usual. Declining stays a one-way step from "waiting".
+- ☑ The guardian's name in the table links to their page; clicking anywhere else on the row still opens the application.
+- ☑ An accepted application links to the child's page from the panel ("Open Amira's page"), not the table — a column of links that only some rows have reads as broken, and the panel is where you are when you want the child.

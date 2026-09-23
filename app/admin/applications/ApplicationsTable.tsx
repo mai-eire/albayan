@@ -20,10 +20,12 @@ import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useDebouncedCallback } from "@mantine/hooks";
-import { IconInbox, IconSearch } from "@tabler/icons-react";
+import { IconArrowUpRight, IconInbox, IconSearch } from "@tabler/icons-react";
+import { AppLink } from "@/components/AppLink";
 import { ClassFilter, type ClassFilterOption } from "@/components/ClassFilter";
 import { Nothing } from "@/components/Nothing";
 import { EmptyState } from "@/components/EmptyState";
+import { LinkButton } from "@/components/LinkButton";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Field } from "@/components/Field";
 import { useUrlFilters } from "@/components/useUrlFilters";
@@ -160,7 +162,15 @@ export function ApplicationsTable({
         </Table.Thead>
         <Table.Tbody>
           {shown.map((a) => (
-            <Table.Tr key={a.id} onClick={() => setOpen(a)} style={{ cursor: "pointer" }}>
+            <Table.Tr
+              key={a.id}
+              // The row opens the application; the guardian's link goes to their page.
+              onClick={(e) => {
+                if ((e.target as HTMLElement).closest("a")) return;
+                setOpen(a);
+              }}
+              style={{ cursor: "pointer" }}
+            >
               <Table.Td>
                 <Text fw={500}>
                   {a.firstName} {a.lastName}
@@ -182,7 +192,7 @@ export function ApplicationsTable({
                 )}
               </Table.Td>
               <Table.Td>
-                {a.guardian.name}
+                <AppLink href={`/admin/guardians/${a.guardian.id}`}>{a.guardian.name}</AppLink>
                 <Text size="sm" c="dimmed">
                   {relationshipLabels[a.guardian.relationship as keyof typeof relationshipLabels]}
                 </Text>
@@ -207,8 +217,20 @@ export function ApplicationsTable({
       >
         {open && (
           <Stack gap="lg">
-            <Group gap="xs">
-              <Outcome application={open} />
+            <Group gap="xs" justify="space-between">
+              <Group gap="xs">
+                <Outcome application={open} />
+              </Group>
+              {open.status === "accepted" && (
+                <LinkButton
+                  href={`/admin/students/${open.id}`}
+                  variant="subtle"
+                  size="xs"
+                  rightSection={<IconArrowUpRight size={14} stroke={1.75} />}
+                >
+                  Open {open.firstName}&apos;s page
+                </LinkButton>
+              )}
             </Group>
             {open.status === "accepted" && open.placedClassName && (
               <Text size="sm">
@@ -278,12 +300,16 @@ export function ApplicationsTable({
                 {open.guardian.phone && ` · ${open.guardian.phone}`}
               </Text>
             </Stack>
-            {open.status === "applied" && (
+            {open.status !== "accepted" && (
               <Group justify="flex-end" mt="md">
-                <Button variant="light" color="clay" onClick={() => setDeciding("decline")}>
-                  Decline
+                {open.status === "applied" && (
+                  <Button variant="light" color="clay" onClick={() => setDeciding("decline")}>
+                    Decline
+                  </Button>
+                )}
+                <Button onClick={() => setDeciding("approve")}>
+                  {open.status === "declined" ? "Offer a place after all" : "Offer a place"}
                 </Button>
-                <Button onClick={() => setDeciding("approve")}>Offer a place</Button>
               </Group>
             )}
           </Stack>

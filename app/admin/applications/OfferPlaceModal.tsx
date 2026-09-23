@@ -148,6 +148,18 @@ function OfferForm({
           {a.allergies && <Badge color="clay">Allergies</Badge>}
           {a.medicalNotes && <Badge color="saffron">Medical</Badge>}
         </Group>
+        {a.status === "declined" && (
+          <Alert
+            color="saffron"
+            variant="light"
+            icon={<IconAlertTriangle size={16} stroke={1.75} />}
+          >
+            This application was declined
+            {a.decidedAt ? ` on ${dayjs(a.decidedAt).format("D MMM YYYY")}` : ""}
+            {a.declinedReason ? `: "${a.declinedReason}"` : "."} Offering a place now replaces that
+            decision and emails the family as usual.
+          </Alert>
+        )}
         <SimpleGrid cols={{ base: 2, xs: 4 }} spacing="md">
           <Field
             label="Age"

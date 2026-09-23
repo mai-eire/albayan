@@ -185,6 +185,14 @@ describe("declineApplication", () => {
       status: "declined",
       declinedReason: reason,
     });
+
+    // The office can change its mind: a declined child can still be given a place.
+    expect(
+      await approveApplication({ id: pending.id, classId: 1, fee: "250", feeNote: "" }),
+    ).toMatchObject({ ok: true });
+    expect(await db.query.students.findFirst({ where: eq(students.id, pending.id) })).toMatchObject(
+      { status: "active", declinedReason: null, declinedAt: null },
+    );
     const mail = readdirSync(mailDir).find((f) => f.includes("about-"));
     expect(mail).toBeTruthy();
     expect(readFileSync(join(mailDir, mail!), "utf8")).toContain("We&#x27;re full");

@@ -1,7 +1,7 @@
 "use server";
 
 import { clock } from "@/lib/clock";
-import { and, count, eq } from "drizzle-orm";
+import { and, count, eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/access";
@@ -27,9 +27,11 @@ import { createStudentAccount } from "@/lib/student-accounts";
 import { nextStudentId } from "@/lib/student-ids";
 import { todayIn } from "@/lib/time";
 
-async function pendingApplication(db: Db, id: number) {
+// An application the office may still act on. A place can be offered to a child who was
+// turned down earlier — the office changes its mind, or a place opens up.
+async function applicationFor(db: Db, id: number, allowed: ("applied" | "declined")[]) {
   const student = await db.query.students.findFirst({
-    where: and(eq(students.id, id), eq(students.status, "applied")),
+    where: and(eq(students.id, id), inArray(students.status, allowed)),
   });
   if (!student) throw new ActionError("That application has already been dealt with.");
   const [contact] = await db
@@ -57,7 +59,7 @@ export const approveApplication = action(
   }),
   async (input, { user, db }) => {
     requireAdmin(user);
-    const { student, contact } = await pendingApplication(db, input.id);
+    const { student, contact } = await applicationFor(db, input.id, ["applied", "declined"]);
     const [placement] = await db
       .select({ cls: classes, session: schoolSessions })
       .from(classes)
@@ -87,7 +89,16 @@ export const approveApplication = action(
     const now = new Date().toISOString();
     await db
       .update(students)
-      .set({ studentId, userId, status: "active", approvedAt: now, offerNote })
+      // Offering a place undoes an earlier refusal; the audit log keeps that history.
+      .set({
+        studentId,
+        userId,
+        status: "active",
+        approvedAt: now,
+        offerNote,
+        declinedReason: null,
+        declinedAt: null,
+      })
       .where(eq(students.id, student.id));
     const [enrolment] = await db
       .insert(enrolments)
@@ -105,6 +116,7 @@ export const approveApplication = action(
       entityType: "student",
       entityId: student.id,
       changes: {
+        status: [student.status, "active"],
         studentId: [null, studentId],
         classId: [null, placement.cls.id],
         feeCents: [null, input.fee],
@@ -147,7 +159,7 @@ export const declineApplication = action(
   }),
   async (input, { user, db }) => {
     requireAdmin(user);
-    const { student, contact } = await pendingApplication(db, input.id);
+    const { student, contact } = await applicationFor(db, input.id, ["applied"]);
     await db
       .update(students)
       .set({

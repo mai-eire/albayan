@@ -28,3 +28,9 @@ button[data-weekend]:not([data-selected]):not([data-disabled]):not([data-outside
   button[data-weekend]:not([data-selected]):not([data-disabled]):not([data-outside]) {
   color: var(--mantine-color-tile-3);
 }
+
+/* Tables carry no stripes, so the hovered row has to read on its own: a touch darker than
+   Mantine's default in light mode (DESIGN 4.5). */
+[data-mantine-color-scheme="light"] .mantine-Table-table {
+  --table-hover-color: var(--mantine-color-gray-2);
+}

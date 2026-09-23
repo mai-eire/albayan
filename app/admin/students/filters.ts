@@ -31,14 +31,15 @@ export function parseStudentFilters(params: Record<string, string | undefined>):
 }
 
 export function applyStudentFilters(rows: StudentListRow[], f: StudentFilters): StudentListRow[] {
+  const q = f.q;
   return rows.filter(
     (s) =>
       (f.status === "all" || s.status === f.status) &&
       (!f.sessionId || s.sessionId === f.sessionId) &&
       (!f.classId || s.classId === f.classId) &&
-      (!f.q ||
-        `${s.firstName} ${s.lastName}`.toLowerCase().includes(f.q) ||
-        (s.studentId ?? "").toLowerCase().includes(f.q) ||
-        (s.guardianName ?? "").toLowerCase().includes(f.q)),
+      (!q ||
+        `${s.firstName} ${s.lastName}`.toLowerCase().includes(q) ||
+        (s.studentId ?? "").toLowerCase().includes(q) ||
+        s.guardians.some((g) => g.name.toLowerCase().includes(q))),
   );
 }

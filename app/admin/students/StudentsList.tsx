@@ -14,7 +14,7 @@ import { ageOn } from "@/lib/age";
 import type { StudentListRow } from "@/lib/db/queries/students";
 import { applyStudentFilters, parseStudentFilters, studentStatusOptions } from "./filters";
 
-type Key = "name" | "id" | "age" | "class" | "guardian";
+type Key = "name" | "id" | "age" | "class" | "guardians";
 
 type Props = {
   rows: StudentListRow[];
@@ -42,8 +42,8 @@ export function StudentsList({ rows, sessions, classes, today }: Props) {
           return s.dateOfBirth;
         case "class":
           return s.className && `${s.sessionName} ${s.className}`;
-        case "guardian":
-          return s.guardianName;
+        case "guardians":
+          return s.guardians[0]?.name ?? null;
       }
     },
     { key: "name", direction: "asc" },
@@ -102,7 +102,7 @@ export function StudentsList({ rows, sessions, classes, today }: Props) {
               {th("ID", "id")}
               {th("Age", "age", "end")}
               {th("Class", "class")}
-              {th("Guardian", "guardian")}
+              {th("Guardians", "guardians")}
               <Table.Th>Status</Table.Th>
             </Table.Tr>
           </Table.Thead>
@@ -137,7 +137,22 @@ export function StudentsList({ rows, sessions, classes, today }: Props) {
                     <Nothing>not placed</Nothing>
                   )}
                 </Table.Td>
-                <Table.Td>{s.guardianName ?? <Nothing>no guardian</Nothing>}</Table.Td>
+                <Table.Td>
+                  {s.guardians.length === 0 ? (
+                    <Nothing>no guardians</Nothing>
+                  ) : (
+                    s.guardians.map((g, i) => (
+                      <span key={g.id}>
+                        {i > 0 && (
+                          <Text component="span" c="dimmed">
+                            {", "}
+                          </Text>
+                        )}
+                        <AppLink href={`/admin/guardians/${g.id}`}>{g.name}</AppLink>
+                      </span>
+                    ))
+                  )}
+                </Table.Td>
                 <Table.Td>
                   <StatusBadge domain="application" value={s.status} />
                 </Table.Td>

@@ -35,9 +35,10 @@ export const theme = createTheme({
     Badge: { defaultProps: { variant: "light", radius: "md", tt: "none" } },
     Modal: { defaultProps: { radius: "lg" } },
     SegmentedControl: { defaultProps: { radius: "xl" } },
-    // Staff tables are dense (DESIGN §4.5): striped, compact rows, small type.
+    // Staff tables are dense (DESIGN §4.5): compact rows, small type, no stripes — the row
+    // under the pointer is what should stand out, so the hover tint carries the emphasis.
     Table: {
-      defaultProps: { verticalSpacing: "xs", fz: "sm", striped: true, highlightOnHover: true },
+      defaultProps: { verticalSpacing: "xs", fz: "sm", highlightOnHover: true },
     },
     // The description sits under the input so paired fields keep their inputs level.
     InputWrapper: {

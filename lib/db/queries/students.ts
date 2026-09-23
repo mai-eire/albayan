@@ -77,9 +77,12 @@ export type StudentListRow = {
   className: string | null;
   sessionId: number | null;
   sessionName: string | null;
+  // The primary contact, for the CSV export and search.
   guardianName: string | null;
   guardianEmail: string | null;
   guardianPhone: string | null;
+  // Everyone linked to the child, primary contact first.
+  guardians: { id: number; name: string }[];
 };
 
 // The active enrolment's class and session, joined once for lists and profiles.
@@ -89,7 +92,18 @@ const activeEnrolment = and(eq(enrolments.studentId, students.id), eq(enrolments
 export async function listStudentsForAdmin(): Promise<StudentListRow[]> {
   const d = await db();
   const guardianUser = alias(users, "guardian_user");
-  return d
+  const links = await d
+    .select({
+      studentId: studentGuardians.studentId,
+      id: guardians.id,
+      name: users.name,
+      isPrimaryContact: studentGuardians.isPrimaryContact,
+    })
+    .from(studentGuardians)
+    .innerJoin(guardians, eq(guardians.id, studentGuardians.guardianId))
+    .innerJoin(users, eq(users.id, guardians.userId))
+    .orderBy(desc(studentGuardians.isPrimaryContact), asc(users.name));
+  const rows = await d
     .select({
       id: students.id,
       studentId: students.studentId,
@@ -116,6 +130,10 @@ export async function listStudentsForAdmin(): Promise<StudentListRow[]> {
     .leftJoin(guardians, eq(guardians.id, studentGuardians.guardianId))
     .leftJoin(guardianUser, eq(guardianUser.id, guardians.userId))
     .orderBy(asc(students.lastName), asc(students.firstName));
+  return rows.map((r) => ({
+    ...r,
+    guardians: links.filter((l) => l.studentId === r.id).map(({ id, name }) => ({ id, name })),
+  }));
 }
 
 export type GuardianForAdmin = {

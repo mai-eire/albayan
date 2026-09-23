@@ -38,7 +38,7 @@ const {
 // the application, including the session and class the family asked for (decision
 // 2026-09-23); what the family wrote and why a place was refused stay with the office.
 const hidden = {
-  students: ["ethnicity", "phone", "email", "application_notes", "declined_reason"],
+  students: ["country_of_origin", "phone", "email", "application_notes", "declined_reason"],
   guardians: [
     "address_line1",
     "address_line2",
@@ -46,7 +46,7 @@ const hidden = {
     "postal_code",
     "area",
     "spoken_languages",
-    "ethnicity",
+    "country_of_origin",
     "registration_reasons",
     "registration_reason_other",
   ],
@@ -72,7 +72,7 @@ beforeAll(async () => {
     emergencyContactPhone: "0860000000",
     emergencyContactRelationship: "Grandmother",
     spokenLanguages: ["SECRET-LANGUAGE"],
-    ethnicity: "SECRET-ETHNICITY",
+    countryOfOrigin: "SECRET-COUNTRY",
     registrationReasons: ["other"],
     registrationReasonOther: "SECRET-REASON",
   });
@@ -102,7 +102,7 @@ beforeAll(async () => {
     lastName: "Ahmed",
     gender: "female",
     dateOfBirth: "2018-05-17",
-    ethnicity: "SECRET-ETHNICITY",
+    countryOfOrigin: "SECRET-COUNTRY",
     allergies: "Penicillin",
     status: "active",
     appliedAt: "2026-08-20T10:00:00.000Z",

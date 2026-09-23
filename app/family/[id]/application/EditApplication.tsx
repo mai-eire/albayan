@@ -2,11 +2,13 @@
 
 import {
   Button,
+  Checkbox,
   Group,
   Modal,
   Select,
   SimpleGrid,
   Stack,
+  TagsInput,
   Textarea,
   TextInput,
 } from "@mantine/core";
@@ -20,7 +22,8 @@ import { FormError } from "@/components/FormError";
 import { toast } from "@/components/toast";
 import type { DayChoice } from "@/app/family/register-child/ApplicationWizard";
 import { arabicProficiencies } from "@/lib/db/schema";
-import { proficiencyLabels, yearGroups } from "@/lib/demographics";
+import { ageOn } from "@/lib/age";
+import { commonAllergies, proficiencyLabels, yearGroupSections } from "@/lib/demographics";
 import { updateApplication } from "./actions";
 
 type Values = {
@@ -29,13 +32,17 @@ type Values = {
   dateOfBirth: string | null;
   gender: string | null;
   schoolYearGroup: string;
+  isHomeschooled: boolean;
   arabicProficiency: string;
-  allergies: string;
+  allergies: string[];
   medicalNotes: string;
   applicationNotes: string;
   preferredSessionId: number | null;
   preferredClassId: number | null;
 };
+
+// Mantine's Select needs a string for every option; this one stands for "no preference".
+const anyDay = "any";
 
 // A family correcting their child's application while it waits. Same questions as the
 // wizard's child step, in one form.
@@ -57,6 +64,9 @@ export function EditApplication({
     initialValues: child,
   });
   const day = days.find((d) => d.id === form.values.preferredSessionId);
+  const age = form.values.dateOfBirth
+    ? ageOn(form.values.dateOfBirth, new Date().toISOString().slice(0, 10))
+    : null;
 
   const submit = form.onSubmit(async (values) => {
     if (saving) return;
@@ -68,7 +78,6 @@ export function EditApplication({
       gender: values.gender as "male" | "female",
       dateOfBirth: values.dateOfBirth ?? "",
       arabicProficiency: values.arabicProficiency as (typeof arabicProficiencies)[number],
-      preferredSessionId: values.preferredSessionId ?? 0,
     });
     setSaving(false);
     if (!result.ok) {
@@ -100,6 +109,8 @@ export function EditApplication({
               <DateField
                 label="Date of birth"
                 withAsterisk
+                description={age === null ? undefined : `${age} years old`}
+                inputWrapperOrder={["label", "input", "description", "error"]}
                 {...form.getInputProps("dateOfBirth")}
               />
               <Select
@@ -111,13 +122,25 @@ export function EditApplication({
                 allowDeselect={false}
                 {...form.getInputProps("gender")}
               />
-              <Select
-                label="School year"
-                data={yearGroups}
-                searchable
-                clearable
-                {...form.getInputProps("schoolYearGroup")}
-              />
+              <Stack gap="xs">
+                <Select
+                  label="School year"
+                  data={yearGroupSections}
+                  searchable
+                  clearable
+                  withAsterisk={!form.values.isHomeschooled}
+                  disabled={form.values.isHomeschooled}
+                  {...form.getInputProps("schoolYearGroup")}
+                />
+                <Checkbox
+                  label="Taught at home"
+                  checked={form.values.isHomeschooled}
+                  onChange={(e) => {
+                    form.setFieldValue("isHomeschooled", e.currentTarget.checked);
+                    if (e.currentTarget.checked) form.setFieldValue("schoolYearGroup", "");
+                  }}
+                />
+              </Stack>
               <Select
                 label="Arabic"
                 data={arabicProficiencies.map((p) => ({ value: p, label: proficiencyLabels[p] }))}
@@ -126,11 +149,14 @@ export function EditApplication({
               />
               <Select
                 label="Day"
-                data={days.map((d) => ({ value: String(d.id), label: d.label }))}
+                data={[
+                  { value: anyDay, label: "Any day" },
+                  ...days.map((d) => ({ value: String(d.id), label: d.label })),
+                ]}
                 allowDeselect={false}
-                value={form.values.preferredSessionId?.toString() ?? null}
+                value={form.values.preferredSessionId?.toString() ?? anyDay}
                 onChange={(v) => {
-                  form.setFieldValue("preferredSessionId", v ? Number(v) : null);
+                  form.setFieldValue("preferredSessionId", v && v !== anyDay ? Number(v) : null);
                   form.setFieldValue("preferredClassId", null);
                 }}
                 error={form.errors.preferredSessionId}
@@ -144,7 +170,13 @@ export function EditApplication({
                 onChange={(v) => form.setFieldValue("preferredClassId", v ? Number(v) : null)}
               />
             </SimpleGrid>
-            <Textarea label="Allergies" autosize minRows={2} {...form.getInputProps("allergies")} />
+            <TagsInput
+              label="Allergies"
+              description="Pick from the list or type your own"
+              data={commonAllergies}
+              maxTags={10}
+              {...form.getInputProps("allergies")}
+            />
             <Textarea
               label="Medical needs"
               autosize

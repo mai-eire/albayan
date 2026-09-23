@@ -12,6 +12,7 @@ export default async function TeacherStudentApplicationPage({ params }: Props) {
       application={{
         ...student.application,
         schoolYearGroup: student.schoolYearGroup,
+        isHomeschooled: student.isHomeschooled,
         arabicProficiency: student.arabicProficiency,
         placedClassName: student.className,
         placedSessionName: student.sessionName,

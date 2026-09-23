@@ -7,6 +7,7 @@ import {
   Modal,
   Select,
   Stack,
+  TagsInput,
   Text,
   Textarea,
   TextInput,
@@ -27,10 +28,11 @@ import {
   type Relationship,
 } from "@/lib/db/schema";
 import {
+  commonAllergies,
   proficiencyLabels,
   relationshipLabels,
   relationshipsFor,
-  yearGroups,
+  yearGroupSections,
 } from "@/lib/demographics";
 import { addChildForGuardian } from "./actions";
 
@@ -41,6 +43,9 @@ type Props = {
   // The other guardians of this guardian's children, offered for the new child too.
   coGuardians: { id: number; name: string; relationship: Relationship }[];
 };
+
+// Mantine's Select needs a string for every option; this one stands for "no preference".
+const anyDay = "any";
 
 // The office registers a child on the family's behalf, asking what the wizard asks;
 // approve from the inbox afterwards.
@@ -59,8 +64,9 @@ export function AddChildButton({ guardian, sessions, coGuardians }: Props) {
       gender: null as Gender | null,
       dateOfBirth: null as string | null,
       schoolYearGroup: null as string | null,
+      isHomeschooled: false,
       arabicProficiency: "none" as ArabicProficiency,
-      allergies: "",
+      allergies: [] as string[],
       medicalNotes: "",
       applicationNotes: "",
       relationship: (guardian.gender === "female"
@@ -68,7 +74,7 @@ export function AddChildButton({ guardian, sessions, coGuardians }: Props) {
         : guardian.gender === "male"
           ? "father"
           : null) as Relationship | null,
-      preferredSessionId: sessions[0] ? String(sessions[0].id) : null,
+      preferredSessionId: sessions[0] ? String(sessions[0].id) : anyDay,
       preferredClassId: null as string | null,
       alsoGuardianIds: coGuardians.map((g) => String(g.id)),
     },
@@ -84,12 +90,16 @@ export function AddChildButton({ guardian, sessions, coGuardians }: Props) {
       gender: values.gender as Gender,
       dateOfBirth: values.dateOfBirth ?? "",
       schoolYearGroup: values.schoolYearGroup,
+      isHomeschooled: values.isHomeschooled,
       arabicProficiency: values.arabicProficiency,
       allergies: values.allergies,
       medicalNotes: values.medicalNotes,
       applicationNotes: values.applicationNotes,
       relationship: values.relationship as Relationship,
-      preferredSessionId: Number(values.preferredSessionId),
+      preferredSessionId:
+        values.preferredSessionId && values.preferredSessionId !== anyDay
+          ? Number(values.preferredSessionId)
+          : null,
       preferredClassId: values.preferredClassId ? Number(values.preferredClassId) : null,
       alsoGuardians: coGuardians
         .filter((g) => values.alsoGuardianIds.includes(String(g.id)))
@@ -142,13 +152,25 @@ export function AddChildButton({ guardian, sessions, coGuardians }: Props) {
               />
             </Group>
             <Group grow align="flex-start">
-              <Select
-                label="School year"
-                description="At their weekday school"
-                data={yearGroups}
-                clearable
-                {...form.getInputProps("schoolYearGroup")}
-              />
+              <Stack gap="xs">
+                <Select
+                  label="School year"
+                  description="At their weekday school"
+                  data={yearGroupSections}
+                  searchable
+                  clearable
+                  disabled={form.values.isHomeschooled}
+                  {...form.getInputProps("schoolYearGroup")}
+                />
+                <Checkbox
+                  label="Taught at home"
+                  checked={form.values.isHomeschooled}
+                  onChange={(e) => {
+                    form.setFieldValue("isHomeschooled", e.currentTarget.checked);
+                    if (e.currentTarget.checked) form.setFieldValue("schoolYearGroup", null);
+                  }}
+                />
+              </Stack>
               <Select
                 label="Arabic level"
                 data={arabicProficiencies.map((p) => ({ value: p, label: proficiencyLabels[p] }))}
@@ -156,11 +178,11 @@ export function AddChildButton({ guardian, sessions, coGuardians }: Props) {
                 {...form.getInputProps("arabicProficiency")}
               />
             </Group>
-            <Textarea
+            <TagsInput
               label="Allergies"
-              description="Leave blank if none"
-              autosize
-              minRows={2}
+              description="Pick from the list or type. Leave blank if none."
+              data={commonAllergies}
+              maxTags={10}
               {...form.getInputProps("allergies")}
             />
             <Textarea
@@ -185,12 +207,14 @@ export function AddChildButton({ guardian, sessions, coGuardians }: Props) {
               />
               <Select
                 label="Preferred session"
-                data={sessions.map((s) => ({ value: String(s.id), label: s.name }))}
-                withAsterisk
+                data={[
+                  { value: anyDay, label: "Any day" },
+                  ...sessions.map((s) => ({ value: String(s.id), label: s.name })),
+                ]}
                 allowDeselect={false}
                 value={form.values.preferredSessionId}
                 onChange={(v) => {
-                  form.setFieldValue("preferredSessionId", v);
+                  form.setFieldValue("preferredSessionId", v ?? anyDay);
                   form.setFieldValue("preferredClassId", null);
                 }}
                 error={form.errors.preferredSessionId}

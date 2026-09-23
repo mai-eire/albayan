@@ -24,7 +24,10 @@ export default async function TeacherStudentPage({ params }: Props) {
         <SimpleGrid cols={{ base: 2, xs: 4 }} spacing="md">
           <Field label="Age" value={ageOn(student.dateOfBirth, today)} />
           <Field label="Gender" value={student.gender === "male" ? "Boy" : "Girl"} />
-          <Field label="School year" value={student.schoolYearGroup} />
+          <Field
+            label="School year"
+            value={student.isHomeschooled ? "Taught at home" : student.schoolYearGroup}
+          />
           <Field label="Arabic" value={proficiencyLabels[student.arabicProficiency]} />
         </SimpleGrid>
       </Card>

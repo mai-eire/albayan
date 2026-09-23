@@ -45,7 +45,9 @@ export const students = sqliteTable(
     lastName: text().notNull(),
     gender: text({ enum: genders }).notNull(),
     dateOfBirth: text().notNull(),
-    ethnicity: text(),
+    countryOfOrigin: text(),
+    // Taught at home rather than at a weekday school; the school year is then not asked.
+    isHomeschooled: bool().notNull().default(false),
     schoolYearGroup: text(),
     arabicProficiency: text({ enum: arabicProficiencies }).notNull().default("none"),
     email: text(),

@@ -4,6 +4,7 @@ import { eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/access";
+import { getCurrentYear } from "@/lib/db/queries/academics";
 import { action, ActionError } from "@/lib/actions";
 import { audit, diff } from "@/lib/audit";
 import {
@@ -66,7 +67,7 @@ export const updateGuardianSensitive = action(
     addressLine2: optionalText(120),
     city: optionalText(60),
     postalCode: optionalText(12),
-    ethnicity: optionalText(60),
+    countryOfOrigin: optionalText(60),
     spokenLanguages: z.array(z.string().trim().min(1).max(40)).max(10),
     registrationReasons: z.array(z.enum(registrationReasons)),
     registrationReasonOther: optionalText(200),
@@ -132,12 +133,14 @@ export const addChildForGuardian = action(
     gender: z.enum(genders, { message: "Choose" }),
     dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Enter their date of birth"),
     schoolYearGroup: optionalText(40),
+    isHomeschooled: z.boolean().default(false),
     arabicProficiency: z.enum(arabicProficiencies),
-    allergies: optionalText(500),
+    allergies: z.array(z.string().trim().min(1).max(60)).max(10).default([]),
     medicalNotes: optionalText(1000),
     applicationNotes: optionalText(1000),
     relationship: z.enum(relationships, { message: "Say who the guardian is to the child" }),
-    preferredSessionId: z.number().int({ message: "Choose a session" }),
+    // Null is "any day", as on the family's own form.
+    preferredSessionId: z.number().int().nullable(),
     preferredClassId: z.number().int().nullable(),
     // The children's other guardians to put on this child too, with what they are to them.
     alsoGuardians: z
@@ -149,10 +152,14 @@ export const addChildForGuardian = action(
     requireAdmin(user);
     const guardian = await db.query.guardians.findFirst({ where: eq(guardians.id, guardianId) });
     if (!guardian) throw new ActionError("That guardian no longer exists.");
-    const session = await db.query.schoolSessions.findFirst({
-      where: eq(schoolSessions.id, child.preferredSessionId),
-    });
-    if (!session) throw new ActionError("Choose a session.");
+    const session = child.preferredSessionId
+      ? await db.query.schoolSessions.findFirst({
+          where: eq(schoolSessions.id, child.preferredSessionId),
+        })
+      : null;
+    if (child.preferredSessionId && !session) throw new ActionError("Choose a session.");
+    const year = session?.academicYearId ?? (await getCurrentYear())?.id;
+    if (!year) throw new ActionError("The school hasn't opened a year for applications yet.");
     const others = alsoGuardians.filter((g) => g.id !== guardianId);
     if (others.length) {
       const known = await db
@@ -171,9 +178,10 @@ export const addChildForGuardian = action(
       .insert(students)
       .values({
         ...child,
+        allergies: child.allergies.join(", ") || null,
         status: "applied",
         // The year they are applying for, from the session they asked for.
-        applicationYearId: session.academicYearId,
+        applicationYearId: year,
         appliedAt: new Date().toISOString(),
         createdByGuardianId: guardianId,
       })

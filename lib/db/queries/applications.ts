@@ -21,6 +21,7 @@ export type Application = {
   gender: (typeof students.$inferSelect)["gender"];
   dateOfBirth: string;
   schoolYearGroup: string | null;
+  isHomeschooled: boolean;
   arabicProficiency: (typeof students.$inferSelect)["arabicProficiency"];
   allergies: string | null;
   medicalNotes: string | null;
@@ -107,6 +108,7 @@ export async function listApplications(
     gender: r.student.gender,
     dateOfBirth: r.student.dateOfBirth,
     schoolYearGroup: r.student.schoolYearGroup,
+    isHomeschooled: r.student.isHomeschooled,
     arabicProficiency: r.student.arabicProficiency,
     allergies: r.student.allergies,
     medicalNotes: r.student.medicalNotes,

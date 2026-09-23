@@ -23,11 +23,11 @@ import type { guardians } from "@/lib/db/schema";
 import { registrationReasons } from "@/lib/db/schema";
 import {
   commonLanguages,
-  ethnicities,
   guardianGenderOptions,
   preferNotToSay,
   reasonLabels,
 } from "@/lib/demographics";
+import { countryOptions } from "@/lib/countries";
 import { updateAccount, type AccountInput } from "./actions";
 
 type Props = {
@@ -52,7 +52,7 @@ export function AccountForm({ user, guardian }: Props) {
       emergencyContactName: guardian?.emergencyContactName ?? "",
       emergencyContactPhone: guardian?.emergencyContactPhone ?? "",
       emergencyContactRelationship: guardian?.emergencyContactRelationship ?? "",
-      ethnicity: guardian?.ethnicity ?? "",
+      countryOfOrigin: guardian?.countryOfOrigin ?? "",
       spokenLanguages: guardian?.spokenLanguages ?? [],
       registrationReasons: guardian?.registrationReasons ?? [],
       registrationReasonOther: guardian?.registrationReasonOther ?? "",
@@ -129,11 +129,12 @@ export function AccountForm({ user, guardian }: Props) {
               {sensitiveExplanation}
             </Text>
             <Select
-              label="Your ethnicity"
-              data={[...ethnicities, preferNotToSay]}
-              value={form.values.ethnicity || preferNotToSay}
+              label="Your country of origin"
+              data={countryOptions(preferNotToSay)}
+              searchable
+              value={form.values.countryOfOrigin || preferNotToSay}
               onChange={(v) =>
-                form.setFieldValue("ethnicity", v === preferNotToSay ? "" : (v ?? ""))
+                form.setFieldValue("countryOfOrigin", v === preferNotToSay ? "" : (v ?? ""))
               }
               allowDeselect={false}
             />

@@ -17,6 +17,7 @@ export default async function StudentApplicationPage({ params }: Props) {
         decidedAt: application.decidedAt,
         academicYearId: application.applicationYearId,
         schoolYearGroup: application.schoolYearGroup,
+        isHomeschooled: application.isHomeschooled,
         arabicProficiency: application.arabicProficiency,
         preferredSessionName: application.preferredSessionName,
         preferredClassName: application.preferredClassName,

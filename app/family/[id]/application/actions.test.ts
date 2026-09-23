@@ -44,19 +44,23 @@ const parent: CurrentUser = {
   areas: ["family"],
 };
 
+// What the form sends: allergies as a list, joined before they are stored.
 const application = {
   firstName: "Zayd",
   lastName: "Khan",
   dateOfBirth: "2017-03-02",
   gender: "male" as const,
   schoolYearGroup: "3rd class",
+  isHomeschooled: false,
   arabicProficiency: "beginner" as const,
-  allergies: "",
+  allergies: [] as string[],
   medicalNotes: "",
   applicationNotes: "Would like to be with his cousin.",
-  preferredSessionId: 1,
-  preferredClassId: null,
+  preferredSessionId: 1 as number | null,
+  preferredClassId: null as number | null,
 };
+
+const stored = { ...application, allergies: null };
 
 beforeAll(async () => {
   ({ db, dispose } = await testDb());
@@ -76,7 +80,7 @@ beforeAll(async () => {
   await db.insert(students).values([
     {
       id: 1,
-      ...application,
+      ...stored,
       status: "applied",
       applicationYearId: "2026-27",
       appliedAt: "2026-08-20T10:00:00.000Z",
@@ -84,7 +88,7 @@ beforeAll(async () => {
     },
     {
       id: 2,
-      ...application,
+      ...stored,
       firstName: "Sara",
       status: "active",
       applicationYearId: "2026-27",

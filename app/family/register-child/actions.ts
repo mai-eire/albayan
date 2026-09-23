@@ -10,6 +10,7 @@ import { audit } from "@/lib/audit";
 import { classes, guardians, schoolSessions, studentGuardians, students } from "@/lib/db/schema";
 import { routingKey } from "@/lib/demographics";
 import { todayIn } from "@/lib/time";
+import { getCurrentYear } from "@/lib/db/queries/academics";
 import { getSchoolSettings } from "@/lib/db/queries/settings";
 import { applicationSchema } from "./schema";
 
@@ -26,11 +27,21 @@ export const submitApplication = action(applicationSchema, async (input, { user,
     throw new ActionError("Check the date of birth — we take children up to 18.");
   }
 
-  const session = await db.query.schoolSessions.findFirst({
-    where: and(eq(schoolSessions.id, input.preferredSessionId), eq(schoolSessions.isActive, true)),
-  });
-  if (!session) throw new ActionError("That day is no longer available. Choose another.");
-  if (input.preferredClassId !== null) {
+  // No preferred day is a real answer ("any day"); the year then comes from the current one.
+  const session = input.preferredSessionId
+    ? await db.query.schoolSessions.findFirst({
+        where: and(
+          eq(schoolSessions.id, input.preferredSessionId),
+          eq(schoolSessions.isActive, true),
+        ),
+      })
+    : null;
+  if (input.preferredSessionId && !session) {
+    throw new ActionError("That day is no longer available. Choose another.");
+  }
+  const year = session?.academicYearId ?? (await getCurrentYear())?.id;
+  if (!year) throw new ActionError("The school hasn't opened a year for applications yet.");
+  if (input.preferredClassId !== null && session) {
     const cls = await db.query.classes.findFirst({
       where: and(eq(classes.id, input.preferredClassId), eq(classes.sessionId, session.id)),
     });
@@ -49,7 +60,7 @@ export const submitApplication = action(applicationSchema, async (input, { user,
       emergencyContactPhone: input.emergencyContactPhone,
       emergencyContactRelationship: input.emergencyContactRelationship,
       spokenLanguages: input.spokenLanguages,
-      ethnicity: input.guardianEthnicity,
+      countryOfOrigin: input.guardianCountry,
       registrationReasons: input.registrationReasons,
       registrationReasonOther: input.registrationReasons.includes("other")
         ? input.registrationReasonOther
@@ -64,16 +75,17 @@ export const submitApplication = action(applicationSchema, async (input, { user,
       lastName: input.lastName,
       gender: input.gender,
       dateOfBirth: input.dateOfBirth,
-      ethnicity: input.childEthnicity,
+      countryOfOrigin: input.childCountry,
       schoolYearGroup: input.schoolYearGroup,
       arabicProficiency: input.arabicProficiency,
-      allergies: input.allergies,
+      allergies: input.allergies.join(", ") || null,
+      isHomeschooled: input.isHomeschooled,
       medicalNotes: input.medicalNotes,
       applicationNotes: input.applicationNotes,
       status: "applied",
       // The year the family is applying for, so the office can list it by year later.
-      applicationYearId: session.academicYearId,
-      preferredSessionId: session.id,
+      applicationYearId: year,
+      preferredSessionId: session?.id ?? null,
       preferredClassId: input.preferredClassId,
       appliedAt: new Date().toISOString(),
       createdByGuardianId: guardian.id,
@@ -90,7 +102,9 @@ export const submitApplication = action(applicationSchema, async (input, { user,
     action: "student.apply",
     entityType: "student",
     entityId: student.id,
-    changes: { created: [null, { firstName: input.firstName, preferredSessionId: session.id }] },
+    changes: {
+      created: [null, { firstName: input.firstName, preferredSessionId: session?.id ?? null }],
+    },
   });
   revalidatePath("/family");
   // The nav carries the pending count, so the whole area is revalidated.

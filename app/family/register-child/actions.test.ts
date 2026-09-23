@@ -63,14 +63,15 @@ const valid = {
   dateOfBirth: "2018-05-04",
   gender: "male",
   schoolYearGroup: "2nd class",
+  isHomeschooled: false,
   arabicProficiency: "beginner",
-  allergies: "Peanuts",
+  allergies: ["Peanuts"],
   medicalNotes: "",
   applicationNotes: "With her cousin please",
   preferredSessionId: 1,
   preferredClassId: 1,
-  childEthnicity: "Arab",
-  guardianEthnicity: null,
+  childCountry: "Egypt",
+  guardianCountry: null,
   spokenLanguages: ["Arabic", "English"],
   registrationReasons: ["quran", "other"],
   registrationReasonOther: "Friends go here",
@@ -119,12 +120,15 @@ describe("submitApplication", () => {
 
   it("validates fields and the chosen day and class", async () => {
     current = verified;
-    expect(
-      await submitApplication({ ...valid, firstName: "", preferredSessionId: null }),
-    ).toMatchObject({
-      ok: false,
-      fieldErrors: { firstName: "Enter their first name", preferredSessionId: "Choose a day" },
-    });
+    expect(await submitApplication({ ...valid, firstName: "", schoolYearGroup: "" })).toMatchObject(
+      {
+        ok: false,
+        fieldErrors: {
+          firstName: "Enter their first name",
+          schoolYearGroup: "Tell us their school year, or tick that they're taught at home",
+        },
+      },
+    );
     expect(await submitApplication({ ...valid, dateOfBirth: "2000-01-01" })).toMatchObject({
       ok: false,
       error: /date of birth/,
@@ -142,6 +146,30 @@ describe("submitApplication", () => {
     expect(await db.select().from(students)).toHaveLength(0);
   });
 
+  it("takes a child taught at home with no preferred day", async () => {
+    current = verified;
+    expect(
+      await submitApplication({
+        ...valid,
+        schoolYearGroup: "",
+        isHomeschooled: true,
+        preferredSessionId: null,
+        preferredClassId: null,
+      }),
+    ).toMatchObject({ ok: true });
+    const [child] = await db.select().from(students);
+    expect(child).toMatchObject({
+      isHomeschooled: true,
+      schoolYearGroup: null,
+      preferredSessionId: null,
+      // No day chosen, so the application belongs to the current year.
+      applicationYearId: "2026-27",
+    });
+    await db.delete(studentGuardians);
+    await db.delete(students);
+    await db.delete(auditLog);
+  });
+
   it("files the child, links the guardian, saves their details and audits", async () => {
     current = verified;
     const result = await submitApplication(valid);
@@ -154,7 +182,7 @@ describe("submitApplication", () => {
       studentId: null,
       preferredSessionId: 1,
       preferredClassId: 1,
-      ethnicity: "Arab",
+      countryOfOrigin: "Egypt",
       medicalNotes: null,
       applicationNotes: "With her cousin please",
       createdByGuardianId: 1,
@@ -173,7 +201,7 @@ describe("submitApplication", () => {
       area: "D15",
       addressLine2: null,
       spokenLanguages: ["Arabic", "English"],
-      ethnicity: null,
+      countryOfOrigin: null,
       registrationReasons: ["quran", "other"],
       registrationReasonOther: "Friends go here",
     });

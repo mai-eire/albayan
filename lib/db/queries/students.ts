@@ -15,7 +15,7 @@ import {
 } from "@/lib/db/schema";
 
 // Per-viewer queries (CLAUDE.md "Privacy is structural"): each function selects only what
-// its viewer may see. Teacher-facing shapes never include ethnicity, languages, reasons,
+// its viewer may see. Teacher-facing shapes never include countryOfOrigin, languages, reasons,
 // address or guardian contact details.
 
 type Student = typeof students.$inferSelect;
@@ -164,14 +164,14 @@ export type StudentForAdmin = Student & {
   guardians: GuardianForAdmin[];
   // Everything under here is admin-only and rendered inside SensitiveSection.
   sensitive: {
-    ethnicity: string | null;
+    countryOfOrigin: string | null;
     guardians: {
       id: number;
       name: string;
       address: string | null;
       area: string | null;
       spokenLanguages: string[];
-      ethnicity: string | null;
+      countryOfOrigin: string | null;
       registrationReasons: string[];
       registrationReasonOther: string | null;
     }[];
@@ -230,7 +230,7 @@ export async function getStudentForAdmin(id: number): Promise<StudentForAdmin | 
       emergencyContactRelationship: guardian.emergencyContactRelationship,
     })),
     sensitive: {
-      ethnicity: student.ethnicity,
+      countryOfOrigin: student.countryOfOrigin,
       guardians: guardianRows.map(({ guardian, user }) => ({
         id: guardian.id,
         name: user.name,
@@ -240,7 +240,7 @@ export async function getStudentForAdmin(id: number): Promise<StudentForAdmin | 
             .join(", ") || null,
         area: guardian.area,
         spokenLanguages: guardian.spokenLanguages ?? [],
-        ethnicity: guardian.ethnicity,
+        countryOfOrigin: guardian.countryOfOrigin,
         registrationReasons: guardian.registrationReasons ?? [],
         registrationReasonOther: guardian.registrationReasonOther,
       })),
@@ -355,7 +355,7 @@ export type GuardianProfile = {
     postalCode: string | null;
     area: string | null;
     spokenLanguages: string[];
-    ethnicity: string | null;
+    countryOfOrigin: string | null;
     registrationReasons: RegistrationReason[];
     registrationReasonOther: string | null;
   };
@@ -410,7 +410,7 @@ export async function getGuardianForAdmin(id: number): Promise<GuardianProfile |
       postalCode: guardian.postalCode,
       area: guardian.area,
       spokenLanguages: guardian.spokenLanguages ?? [],
-      ethnicity: guardian.ethnicity,
+      countryOfOrigin: guardian.countryOfOrigin,
       registrationReasons: guardian.registrationReasons ?? [],
       registrationReasonOther: guardian.registrationReasonOther,
     },

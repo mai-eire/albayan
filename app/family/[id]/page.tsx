@@ -17,7 +17,10 @@ export default async function ChildDetailsPage({ params }: Props) {
           <Field label="Full name" value={`${child.firstName} ${child.lastName}`} />
           <Field label="Date of birth" value={<DateText date={child.dateOfBirth} withYear />} />
           <Field label="Student ID" value={child.studentId} />
-          <Field label="School year" value={child.schoolYearGroup} />
+          <Field
+            label="School year"
+            value={child.isHomeschooled ? "Taught at home" : child.schoolYearGroup}
+          />
           <Field label="Arabic" value={proficiencyLabels[child.arabicProficiency]} />
           {child.place && <Field label="Class teacher" value={child.place.classTeacherName} />}
         </SimpleGrid>

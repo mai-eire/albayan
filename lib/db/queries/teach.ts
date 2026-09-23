@@ -17,7 +17,7 @@ import {
 import { timePeriods } from "@/lib/timetable";
 
 // Teacher-facing queries. Every select here lists its columns; nothing under the
-// "sensitive" rules in CLAUDE.md (ethnicity, languages, reasons, address, guardian
+// "sensitive" rules in CLAUDE.md (countryOfOrigin, languages, reasons, address, guardian
 // contact details) is ever named. lib/db/queries/teach.test.ts checks the SQL.
 
 export type TeacherClassRow = {
@@ -210,6 +210,7 @@ export type StudentForTeacher = {
   dateOfBirth: string;
   gender: (typeof students.$inferSelect)["gender"];
   schoolYearGroup: string | null;
+  isHomeschooled: boolean;
   arabicProficiency: (typeof students.$inferSelect)["arabicProficiency"];
   allergies: string | null;
   medicalNotes: string | null;
@@ -250,6 +251,7 @@ export async function getStudentForTeacher(id: number): Promise<StudentForTeache
       dateOfBirth: students.dateOfBirth,
       gender: students.gender,
       schoolYearGroup: students.schoolYearGroup,
+      isHomeschooled: students.isHomeschooled,
       arabicProficiency: students.arabicProficiency,
       allergies: students.allergies,
       medicalNotes: students.medicalNotes,

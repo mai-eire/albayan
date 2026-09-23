@@ -21,7 +21,10 @@ export default async function StudentDetailsPage({ params }: Props) {
             <Field label="Surname" value={student.lastName} />
             <Field label="Date of birth" value={<DateText date={student.dateOfBirth} withYear />} />
             <Field label="Gender" value={student.gender === "female" ? "Girl" : "Boy"} />
-            <Field label="School year" value={student.schoolYearGroup} />
+            <Field
+              label="School year"
+              value={student.isHomeschooled ? "Taught at home" : student.schoolYearGroup}
+            />
             <Field label="Arabic level" value={proficiencyLabels[student.arabicProficiency]} />
             <Field label="Student's email" value={student.email} />
             <Field label="Student's phone" value={student.phone} />

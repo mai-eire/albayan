@@ -11,27 +11,19 @@ import {
 
 export const preferNotToSay = "Prefer not to say";
 
-// Top-level groups only; the report is about the mix of the school, not sub-categories.
-export const ethnicities = ["Arab", "Asian", "Black", "White", "Mixed", "Other"];
-
-// Irish mainstream school years; stored as the label.
-export const yearGroups = [
-  "Not yet in school",
-  "Junior infants",
-  "Senior infants",
-  "1st class",
-  "2nd class",
-  "3rd class",
-  "4th class",
-  "5th class",
-  "6th class",
-  "1st year",
-  "2nd year",
-  "3rd year",
-  "4th year",
-  "5th year",
-  "6th year",
+// Irish mainstream school years, grouped the way parents talk about them. Stored as the
+// label, so the flat list is what the reports and the CSVs use.
+export const yearGroupSections = [
+  { group: "Pre-school", items: ["Not yet in school", "Junior infants", "Senior infants"] },
+  {
+    group: "Primary",
+    items: ["1st class", "2nd class", "3rd class", "4th class", "5th class", "6th class"],
+  },
+  { group: "Junior cycle", items: ["1st year", "2nd year", "3rd year"] },
+  { group: "Senior cycle", items: ["4th year", "5th year", "6th year"] },
 ];
+
+export const yearGroups = yearGroupSections.flatMap((s) => s.items);
 
 export const proficiencyLabels: Record<ArabicProficiency, string> = {
   none: "None yet",
@@ -70,18 +62,103 @@ export const reasonLabels: Record<RegistrationReason, string> = {
   other: "Something else",
 };
 
+// The languages families here actually speak, then the rest of the world's big ones.
+// The field accepts anything typed, so this is a head start, not a closed list.
 export const commonLanguages = [
   "Arabic",
   "English",
-  "Urdu",
-  "Somali",
+  "Irish",
+  "Albanian",
+  "Amharic",
   "Bengali",
-  "Kurdish",
-  "Turkish",
+  "Bosnian",
+  "Bulgarian",
+  "Cantonese",
+  "Croatian",
+  "Czech",
+  "Danish",
+  "Dari",
+  "Dutch",
+  "Farsi",
+  "Filipino",
+  "Finnish",
   "French",
+  "German",
+  "Greek",
+  "Gujarati",
+  "Hausa",
+  "Hindi",
+  "Hungarian",
+  "Igbo",
+  "Indonesian",
+  "Italian",
+  "Japanese",
+  "Korean",
+  "Kurdish",
+  "Latvian",
+  "Lingala",
+  "Lithuanian",
   "Malay",
+  "Malayalam",
+  "Mandarin",
+  "Nepali",
+  "Norwegian",
+  "Oromo",
   "Pashto",
+  "Polish",
+  "Portuguese",
+  "Punjabi",
+  "Romanian",
+  "Russian",
+  "Serbian",
+  "Sinhala",
+  "Slovak",
+  "Somali",
+  "Spanish",
+  "Swahili",
+  "Swedish",
+  "Tamil",
+  "Telugu",
+  "Thai",
+  "Tigrinya",
+  "Turkish",
+  "Twi",
+  "Ukrainian",
+  "Urdu",
+  "Vietnamese",
+  "Wolof",
+  "Yoruba",
+  "Zulu",
 ];
+
+// The allergies a school hears about most; anything else is typed in. Stored as one text
+// field, comma separated, because that is how a teacher reads it on a register.
+export const commonAllergies = [
+  "Peanuts",
+  "Tree nuts",
+  "Dairy",
+  "Eggs",
+  "Wheat or gluten",
+  "Soya",
+  "Fish",
+  "Shellfish",
+  "Sesame",
+  "Penicillin",
+  "Bee or wasp stings",
+  "Pollen or hay fever",
+  "Dust",
+  "Animals",
+  "Latex",
+];
+
+// Allergies are stored as one comma-separated line (a teacher reads them that way on a
+// register) and edited as a list.
+export function splitAllergies(value: string | null | undefined): string[] {
+  return (value ?? "")
+    .split(",")
+    .map((a) => a.trim())
+    .filter(Boolean);
+}
 
 // Eircode routing key ("D15 AB12" → "D15"), the only part of the address the reports use.
 export function routingKey(postalCode: string): string | null {

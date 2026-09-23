@@ -25,7 +25,7 @@ export default async function GuardianSensitivePage({ params }: Props) {
               label="Languages at home"
               value={s.spokenLanguages.length ? s.spokenLanguages.join(", ") : "Not given"}
             />
-            <Field label="Ethnicity" value={s.ethnicity ?? "Prefer not to say"} />
+            <Field label="Country of origin" value={s.countryOfOrigin ?? "Prefer not to say"} />
             <Field
               label="Reasons for registering"
               value={

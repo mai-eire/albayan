@@ -24,7 +24,7 @@ Guiding principle: **build the simplest system that makes the school's common wo
 | Registration | Application → admin approval. Guardians state a preferred class/session. |
 | Attendance | Once per student per school day. |
 | Student "academic year" field | The child's mainstream-school year group (`schoolYearGroup`), distinct from the school's academic year and class. |
-| Sensitive data | Ethnicity etc. collected optionally for diversity statistics; admin-only; form explains it plays no part in decisions. |
+| Sensitive data | Country of origin etc. collected optionally for diversity statistics; admin-only; form explains it plays no part in decisions. |
 | Safety data | Medical/allergy info per child; emergency contact per guardian. Visible to the child's teachers. |
 | Student ID | `ALB-26-0042` |
 | Local development | **Zero service dependencies.** `pnpm dev` must work offline: SQLite on disk for the DB, local folder for files, emails written to disk. No Docker, no cloud accounts needed to contribute. |
@@ -58,7 +58,7 @@ D1 is the right call for "one dependency" and this scale, but it is SQLite, whic
 - No timezone-aware timestamps: everything stored as UTC ISO strings / integers; the app renders in the school's timezone (a `school_settings` value; **to confirm — Europe/Dublin?**).
 - No decimal type: money is stored as integer cents (`feeCents`, `amountCents`) because SQLite would otherwise store `250.10` as a float and sums drift. The UI, forms and emails only ever show and accept euros (`250` or `250.50`); the conversion lives in one `lib/money.ts`.
 - Single-writer, ~10 GB limit, no concurrent-transaction complexity: fine for a school; irrelevant at this scale.
-- Reporting queries (group by ethnicity, etc.) are trivial in SQLite.
+- Reporting queries (group by country of origin, etc.) are trivial in SQLite.
 
 Fallback if D1 ever bites: Postgres on Neon reached through Cloudflare Hyperdrive. Drizzle makes that a migration, not a rewrite. Do **not** start there — it adds a vendor for no current benefit.
 
@@ -183,14 +183,14 @@ guardians
   id, userId UNIQUE,
   addressLine1?, addressLine2?, city?, postalCode? (Eircode), area? (derived from Eircode routing key, e.g. "D15"),
   emergencyContactName?, emergencyContactPhone?, emergencyContactRelationship?,
-  spokenLanguages JSON [], ethnicity?,                          -- sensitive
+  spokenLanguages JSON [], countryOfOrigin?,                    -- sensitive
   registrationReasons JSON [] (arabic|quran|religion|mosque|community|other),
   registrationReasonOther?                                      -- sensitive
 
 students
   id, studentId? UNIQUE (assigned on approval), userId? UNIQUE,
   firstName, lastName, gender (male|female), dateOfBirth,        -- age computed
-  ethnicity?,                                                   -- sensitive
+  countryOfOrigin?, isHomeschooled,                             -- countryOfOrigin sensitive
   schoolYearGroup?,                                             -- mainstream school year
   arabicProficiency (none|beginner|intermediate|advanced|native),
   email?, phone?,                                               -- student's own, optional
@@ -316,7 +316,7 @@ canViewResource(viewer, resource)
 | | Admin | Teacher | Guardian | Student |
 |---|---|---|---|---|
 | Students | all, RW | own classes, limited fields | own children | self |
-| Sensitive demographics (ethnicity, languages, reasons, address) | RW | **hidden** | own only | — |
+| Sensitive demographics (country of origin, languages, reasons, address) | RW | **hidden** | own only | — |
 | Allergies / medical notes | RW | **visible** for own students | own children RW | — |
 | Emergency contact (on guardian) | RW | **visible** for own students' guardians | own RW | — |
 | Guardian phone/email | RW | hidden (name + relationship only) | own | — |
@@ -330,7 +330,7 @@ canViewResource(viewer, resource)
 
 Privacy is structural: teacher-facing queries never select the hidden columns. Medical and emergency-contact data are the deliberate exception because a teacher is the person on the spot.
 
-Field policy: ethnicity (guardian and student), spoken languages and registration reasons are **optional**, with "prefer not to say", and the form states: *"Used only for anonymous diversity statistics. It has no effect on any admission or placement decision."* They feed the admin reports (§11) as aggregate counts and are never shown to teachers.
+Field policy: country of origin (guardian and student), spoken languages and registration reasons are **optional**, with "prefer not to say", and the form states: *"Used only for anonymous diversity statistics. It has no effect on any admission or placement decision."* They feed the admin reports (§11) as aggregate counts and are never shown to teachers.
 
 ---
 
@@ -351,7 +351,7 @@ Field policy: ethnicity (guardian and student), spoken languages and registratio
 /admin/fees               Outstanding balances, record payment, payment history
 /admin/events             Events & calendar
 /admin/resources          School-wide resources
-/admin/reports            Diversity & demographics: ethnicity, languages, postal area,
+/admin/reports            Diversity & demographics: country of origin, languages, postal area,
                           gender, age band, session, Arabic proficiency, registration reasons
 /admin/audit              Audit log
 /admin/rules              School rules (rich text, shown in every area)
@@ -407,7 +407,7 @@ Home · Timetable · Homework · Resources · Calendar. Attendance and notes are
 - **Schedule editor** (per session): set the start time, then an ordered list of periods — pick a subject or type a title (Break), set duration in minutes, drag to reorder. A live preview shows the computed timeline (10:00 Quran · 10:50 Arabic · 11:40 Break · 11:55 Islamic Studies). No times are typed.
 - **Class teachers** (per class): a table with one row per subject in the session's schedule and a teacher dropdown on each row, plus the class teacher. The class timetable renders underneath. A teacher assigned to the same subject in two classes of the same session is shown as a warning (they'd be in two rooms at once), not blocked.
 - **Fees**: outstanding balances by session/class; record payment (choose child's enrolment, amount, method, who paid); payment history per student and per guardian; export CSV.
-- **Reports**: bar/pie charts of active students by ethnicity, spoken language, postal area, gender, age band, session, Arabic proficiency, registration reasons; filter by academic year. Counts only; CSV export. Headline versions (two or three charts) on the dashboard.
+- **Reports**: bar/pie charts of active students by country of origin, spoken language, postal area, gender, age band, session, Arabic proficiency, registration reasons; filter by academic year. Counts only; CSV export. Headline versions (two or three charts) on the dashboard.
 - **Attendance**: by date → sessions → classes → submitted/missing; drill in and edit (audited).
 - **Year rollover** (end of year, Phase 3): create the next academic year, copy sessions/schedules/classes, then a roll-over screen listing every active student with a proposed next class (default: same level name, admin adjusts) → creates next year's enrolments at the new standard fee and marks the old ones ended. Guardians get a "confirm your child's place for 2027-28" notification. Students who don't return are marked `inactive`. This is the only annual workflow beyond setup, and the first one isn't needed until the end of year one.
 

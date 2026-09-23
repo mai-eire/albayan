@@ -16,6 +16,7 @@ const detailsSchema = z.object({
   dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Enter their date of birth"),
   gender: z.enum(genders),
   schoolYearGroup: optionalText(40),
+  isHomeschooled: z.boolean(),
   arabicProficiency: z.enum(arabicProficiencies),
   email: optionalText(120),
   phone: optionalText(30),
@@ -27,7 +28,7 @@ const healthSchema = z.object({
   medicalNotes: optionalText(1000),
 });
 
-const ethnicitySchema = z.object({ id: z.number().int(), ethnicity: optionalText(60) });
+const countrySchema = z.object({ id: z.number().int(), countryOfOrigin: optionalText(60) });
 
 // One action per card on the profile; each audits the fields that actually changed.
 function update(
@@ -54,4 +55,4 @@ function update(
 
 export const updateStudentDetails = update("update_details", detailsSchema);
 export const updateStudentHealth = update("update_health", healthSchema);
-export const updateStudentEthnicity = update("update_ethnicity", ethnicitySchema);
+export const updateStudentCountry = update("update_country", countrySchema);

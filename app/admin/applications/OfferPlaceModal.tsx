@@ -166,7 +166,10 @@ function OfferForm({
             value={`${ageOn(a.dateOfBirth, today)} (${dayjs(a.dateOfBirth).format("D MMM YYYY")})`}
           />
           <Field label="Gender" value={a.gender === "male" ? "Boy" : "Girl"} />
-          <Field label="School year" value={a.schoolYearGroup} />
+          <Field
+            label="School year"
+            value={a.isHomeschooled ? "Taught at home" : a.schoolYearGroup}
+          />
           <Field label="Arabic" value={proficiencyLabels[a.arabicProficiency]} />
           <Field label="Session asked for" value={a.preferredSessionName ?? "No preference"} />
           <Field label="Class asked for" value={a.preferredClassName ?? "No preference"} />

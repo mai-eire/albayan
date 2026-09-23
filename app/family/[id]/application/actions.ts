@@ -11,13 +11,13 @@ import { clock } from "@/lib/clock";
 import { getSchoolSettings } from "@/lib/db/queries/settings";
 import { classes, schoolSessions, students } from "@/lib/db/schema";
 import { todayIn } from "@/lib/time";
-import { childStepSchema } from "@/app/family/register-child/schema";
+import { childFields, withSchoolYearRule } from "@/app/family/register-child/schema";
 
 // A family may correct their child's application until the office decides. The change is
 // audited (decision 2026-09-23); the office reads the current version in the inbox, so
 // nobody is notified for a typo.
 export const updateApplication = action(
-  childStepSchema.safeExtend({ id: z.number().int() }),
+  withSchoolYearRule(z.object({ ...childFields, id: z.number().int() })),
   async ({ id, ...input }, { user, db }) => {
     const [facts, { timezone }] = await Promise.all([loadStudentFacts(id), getSchoolSettings()]);
     await requireArea("family");
@@ -34,20 +34,29 @@ export const updateApplication = action(
     if (input.dateOfBirth > today || age > 18) {
       throw new ActionError("Check the date of birth — we take children up to 18.");
     }
-    const session = await db.query.schoolSessions.findFirst({
-      where: and(
-        eq(schoolSessions.id, input.preferredSessionId),
-        eq(schoolSessions.isActive, true),
-      ),
-    });
-    if (!session) throw new ActionError("That day is no longer available. Choose another.");
-    if (input.preferredClassId !== null) {
+    const session = input.preferredSessionId
+      ? await db.query.schoolSessions.findFirst({
+          where: and(
+            eq(schoolSessions.id, input.preferredSessionId),
+            eq(schoolSessions.isActive, true),
+          ),
+        })
+      : null;
+    if (input.preferredSessionId && !session) {
+      throw new ActionError("That day is no longer available. Choose another.");
+    }
+    const year = session?.academicYearId ?? before.applicationYearId;
+    if (input.preferredClassId !== null && session) {
       const cls = await db.query.classes.findFirst({
         where: and(eq(classes.id, input.preferredClassId), eq(classes.sessionId, session.id)),
       });
       if (!cls) throw new ActionError("That class isn't on the day you chose.");
     }
-    const values = { ...input, applicationYearId: session.academicYearId };
+    const values = {
+      ...input,
+      allergies: input.allergies.join(", ") || null,
+      applicationYearId: year,
+    };
     await db.update(students).set(values).where(eq(students.id, id));
     await audit(db, {
       actorUserId: user.id,

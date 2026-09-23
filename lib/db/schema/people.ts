@@ -15,7 +15,7 @@ export type RegistrationReason = (typeof registrationReasons)[number];
 export const guardianGenders = ["female", "male"] as const;
 export type GuardianGender = (typeof guardianGenders)[number];
 
-// Sensitive columns (ethnicity, spokenLanguages, registrationReasons*, address) are
+// Sensitive columns (countryOfOrigin, spokenLanguages, registrationReasons*, address) are
 // admin-only and never selected by teacher-facing queries (lib/db/queries).
 export const guardians = sqliteTable(
   "guardians",
@@ -39,7 +39,7 @@ export const guardians = sqliteTable(
     emergencyContactPhone: text(),
     emergencyContactRelationship: text(),
     spokenLanguages: jsonList(),
-    ethnicity: text(),
+    countryOfOrigin: text(),
     registrationReasons: jsonList<RegistrationReason>(),
     registrationReasonOther: text(),
     ...timestamps,

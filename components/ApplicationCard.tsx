@@ -16,6 +16,7 @@ export type ApplicationView = {
   decidedAt: string | null;
   academicYearId: string | null;
   schoolYearGroup: string | null;
+  isHomeschooled: boolean;
   arabicProficiency: ArabicProficiency;
   preferredSessionName: string | null;
   preferredClassName: string | null;
@@ -56,7 +57,10 @@ export function ApplicationCard({
           />
           <Field label="Session asked for" value={a.preferredSessionName ?? "No preference"} />
           <Field label="Class asked for" value={a.preferredClassName ?? "No preference"} />
-          <Field label="School year then" value={a.schoolYearGroup} />
+          <Field
+            label="School year then"
+            value={a.isHomeschooled ? "Taught at home" : a.schoolYearGroup}
+          />
           <Field label="Arabic then" value={proficiencyLabels[a.arabicProficiency]} />
           {a.placedClassName && (
             <Field

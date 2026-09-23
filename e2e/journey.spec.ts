@@ -53,6 +53,7 @@ test("register → apply → approve → student signs in; teacher kept out", as
   await page.getByRole("textbox", { name: /^Date of birth/ }).fill("4 May 2018");
   await page.getByRole("textbox", { name: /^Date of birth/ }).press("Tab");
   await pick(page, /^Gender/, "Boy");
+  await pick(page, /^School year/, "1st class");
   await pick(page, /^Preferred day/, "Sunday");
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(page.getByText("Optional. Used only for anonymous")).toBeVisible();

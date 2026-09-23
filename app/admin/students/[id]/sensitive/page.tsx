@@ -5,7 +5,7 @@ import { EditableCard } from "@/components/EditableCard";
 import { Field } from "@/components/Field";
 import { SensitiveSection } from "@/components/SensitiveSection";
 import { reasonLabels } from "@/lib/demographics";
-import { EthnicityForm } from "../forms";
+import { CountryOfOriginForm } from "../forms";
 import { loadStudent } from "../load";
 
 type Props = { params: Promise<{ id: string }> };
@@ -20,11 +20,14 @@ export default async function StudentSensitivePage({ params }: Props) {
           title={student.firstName}
           view={
             <SimpleGrid cols={{ base: 2, xs: 4 }} spacing="md">
-              <Field label="Ethnicity" value={student.ethnicity ?? "Prefer not to say"} />
+              <Field
+                label="Country of origin"
+                value={student.countryOfOrigin ?? "Prefer not to say"}
+              />
             </SimpleGrid>
           }
         >
-          <EthnicityForm student={student} />
+          <CountryOfOriginForm student={student} />
         </EditableCard>
         {student.sensitive.guardians.map((g) => (
           <Card key={g.id}>
@@ -43,7 +46,7 @@ export default async function StudentSensitivePage({ params }: Props) {
                 label="Languages at home"
                 value={g.spokenLanguages.length ? g.spokenLanguages.join(", ") : "Not given"}
               />
-              <Field label="Ethnicity" value={g.ethnicity ?? "Prefer not to say"} />
+              <Field label="Country of origin" value={g.countryOfOrigin ?? "Prefer not to say"} />
               <Field
                 label="Reasons for registering"
                 value={

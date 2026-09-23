@@ -35,7 +35,7 @@ beforeAll(async () => {
     { id: 1, name: "Maryam Parent", email: "SECRET-EMAIL@example.com" },
     { id: 2, name: "Omar Teacher", email: "omar@example.com" },
   ]);
-  await db.insert(guardians).values({ id: 1, userId: 1, ethnicity: "SECRET-ETHNICITY" });
+  await db.insert(guardians).values({ id: 1, userId: 1, countryOfOrigin: "SECRET-COUNTRY" });
   await db.insert(teachers).values({ id: 1, userId: 2 });
   await db.insert(academicYears).values({
     id: "2026-27",
@@ -76,7 +76,7 @@ beforeAll(async () => {
       lastName: "Ahmed",
       gender: "female",
       dateOfBirth: "2018-05-17",
-      ethnicity: "SECRET-ETHNICITY",
+      countryOfOrigin: "SECRET-COUNTRY",
       allergies: "Penicillin",
       status: "active",
       appliedAt: "2026-08-20T10:00:00.000Z",

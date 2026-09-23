@@ -22,7 +22,7 @@ const schema = z.object({
   emergencyContactName: optionalText(80),
   emergencyContactPhone: optionalText(30),
   emergencyContactRelationship: optionalText(40),
-  ethnicity: optionalText(60),
+  countryOfOrigin: optionalText(60),
   spokenLanguages: z.array(z.string().trim().min(1).max(40)).max(10),
   registrationReasons: z.array(z.enum(registrationReasons)),
   registrationReasonOther: optionalText(200),

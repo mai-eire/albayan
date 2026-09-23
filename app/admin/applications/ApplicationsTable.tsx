@@ -180,7 +180,11 @@ export function ApplicationsTable({
                   {a.siblings.length > 0 && ` · sibling of ${a.siblings.join(", ")}`}
                 </Text>
               </Table.Td>
-              <Table.Td>{a.schoolYearGroup ?? <Nothing>not given</Nothing>}</Table.Td>
+              <Table.Td>
+                {a.isHomeschooled
+                  ? "Taught at home"
+                  : (a.schoolYearGroup ?? <Nothing>not given</Nothing>)}
+              </Table.Td>
               <Table.Td>{proficiencyLabels[a.arabicProficiency]}</Table.Td>
               <Table.Td>
                 {a.preferredSessionName ?? <Nothing>no preference</Nothing>}
@@ -264,7 +268,7 @@ export function ApplicationsTable({
                     `${ageOn(open.dateOfBirth, today)} (${dayjs(open.dateOfBirth).format("D MMM YYYY")})`,
                   ],
                   ["Gender", open.gender === "male" ? "Boy" : "Girl"],
-                  ["School year", open.schoolYearGroup],
+                  ["School year", open.isHomeschooled ? "Taught at home" : open.schoolYearGroup],
                   ["Arabic", proficiencyLabels[open.arabicProficiency]],
                   [
                     "Prefers",

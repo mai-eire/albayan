@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Group, Select, Stack, Textarea, TextInput } from "@mantine/core";
+import { Button, Checkbox, Group, Select, Stack, Textarea, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -10,8 +10,9 @@ import { FormError } from "@/components/FormError";
 import { toast } from "@/components/toast";
 import type { StudentForAdmin } from "@/lib/db/queries/students";
 import { arabicProficiencies } from "@/lib/db/schema";
-import { ethnicities, preferNotToSay, proficiencyLabels, yearGroups } from "@/lib/demographics";
-import { updateStudentDetails, updateStudentEthnicity, updateStudentHealth } from "./actions";
+import { preferNotToSay, proficiencyLabels, yearGroupSections } from "@/lib/demographics";
+import { countryOptions } from "@/lib/countries";
+import { updateStudentDetails, updateStudentCountry, updateStudentHealth } from "./actions";
 
 type Result =
   { ok: true; data: unknown } | { ok: false; error: string; fieldErrors?: Record<string, string> };
@@ -83,6 +84,7 @@ export function DetailsForm({ student }: { student: StudentForAdmin }) {
       dateOfBirth: student.dateOfBirth,
       gender: student.gender,
       schoolYearGroup: student.schoolYearGroup,
+      isHomeschooled: student.isHomeschooled,
       arabicProficiency: student.arabicProficiency,
       email: student.email ?? "",
       phone: student.phone ?? "",
@@ -109,13 +111,25 @@ export function DetailsForm({ student }: { student: StudentForAdmin }) {
             {...form.getInputProps("gender")}
           />
         </Group>
-        <Group grow>
-          <Select
-            label="School year"
-            data={yearGroups}
-            clearable
-            {...form.getInputProps("schoolYearGroup")}
-          />
+        <Group grow align="flex-start">
+          <Stack gap="xs">
+            <Select
+              label="School year"
+              data={yearGroupSections}
+              searchable
+              clearable
+              disabled={form.values.isHomeschooled}
+              {...form.getInputProps("schoolYearGroup")}
+            />
+            <Checkbox
+              label="Taught at home"
+              checked={form.values.isHomeschooled}
+              onChange={(e) => {
+                form.setFieldValue("isHomeschooled", e.currentTarget.checked);
+                if (e.currentTarget.checked) form.setFieldValue("schoolYearGroup", null);
+              }}
+            />
+          </Stack>
           <Select
             label="Arabic level"
             data={arabicProficiencies.map((p) => ({ value: p, label: proficiencyLabels[p] }))}
@@ -167,20 +181,23 @@ export function HealthForm({ student }: { student: StudentForAdmin }) {
   );
 }
 
-export function EthnicityForm({ student }: { student: StudentForAdmin }) {
+export function CountryOfOriginForm({ student }: { student: StudentForAdmin }) {
   const { form, submit, error, saving, close } = useSave(
-    { ethnicity: student.ethnicity ?? "" },
-    (values) => updateStudentEthnicity({ id: student.id, ...values }),
+    { countryOfOrigin: student.countryOfOrigin ?? "" },
+    (values) => updateStudentCountry({ id: student.id, ...values }),
     "Saved",
   );
   return (
     <form onSubmit={submit}>
       <Stack gap="md">
         <Select
-          label={`${student.firstName}'s ethnicity`}
-          data={[...ethnicities, preferNotToSay]}
-          value={form.values.ethnicity || preferNotToSay}
-          onChange={(v) => form.setFieldValue("ethnicity", v === preferNotToSay ? "" : (v ?? ""))}
+          label={`${student.firstName}'s country of origin`}
+          data={countryOptions(preferNotToSay)}
+          searchable
+          value={form.values.countryOfOrigin || preferNotToSay}
+          onChange={(v) =>
+            form.setFieldValue("countryOfOrigin", v === preferNotToSay ? "" : (v ?? ""))
+          }
           allowDeselect={false}
           maw={320}
         />

@@ -1,4 +1,4 @@
-import { ethnicities as demographicEthnicities, yearGroups } from "@/lib/demographics";
+import { commonAllergies, yearGroups } from "@/lib/demographics";
 import { getTableColumns, sql, type Table } from "drizzle-orm";
 import type { Auth } from "@/lib/auth";
 import type { Db } from "@/lib/db";
@@ -71,10 +71,23 @@ const teacherNames = [
   "Ismail Haddad",
 ];
 const languages = ["Arabic", "Urdu", "Somali", "Bengali", "Kurdish"];
-const ethnicities = [...demographicEthnicities.slice(0, 6), null];
+// A spread of countries families here come from, plus "didn't say".
+const origins = [
+  "Ireland",
+  "Egypt",
+  "Pakistan",
+  "Somalia",
+  "Syria",
+  "Nigeria",
+  "Bangladesh",
+  "Algeria",
+  "Morocco",
+  "Mixed",
+  null,
+] as const;
 const areas = ["D15", "D7", "D1", "D3", "D9", "D11", "K78", "A94"];
 const streets = ["Main Street", "Castle Road", "Park Avenue", "Mill Lane", "Church View"];
-const allergies = [null, null, null, null, "Peanuts", "Penicillin", "Dairy", "Bee stings"];
+const allergies = [null, null, null, null, ...commonAllergies.slice(0, 6)];
 
 function rng(seed: number) {
   let a = seed >>> 0;
@@ -191,7 +204,7 @@ export async function seed(db: Db, auth: Auth) {
       emergencyContactPhone: `08${pad(6000000 + f * 3131, 7)}`,
       emergencyContactRelationship: pick(["Aunt", "Uncle", "Grandmother", "Neighbour"]),
       spokenLanguages: [pick(languages), "English"],
-      ethnicity: pick(ethnicities),
+      countryOfOrigin: pick(origins),
       registrationReasons: random() < 0.7 ? ["quran", "arabic"] : ["religion", "community"],
     });
     const sessionId = sessions[f % 2].id;
@@ -221,11 +234,13 @@ export async function seed(db: Db, auth: Auth) {
         lastName,
         gender: isFemale ? "female" : "male",
         dateOfBirth: `${birthYear}-${pad(1 + Math.floor(random() * 12), 2)}-${pad(1 + Math.floor(random() * 28), 2)}`,
-        ethnicity: pick(ethnicities),
+        countryOfOrigin: pick(origins),
         schoolYearGroup:
           yearGroups[Math.min(yearGroups.length - 1, Math.max(1, 2026 - birthYear - 4))],
         arabicProficiency: pick(t.arabicProficiencies),
         allergies: pick(allergies),
+        // From the id, not random(): a draw here would reshuffle every child after it.
+        isHomeschooled: id % 17 === 0,
         status: pending ? "applied" : "active",
         applicationYearId: yearId,
         preferredSessionId: sessionId,
@@ -280,7 +295,7 @@ export async function seed(db: Db, auth: Auth) {
       emergencyContactPhone: first.emergencyContactPhone,
       emergencyContactRelationship: first.emergencyContactRelationship,
       spokenLanguages: first.spokenLanguages,
-      ethnicity: first.ethnicity,
+      countryOfOrigin: first.countryOfOrigin,
       registrationReasons: first.registrationReasons,
     });
     for (const link of theirKids) {

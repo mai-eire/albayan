@@ -30,20 +30,25 @@ import { sensitiveExplanation } from "@/components/SensitiveSection";
 import { toast } from "@/components/toast";
 import type { guardians } from "@/lib/db/schema";
 import { arabicProficiencies, registrationReasons } from "@/lib/db/schema";
+import { countryOptions } from "@/lib/countries";
 import {
+  commonAllergies,
   commonLanguages,
-  ethnicities,
   preferNotToSay,
   proficiencyLabels,
   reasonLabels,
   relationshipLabels,
   relationshipsFor,
-  yearGroups,
+  yearGroupSections,
 } from "@/lib/demographics";
+import { ageOn } from "@/lib/age";
 import { submitApplication } from "./actions";
 import { childStepSchema, familyStepSchema, guardianStepSchema } from "./schema";
 
 export type DayChoice = { id: number; label: string; classes: { id: number; name: string }[] };
+
+// Mantine's Select needs a string for every option; this one stands for "no preference".
+const anyDay = "any";
 
 type Guardian = typeof guardians.$inferSelect;
 
@@ -61,14 +66,15 @@ type Values = {
   dateOfBirth: string | null;
   gender: string | null;
   schoolYearGroup: string | null;
+  isHomeschooled: boolean;
   arabicProficiency: string;
-  allergies: string;
+  allergies: string[];
   medicalNotes: string;
   applicationNotes: string;
   preferredSessionId: number | null;
   preferredClassId: number | null;
-  childEthnicity: string | null;
-  guardianEthnicity: string | null;
+  childCountry: string | null;
+  guardianCountry: string | null;
   spokenLanguages: string[];
   registrationReasons: string[];
   registrationReasonOther: string;
@@ -80,13 +86,14 @@ const emptyChild = {
   dateOfBirth: null,
   gender: null,
   schoolYearGroup: null,
+  isHomeschooled: false,
   arabicProficiency: "none",
-  allergies: "",
+  allergies: [],
   medicalNotes: "",
   applicationNotes: "",
   preferredSessionId: null,
   preferredClassId: null,
-  childEthnicity: null,
+  childCountry: null,
 };
 
 const steps = [guardianStepSchema, childStepSchema, familyStepSchema];
@@ -131,7 +138,8 @@ export function ApplicationWizard({
       emergencyContactPhone: guardian?.emergencyContactPhone ?? "",
       emergencyContactRelationship: guardian?.emergencyContactRelationship ?? "",
       ...emptyChild,
-      guardianEthnicity: guardian?.ethnicity ?? null,
+      childCountry: guardian?.countryOfOrigin ?? null,
+      guardianCountry: guardian?.countryOfOrigin ?? null,
       spokenLanguages: guardian?.spokenLanguages ?? [],
       registrationReasons: guardian?.registrationReasons ?? [],
       registrationReasonOther: guardian?.registrationReasonOther ?? "",
@@ -171,6 +179,10 @@ export function ApplicationWizard({
   };
 
   const day = days.find((d) => d.id === form.values.preferredSessionId);
+  // Shown under the date of birth as it is picked, so a mistyped year is obvious.
+  const age = form.values.dateOfBirth
+    ? ageOn(form.values.dateOfBirth, new Date().toISOString().slice(0, 10))
+    : null;
 
   if (submitted) {
     return (
@@ -285,11 +297,13 @@ export function ApplicationWizard({
               <TextInput label="First name" withAsterisk {...form.getInputProps("firstName")} />
               <TextInput label="Surname" withAsterisk {...form.getInputProps("lastName")} />
             </Group>
-            <Group grow>
+            <Group grow align="flex-start">
               <DateField
                 label="Date of birth"
                 withAsterisk
                 maxDate={new Date()}
+                description={age === null ? undefined : `${age} years old`}
+                inputWrapperOrder={["label", "input", "description", "error"]}
                 {...form.getInputProps("dateOfBirth")}
               />
               <Select
@@ -304,25 +318,40 @@ export function ApplicationWizard({
               />
             </Group>
             <Group grow align="flex-start">
-              <Select
-                label="School year"
-                description="At their weekday school"
-                data={yearGroups}
-                clearable
-                {...form.getInputProps("schoolYearGroup")}
-              />
+              <Stack gap="xs">
+                <Select
+                  label="School year"
+                  description="At their weekday school"
+                  data={yearGroupSections}
+                  searchable
+                  clearable
+                  withAsterisk={!form.values.isHomeschooled}
+                  disabled={form.values.isHomeschooled}
+                  {...form.getInputProps("schoolYearGroup")}
+                />
+                <Checkbox
+                  label="Taught at home"
+                  checked={form.values.isHomeschooled}
+                  onChange={(e) => {
+                    form.setFieldValue("isHomeschooled", e.currentTarget.checked);
+                    if (e.currentTarget.checked) form.setFieldValue("schoolYearGroup", null);
+                  }}
+                />
+              </Stack>
               <Select
                 label="Arabic level"
                 data={arabicProficiencies.map((p) => ({ value: p, label: proficiencyLabels[p] }))}
                 allowDeselect={false}
+                withAsterisk
                 {...form.getInputProps("arabicProficiency")}
               />
             </Group>
-            <Textarea
+            <TagsInput
               label="Allergies"
-              description="Leave blank if none"
-              autosize
-              minRows={2}
+              description="Pick from the list or type your own. Leave blank if none."
+              placeholder={form.values.allergies.length ? undefined : "None"}
+              data={commonAllergies}
+              maxTags={10}
               {...form.getInputProps("allergies")}
             />
             <Textarea
@@ -341,12 +370,15 @@ export function ApplicationWizard({
             <Group grow align="flex-start">
               <Select
                 label="Preferred day"
-                data={days.map((d) => ({ value: String(d.id), label: d.label }))}
+                description="We'll do our best; the school decides the final day"
+                data={[
+                  { value: anyDay, label: "Any day" },
+                  ...days.map((d) => ({ value: String(d.id), label: d.label })),
+                ]}
                 allowDeselect={false}
-                withAsterisk
-                value={form.values.preferredSessionId?.toString() ?? null}
+                value={form.values.preferredSessionId?.toString() ?? anyDay}
                 onChange={(v) => {
-                  form.setFieldValue("preferredSessionId", v ? Number(v) : null);
+                  form.setFieldValue("preferredSessionId", v && v !== anyDay ? Number(v) : null);
                   form.setFieldValue("preferredClassId", null);
                 }}
                 error={form.errors.preferredSessionId}
@@ -369,22 +401,29 @@ export function ApplicationWizard({
             <Text size="sm" c="dimmed">
               {sensitiveExplanation}
             </Text>
-            <Group grow>
+            <Group grow align="flex-start">
               <Select
-                label={`${form.values.firstName || "Your child"}'s ethnicity`}
-                data={[...ethnicities, preferNotToSay]}
-                value={form.values.childEthnicity ?? preferNotToSay}
-                onChange={(v) =>
-                  form.setFieldValue("childEthnicity", v === preferNotToSay ? null : v)
-                }
+                label="Your country of origin"
+                data={countryOptions(preferNotToSay)}
+                searchable
+                value={form.values.guardianCountry ?? preferNotToSay}
+                onChange={(v) => {
+                  const next = v === preferNotToSay ? null : v;
+                  // The child's answer follows yours until you change the child's yourself.
+                  if (form.values.childCountry === form.values.guardianCountry) {
+                    form.setFieldValue("childCountry", next);
+                  }
+                  form.setFieldValue("guardianCountry", next);
+                }}
                 allowDeselect={false}
               />
               <Select
-                label="Your ethnicity"
-                data={[...ethnicities, preferNotToSay]}
-                value={form.values.guardianEthnicity ?? preferNotToSay}
+                label={`${form.values.firstName || "Your child"}'s country of origin`}
+                data={countryOptions(preferNotToSay)}
+                searchable
+                value={form.values.childCountry ?? preferNotToSay}
                 onChange={(v) =>
-                  form.setFieldValue("guardianEthnicity", v === preferNotToSay ? null : v)
+                  form.setFieldValue("childCountry", v === preferNotToSay ? null : v)
                 }
                 allowDeselect={false}
               />
@@ -423,17 +462,20 @@ export function ApplicationWizard({
                   form.values.dateOfBirth && dayjs(form.values.dateOfBirth).format("D MMMM YYYY"),
                 ],
                 ["Gender", form.values.gender === "male" ? "Boy" : "Girl"],
-                ["School year", form.values.schoolYearGroup],
+                [
+                  "School year",
+                  form.values.isHomeschooled ? "Taught at home" : form.values.schoolYearGroup,
+                ],
                 [
                   "Arabic level",
                   proficiencyLabels[
                     form.values.arabicProficiency as keyof typeof proficiencyLabels
                   ],
                 ],
-                ["Allergies", form.values.allergies || "None"],
+                ["Allergies", form.values.allergies.join(", ") || "None"],
                 ["Medical", form.values.medicalNotes || "None"],
                 ["Notes", form.values.applicationNotes || "None"],
-                ["Preferred day", day?.label],
+                ["Preferred day", day?.label ?? "Any day"],
                 [
                   "Preferred class",
                   day?.classes.find((c) => c.id === form.values.preferredClassId)?.name ??

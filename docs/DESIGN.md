@@ -186,7 +186,7 @@ Filtering happens in the browser: the page loads the whole list once and a clien
 
 Mantine form components with `@mantine/form`. Labels above fields, required marked with the Mantine asterisk, description *below the input* (set in the theme, so paired fields keep their inputs level), errors inline under the field. A server-side "check the highlighted fields" line (`FormError`) clears as soon as any value changes (`onValuesChange`), so it never outlives the mistake. Field widths: `Group grow` for pairs, full width otherwise. Dates: `DateField` (a `DateInput` preset to `valueFormat="ddd D MMM YYYY"` with the placeholder `dd/mm/yyyy`, parsing typed "19/09/2026", "19 Sep 2026" and ISO). Money: `NumberInput` with `€` prefix, `decimalScale={2}`, backed by `lib/money.ts`. Selects use `allowDeselect={false}` when a value is required. Multi-step forms (registration wizard) use `Stepper` with a review step.
 
-Sensitive fields (ethnicity, languages, reasons) are grouped under their own heading with the standard explanation copy (§7) and are always optional with "Prefer not to say".
+Sensitive fields (country of origin, languages, reasons) are grouped under their own heading with the standard explanation copy (§7) and are always optional with "Prefer not to say".
 
 Calendars show Saturday and Sunday — the school's days — in tile (shade 6, dark shade 3, semibold) rather than Mantine's red, and ring today (`globals.css`, `highlightToday` on `DateField`).
 

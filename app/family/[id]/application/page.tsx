@@ -3,6 +3,7 @@ import { getCurrentYear, listClasses, listSessions } from "@/lib/db/queries/acad
 import { sessionEndTime } from "@/lib/timetable";
 import type { DayChoice } from "@/app/family/register-child/ApplicationWizard";
 import { loadChild } from "../load";
+import { splitAllergies } from "@/lib/demographics";
 import { EditApplication } from "./EditApplication";
 
 type Props = { params: Promise<{ id: string }> };
@@ -35,6 +36,7 @@ export default async function ChildApplicationPage({ params }: Props) {
         decidedAt: child.decidedAt,
         academicYearId: child.academicYearId,
         schoolYearGroup: child.schoolYearGroup,
+        isHomeschooled: child.isHomeschooled,
         arabicProficiency: child.arabicProficiency,
         preferredSessionName: child.preferredSessionName,
         preferredClassName: child.preferredClassName,
@@ -55,8 +57,9 @@ export default async function ChildApplicationPage({ params }: Props) {
               dateOfBirth: child.dateOfBirth,
               gender: child.gender,
               schoolYearGroup: child.schoolYearGroup ?? "",
+              isHomeschooled: child.isHomeschooled,
               arabicProficiency: child.arabicProficiency,
-              allergies: child.allergies ?? "",
+              allergies: splitAllergies(child.allergies),
               medicalNotes: child.medicalNotes ?? "",
               applicationNotes: child.applicationNotes ?? "",
               preferredSessionId: child.preferredSessionId,

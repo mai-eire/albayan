@@ -128,6 +128,7 @@ export type StudentForGuardian = {
   dateOfBirth: string;
   gender: Student["gender"];
   schoolYearGroup: string | null;
+  isHomeschooled: boolean;
   arabicProficiency: Student["arabicProficiency"];
   allergies: string | null;
   medicalNotes: string | null;
@@ -160,6 +161,7 @@ export async function getStudentForGuardian(id: number): Promise<StudentForGuard
       dateOfBirth: students.dateOfBirth,
       gender: students.gender,
       schoolYearGroup: students.schoolYearGroup,
+      isHomeschooled: students.isHomeschooled,
       arabicProficiency: students.arabicProficiency,
       allergies: students.allergies,
       medicalNotes: students.medicalNotes,

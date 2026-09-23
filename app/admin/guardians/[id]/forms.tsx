@@ -5,11 +5,11 @@ import type { GuardianProfile } from "@/lib/db/queries/students";
 import { registrationReasons } from "@/lib/db/schema";
 import {
   commonLanguages,
-  ethnicities,
   guardianGenderOptions,
   preferNotToSay,
   reasonLabels,
 } from "@/lib/demographics";
+import { countryOptions } from "@/lib/countries";
 import { SaveRow, useSave } from "@/app/admin/students/[id]/forms";
 import { updateGuardianContact, updateGuardianSensitive } from "./actions";
 
@@ -73,7 +73,7 @@ export function SensitiveForm({ guardian }: { guardian: GuardianProfile }) {
       addressLine2: s.addressLine2 ?? "",
       city: s.city ?? "",
       postalCode: s.postalCode ?? "",
-      ethnicity: s.ethnicity ?? "",
+      countryOfOrigin: s.countryOfOrigin ?? "",
       spokenLanguages: s.spokenLanguages,
       registrationReasons: s.registrationReasons,
       registrationReasonOther: s.registrationReasonOther ?? "",
@@ -94,10 +94,13 @@ export function SensitiveForm({ guardian }: { guardian: GuardianProfile }) {
         </Group>
         <Group grow align="flex-start">
           <Select
-            label="Ethnicity"
-            data={[...ethnicities, preferNotToSay]}
-            value={form.values.ethnicity || preferNotToSay}
-            onChange={(v) => form.setFieldValue("ethnicity", v === preferNotToSay ? "" : (v ?? ""))}
+            label="Country of origin"
+            data={countryOptions(preferNotToSay)}
+            searchable
+            value={form.values.countryOfOrigin || preferNotToSay}
+            onChange={(v) =>
+              form.setFieldValue("countryOfOrigin", v === preferNotToSay ? "" : (v ?? ""))
+            }
             allowDeselect={false}
           />
           <TagsInput

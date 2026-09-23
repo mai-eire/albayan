@@ -16,7 +16,7 @@ vi.mock("@/lib/db", async (importOriginal) => ({
 vi.mock("@/lib/current-user", () => ({ getCurrentUser: async () => current }));
 vi.mock("next/cache", () => ({ revalidatePath: () => {} }));
 
-const { updateStudentDetails, updateStudentHealth, updateStudentEthnicity } =
+const { updateStudentDetails, updateStudentHealth, updateStudentCountry } =
   await import("./actions");
 
 const admin: CurrentUser = {
@@ -60,6 +60,7 @@ const details = {
   dateOfBirth: "2018-05-04",
   gender: "male",
   schoolYearGroup: "",
+  isHomeschooled: false,
   arabicProficiency: "none",
   email: "",
   phone: "",
@@ -91,14 +92,16 @@ describe("student profile edits", () => {
     expect(await updateStudentHealth({ id: 1, allergies: "Nuts", medicalNotes: "" })).toMatchObject(
       { ok: true },
     );
-    expect(await updateStudentEthnicity({ id: 1, ethnicity: "Arab" })).toMatchObject({ ok: true });
+    expect(await updateStudentCountry({ id: 1, countryOfOrigin: "Arab" })).toMatchObject({
+      ok: true,
+    });
 
     expect(await db.query.students.findFirst({ where: eq(students.id, 1) })).toMatchObject({
       schoolYearGroup: "2nd class",
       arabicProficiency: "beginner",
       allergies: "Nuts",
       medicalNotes: null,
-      ethnicity: "Arab",
+      countryOfOrigin: "Arab",
     });
     const entries = await db.select().from(auditLog);
     expect(entries.map((e) => [e.action, e.changes])).toEqual([
@@ -107,7 +110,7 @@ describe("student profile edits", () => {
         { schoolYearGroup: [null, "2nd class"], arabicProficiency: ["none", "beginner"] },
       ],
       ["student.update_health", { allergies: [null, "Nuts"] }],
-      ["student.update_ethnicity", { ethnicity: [null, "Arab"] }],
+      ["student.update_country", { countryOfOrigin: [null, "Arab"] }],
     ]);
   });
 

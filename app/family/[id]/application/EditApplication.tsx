@@ -38,7 +38,7 @@ type Values = {
   medicalNotes: string;
   applicationNotes: string;
   preferredSessionId: number | null;
-  preferredClassId: number | null;
+  preferredClassName: string;
 };
 
 // Mantine's Select needs a string for every option; this one stands for "no preference".
@@ -64,6 +64,9 @@ export function EditApplication({
     initialValues: child,
   });
   const day = days.find((d) => d.id === form.values.preferredSessionId);
+  const levelNames = [
+    ...new Set((day ? day.classes : days.flatMap((d) => d.classes)).map((c) => c.name)),
+  ].sort();
   const age = form.values.dateOfBirth
     ? ageOn(form.values.dateOfBirth, new Date().toISOString().slice(0, 10))
     : null;
@@ -129,15 +132,13 @@ export function EditApplication({
                   searchable
                   clearable
                   withAsterisk={!form.values.isHomeschooled}
-                  disabled={form.values.isHomeschooled}
                   {...form.getInputProps("schoolYearGroup")}
                 />
                 <Checkbox
-                  label="Taught at home"
+                  label="Home schooled"
                   checked={form.values.isHomeschooled}
                   onChange={(e) => {
                     form.setFieldValue("isHomeschooled", e.currentTarget.checked);
-                    if (e.currentTarget.checked) form.setFieldValue("schoolYearGroup", "");
                   }}
                 />
               </Stack>
@@ -157,17 +158,21 @@ export function EditApplication({
                 value={form.values.preferredSessionId?.toString() ?? anyDay}
                 onChange={(v) => {
                   form.setFieldValue("preferredSessionId", v && v !== anyDay ? Number(v) : null);
-                  form.setFieldValue("preferredClassId", null);
+                  const next = v && v !== anyDay ? days.find((d) => String(d.id) === v) : null;
+                  const still =
+                    !next || next.classes.some((c) => c.name === form.values.preferredClassName);
+                  if (!still) form.setFieldValue("preferredClassName", "");
                 }}
                 error={form.errors.preferredSessionId}
               />
               <Select
                 label="Class (if you have a preference)"
                 placeholder="Leave it to the school"
-                data={(day?.classes ?? []).map((c) => ({ value: String(c.id), label: c.name }))}
+                data={levelNames}
+                searchable
                 clearable
-                value={form.values.preferredClassId?.toString() ?? null}
-                onChange={(v) => form.setFieldValue("preferredClassId", v ? Number(v) : null)}
+                value={form.values.preferredClassName || null}
+                onChange={(v) => form.setFieldValue("preferredClassName", v ?? "")}
               />
             </SimpleGrid>
             <TagsInput

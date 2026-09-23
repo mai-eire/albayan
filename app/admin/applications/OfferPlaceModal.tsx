@@ -34,7 +34,7 @@ import {
 import { ageOn } from "@/lib/age";
 import type { Application } from "@/lib/db/queries/applications";
 import type { FamilyMember } from "@/lib/db/queries/families";
-import { proficiencyLabels, relationshipLabels } from "@/lib/demographics";
+import { proficiencyLabels, relationshipLabels, schoolYearLabel } from "@/lib/demographics";
 import { formatEuros } from "@/lib/money";
 import { approveApplication } from "./actions";
 
@@ -82,6 +82,18 @@ function OfferForm({
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
+  // The class that matches what the family asked for: the level they named, on the day they
+  // named when they named one. A level with no day can sit on either day, so the first match
+  // is offered and the office changes it if the other day suits better.
+  function preferredClass(classes: ClassChoice[], a: Application): ClassChoice | null {
+    if (!a.preferredClassName) return null;
+    const named = classes.filter((c) => c.name === a.preferredClassName);
+    return (
+      named.find((c) => a.preferredSessionId === null || c.sessionId === a.preferredSessionId) ??
+      null
+    );
+  }
+
   // The session is what we respect; the class is our call. So the picker starts on the
   // class the family named (or empty), offers the preferred session's classes unless
   // asked for every session, and can be narrowed by teacher.
@@ -92,10 +104,9 @@ function OfferForm({
       // The server's "check the highlighted fields" goes as soon as something changes.
       onValuesChange: () => setError(null),
       initialValues: {
-        // The class the family named, if they named one; otherwise the office chooses.
-        classId: classes.some((c) => c.id === a.preferredClassId)
-          ? String(a.preferredClassId)
-          : null,
+        // The level the family named, on the day they named if they named one; a level
+        // with no day starts on the first class of that level, which the office can change.
+        classId: preferredClass(classes, a)?.id.toString() ?? null,
         fee: formatEuros(standardFeeCents).replace(/[€,]/g, ""),
         feeNote: "",
         offerNote: "",
@@ -107,7 +118,7 @@ function OfferForm({
   const sessionDiffers =
     !!chosen && a.preferredSessionId !== null && chosen.sessionId !== a.preferredSessionId;
   const classDiffers =
-    !!chosen && !sessionDiffers && a.preferredClassId !== null && chosen.id !== a.preferredClassId;
+    !!chosen && !sessionDiffers && !!a.preferredClassName && chosen.name !== a.preferredClassName;
   const teachers = [...new Set(classes.flatMap((c) => c.classTeacherName ?? []))].sort();
   const offered = classes.filter(
     (c) =>
@@ -166,10 +177,7 @@ function OfferForm({
             value={`${ageOn(a.dateOfBirth, today)} (${dayjs(a.dateOfBirth).format("D MMM YYYY")})`}
           />
           <Field label="Gender" value={a.gender === "male" ? "Boy" : "Girl"} />
-          <Field
-            label="School year"
-            value={a.isHomeschooled ? "Taught at home" : a.schoolYearGroup}
-          />
+          <Field label="School year" value={schoolYearLabel(a.schoolYearGroup, a.isHomeschooled)} />
           <Field label="Arabic" value={proficiencyLabels[a.arabicProficiency]} />
           <Field label="Session asked for" value={a.preferredSessionName ?? "No preference"} />
           <Field label="Class asked for" value={a.preferredClassName ?? "No preference"} />

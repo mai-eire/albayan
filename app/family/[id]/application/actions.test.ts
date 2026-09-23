@@ -57,10 +57,10 @@ const application = {
   medicalNotes: "",
   applicationNotes: "Would like to be with his cousin.",
   preferredSessionId: 1 as number | null,
-  preferredClassId: null as number | null,
+  preferredClassName: "",
 };
 
-const stored = { ...application, allergies: null };
+const stored = { ...application, allergies: null, preferredClassName: null };
 
 beforeAll(async () => {
   ({ db, dispose } = await testDb());
@@ -111,7 +111,9 @@ describe("updateApplication", () => {
 
     current = parent;
     // A class has to be on the day chosen.
-    expect(await updateApplication({ id: 1, ...application, preferredClassId: 1 })).toMatchObject({
+    expect(
+      await updateApplication({ id: 1, ...application, preferredClassName: "L1" }),
+    ).toMatchObject({
       ok: false,
       error: /isn't on the day/,
     });
@@ -121,13 +123,13 @@ describe("updateApplication", () => {
         id: 1,
         ...application,
         preferredSessionId: 2,
-        preferredClassId: 1,
+        preferredClassName: "L1",
         applicationNotes: "His cousin moved to Sunday.",
       }),
     ).toMatchObject({ ok: true });
     expect(await db.query.students.findFirst({ where: eq(students.id, 1) })).toMatchObject({
       preferredSessionId: 2,
-      preferredClassId: 1,
+      preferredClassName: "L1",
       applicationNotes: "His cousin moved to Sunday.",
       applicationYearId: "2026-27",
     });

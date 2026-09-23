@@ -9,19 +9,16 @@ import {
   ScrollArea,
   Stack,
   Text,
-  UnstyledButton,
 } from "@mantine/core";
 import { IconBell } from "@tabler/icons-react";
-import dayjs from "dayjs";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Area } from "@/lib/current-user";
-import type { NotificationRow } from "@/lib/db/queries/notifications";
+import type { NotificationRow as Row } from "@/lib/db/queries/notifications";
 import { markNotificationRead } from "@/lib/notifications";
 import { MarkAllReadButton } from "./MarkAllReadButton";
-import { NotificationTags } from "./NotificationList";
-import classes from "./NotificationList.module.css";
+import { NotificationRow } from "./NotificationRow";
 
 // The bell shows what is waiting without leaving the page: the newest unread by title,
 // then the two things anyone wants from here — clear them, or see the lot.
@@ -32,13 +29,13 @@ export function NotificationBell({
 }: {
   area: Area;
   unread: number;
-  recent: NotificationRow[];
+  recent: Row[];
 }) {
   const router = useRouter();
   const [opened, setOpened] = useState(false);
   const all = `/${area}/notifications`;
 
-  const open = async (n: NotificationRow) => {
+  const open = async (n: Row) => {
     setOpened(false);
     await markNotificationRead({ id: n.id });
     router.push(n.href ?? all);
@@ -84,19 +81,9 @@ export function NotificationBell({
             </Text>
           ) : (
             <ScrollArea.Autosize mah={280} type="auto">
-              <Stack gap={0}>
+              <Stack gap="xs">
                 {recent.map((n) => (
-                  <UnstyledButton key={n.id} className={classes.row} onClick={() => open(n)}>
-                    <Group gap="xs" align="center">
-                      <Text size="sm" fw={600} lineClamp={2}>
-                        {n.title}
-                      </Text>
-                      <NotificationTags n={n} />
-                    </Group>
-                    <Text size="xs" c="dimmed" mt={2}>
-                      {dayjs(n.createdAt).format("D MMM, HH:mm")}
-                    </Text>
-                  </UnstyledButton>
+                  <NotificationRow key={n.id} n={n} compact onOpen={open} />
                 ))}
               </Stack>
             </ScrollArea.Autosize>

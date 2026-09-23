@@ -140,7 +140,6 @@ export type StudentForGuardian = {
   applicationNotes: string | null;
   preferredSessionId: number | null;
   preferredSessionName: string | null;
-  preferredClassId: number | null;
   preferredClassName: string | null;
   declinedReason: string | null;
   // The office's word when the place offered wasn't the one asked for.
@@ -151,7 +150,6 @@ export type StudentForGuardian = {
 
 export async function getStudentForGuardian(id: number): Promise<StudentForGuardian | null> {
   const d = await db();
-  const preferredClass = alias(classes, "preferred_class");
   const [student] = await d
     .select({
       id: students.id,
@@ -175,12 +173,10 @@ export async function getStudentForGuardian(id: number): Promise<StudentForGuard
       offerNote: students.offerNote,
       preferredSessionId: students.preferredSessionId,
       preferredSessionName: schoolSessions.name,
-      preferredClassId: students.preferredClassId,
-      preferredClassName: preferredClass.name,
+      preferredClassName: students.preferredClassName,
     })
     .from(students)
     .leftJoin(schoolSessions, eq(schoolSessions.id, students.preferredSessionId))
-    .leftJoin(preferredClass, eq(preferredClass.id, students.preferredClassId))
     .where(eq(students.id, id));
   if (!student) return null;
   const placed = await loadPlace(id);

@@ -22,7 +22,6 @@ import { useState } from "react";
 import { useDebouncedCallback } from "@mantine/hooks";
 import { IconArrowUpRight, IconInbox, IconSearch } from "@tabler/icons-react";
 import { AppLink } from "@/components/AppLink";
-import { ClassFilter, type ClassFilterOption } from "@/components/ClassFilter";
 import { Nothing } from "@/components/Nothing";
 import { EmptyState } from "@/components/EmptyState";
 import { LinkButton } from "@/components/LinkButton";
@@ -33,7 +32,7 @@ import { FormError } from "@/components/FormError";
 import { toast } from "@/components/toast";
 import { ageOn } from "@/lib/age";
 import type { Application } from "@/lib/db/queries/applications";
-import { proficiencyLabels, relationshipLabels } from "@/lib/demographics";
+import { proficiencyLabels, relationshipLabels, schoolYearLabel } from "@/lib/demographics";
 import type { ClassChoice } from "@/app/admin/academics/classes/ClassPicker";
 import type { FamilyMember } from "@/lib/db/queries/families";
 import { declineApplication } from "./actions";
@@ -87,17 +86,17 @@ export function ApplicationsTable({
     (a) =>
       (status === "all" || a.status === status) &&
       (!session || String(a.preferredSessionId) === session) &&
-      (!cls || String(a.preferredClassId) === cls) &&
+      (!cls || a.preferredClassName === cls) &&
       (!q ||
         `${a.firstName} ${a.lastName}`.toLowerCase().includes(q) ||
         a.guardian.name.toLowerCase().includes(q)),
   );
-  const classOptions: ClassFilterOption[] = classes.map((c) => ({
-    id: c.id,
-    name: c.name,
-    sessionId: c.sessionId,
-    sessionName: c.sessionName,
-  }));
+  // Families name a level, not a class row, so the filter offers each level once.
+  const classOptions = [
+    ...new Set(
+      classes.filter((c) => !session || String(c.sessionId) === session).map((c) => c.name),
+    ),
+  ].sort();
 
   return (
     <>
@@ -119,11 +118,14 @@ export function ApplicationsTable({
           onChange={(v) => set({ session: v, class: null })}
           w={200}
         />
-        <ClassFilter
-          classes={classOptions}
-          sessionId={session}
+        <Select
+          aria-label="Class asked for"
+          placeholder="Any class asked for"
+          data={classOptions}
           value={cls}
+          clearable
           onChange={(v) => set({ class: v })}
+          w={190}
         />
         <Select
           aria-label="Status"
@@ -181,9 +183,9 @@ export function ApplicationsTable({
                 </Text>
               </Table.Td>
               <Table.Td>
-                {a.isHomeschooled
-                  ? "Taught at home"
-                  : (a.schoolYearGroup ?? <Nothing>not given</Nothing>)}
+                {schoolYearLabel(a.schoolYearGroup, a.isHomeschooled) ?? (
+                  <Nothing>not given</Nothing>
+                )}
               </Table.Td>
               <Table.Td>{proficiencyLabels[a.arabicProficiency]}</Table.Td>
               <Table.Td>
@@ -268,7 +270,7 @@ export function ApplicationsTable({
                     `${ageOn(open.dateOfBirth, today)} (${dayjs(open.dateOfBirth).format("D MMM YYYY")})`,
                   ],
                   ["Gender", open.gender === "male" ? "Boy" : "Girl"],
-                  ["School year", open.isHomeschooled ? "Taught at home" : open.schoolYearGroup],
+                  ["School year", schoolYearLabel(open.schoolYearGroup, open.isHomeschooled)],
                   ["Arabic", proficiencyLabels[open.arabicProficiency]],
                   [
                     "Prefers",

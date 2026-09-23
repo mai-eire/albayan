@@ -4,7 +4,7 @@ import { CardTitle } from "@/components/CardTitle";
 import { Field } from "@/components/Field";
 import { ageOn } from "@/lib/age";
 import { getSchoolSettings } from "@/lib/db/queries/settings";
-import { proficiencyLabels, relationshipLabels } from "@/lib/demographics";
+import { proficiencyLabels, relationshipLabels, schoolYearLabel } from "@/lib/demographics";
 import { todayIn } from "@/lib/time";
 import { loadTeacherStudent } from "./load";
 
@@ -26,7 +26,7 @@ export default async function TeacherStudentPage({ params }: Props) {
           <Field label="Gender" value={student.gender === "male" ? "Boy" : "Girl"} />
           <Field
             label="School year"
-            value={student.isHomeschooled ? "Taught at home" : student.schoolYearGroup}
+            value={schoolYearLabel(student.schoolYearGroup, student.isHomeschooled)}
           />
           <Field label="Arabic" value={proficiencyLabels[student.arabicProficiency]} />
         </SimpleGrid>

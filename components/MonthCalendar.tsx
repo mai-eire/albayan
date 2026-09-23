@@ -52,13 +52,13 @@ export function MonthCalendar({ month, base }: { month: CalendarMonth; base: str
             aria-label={[day.date, ...day.lessons, ...day.events].join(", ")}
           >
             <span className={classes.number}>{day.dayOfMonth}</span>
-            {day.lessons.map((l) => (
-              <span key={l} className={classes.lesson}>
+            {day.lessons.map((l, i) => (
+              <span key={`${l}-${i}`} className={classes.lesson}>
                 {l}
               </span>
             ))}
-            {day.events.map((e) => (
-              <span key={e} className={classes.event}>
+            {day.events.map((e, i) => (
+              <span key={`${e}-${i}`} className={classes.event}>
                 {e}
               </span>
             ))}

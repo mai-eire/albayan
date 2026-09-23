@@ -133,7 +133,8 @@ export async function listClasses(academicYearId: string): Promise<ClassRow[]> {
       sessionDay: schoolSessions.dayOfWeek,
       classTeacherName: classTeacherUser.name,
       studentCount: count(enrolments.id),
-      applicationCount: sql<number>`(select count(*) from ${students} where ${students.preferredClassId} = ${classes.id} and ${students.status} = 'applied')`,
+      // Waiting children who named this level, on this day or on no day in particular.
+      applicationCount: sql<number>`(select count(*) from ${students} where ${students.preferredClassName} = ${classes.name} and (${students.preferredSessionId} is null or ${students.preferredSessionId} = ${classes.sessionId}) and ${students.status} = 'applied')`,
     })
     .from(classes)
     .innerJoin(schoolSessions, eq(schoolSessions.id, classes.sessionId))

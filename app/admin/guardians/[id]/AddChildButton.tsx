@@ -75,11 +75,15 @@ export function AddChildButton({ guardian, sessions, coGuardians }: Props) {
           ? "father"
           : null) as Relationship | null,
       preferredSessionId: sessions[0] ? String(sessions[0].id) : anyDay,
-      preferredClassId: null as string | null,
+      preferredClassName: "",
       alsoGuardianIds: coGuardians.map((g) => String(g.id)),
     },
   });
   const session = sessions.find((s) => String(s.id) === form.values.preferredSessionId);
+  // A class is a level on a day; with no day chosen every level is offered once.
+  const levelNames = [
+    ...new Set((session ? session.classes : sessions.flatMap((s) => s.classes)).map((c) => c.name)),
+  ].sort();
   const submit = form.onSubmit(async (values) => {
     setSaving(true);
     setError(null);
@@ -100,7 +104,7 @@ export function AddChildButton({ guardian, sessions, coGuardians }: Props) {
         values.preferredSessionId && values.preferredSessionId !== anyDay
           ? Number(values.preferredSessionId)
           : null,
-      preferredClassId: values.preferredClassId ? Number(values.preferredClassId) : null,
+      preferredClassName: values.preferredClassName,
       alsoGuardians: coGuardians
         .filter((g) => values.alsoGuardianIds.includes(String(g.id)))
         .map(({ id, relationship }) => ({ id, relationship })),
@@ -155,19 +159,17 @@ export function AddChildButton({ guardian, sessions, coGuardians }: Props) {
               <Stack gap="xs">
                 <Select
                   label="School year"
-                  description="At their weekday school"
+                  description="The year they are in, or would be"
                   data={yearGroupSections}
                   searchable
                   clearable
-                  disabled={form.values.isHomeschooled}
                   {...form.getInputProps("schoolYearGroup")}
                 />
                 <Checkbox
-                  label="Taught at home"
+                  label="Home schooled"
                   checked={form.values.isHomeschooled}
                   onChange={(e) => {
                     form.setFieldValue("isHomeschooled", e.currentTarget.checked);
-                    if (e.currentTarget.checked) form.setFieldValue("schoolYearGroup", null);
                   }}
                 />
               </Stack>
@@ -215,17 +217,22 @@ export function AddChildButton({ guardian, sessions, coGuardians }: Props) {
                 value={form.values.preferredSessionId}
                 onChange={(v) => {
                   form.setFieldValue("preferredSessionId", v ?? anyDay);
-                  form.setFieldValue("preferredClassId", null);
+                  const next = sessions.find((x) => String(x.id) === v);
+                  const still =
+                    !next || next.classes.some((c) => c.name === form.values.preferredClassName);
+                  if (!still) form.setFieldValue("preferredClassName", "");
                 }}
                 error={form.errors.preferredSessionId}
               />
               <Select
                 label="Preferred class"
                 description="Optional — the office decides the placement"
-                data={(session?.classes ?? []).map((c) => ({ value: String(c.id), label: c.name }))}
-                disabled={!session || session.classes.length === 0}
+                data={levelNames}
+                disabled={levelNames.length === 0}
+                searchable
                 clearable
-                {...form.getInputProps("preferredClassId")}
+                value={form.values.preferredClassName || null}
+                onChange={(v) => form.setFieldValue("preferredClassName", v ?? "")}
               />
             </Group>
             {coGuardians.length > 0 && (

@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Anchor,
   Box,
   Button,
   Card,
@@ -12,6 +13,7 @@ import {
   Stepper,
   TagsInput,
   Text,
+  Tooltip,
   Textarea,
   TextInput,
   Title,
@@ -19,6 +21,7 @@ import {
 import { useForm } from "@mantine/form";
 import dayjs from "dayjs";
 import { IconCircleCheck } from "@tabler/icons-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { z } from "zod";
@@ -30,7 +33,7 @@ import { sensitiveExplanation } from "@/components/SensitiveSection";
 import { toast } from "@/components/toast";
 import type { guardians } from "@/lib/db/schema";
 import { arabicProficiencies, registrationReasons } from "@/lib/db/schema";
-import { countryOptions } from "@/lib/countries";
+import { countryOptions, mixedHeritage } from "@/lib/countries";
 import {
   commonAllergies,
   commonLanguages,
@@ -72,7 +75,7 @@ type Values = {
   medicalNotes: string;
   applicationNotes: string;
   preferredSessionId: number | null;
-  preferredClassId: number | null;
+  preferredClassName: string;
   childCountry: string | null;
   guardianCountry: string | null;
   spokenLanguages: string[];
@@ -92,7 +95,7 @@ const emptyChild = {
   medicalNotes: "",
   applicationNotes: "",
   preferredSessionId: null,
-  preferredClassId: null,
+  preferredClassName: "",
   childCountry: null,
 };
 
@@ -109,10 +112,13 @@ function stepErrors(schema: z.ZodType, values: Values): Record<string, string> |
 
 export function ApplicationWizard({
   guardian,
+  familyCountries,
   lastRelationship,
   days,
 }: {
   guardian: Guardian | null;
+  // Where this child's parents are from — offered first when saying where the child is from.
+  familyCountries: string[];
   // What they said they were to the child they registered last; the default this time.
   lastRelationship: string | null;
   days: DayChoice[];
@@ -178,7 +184,24 @@ export function ApplicationWizard({
     setStep(1);
   };
 
+  const guardianCountry = guardian?.countryOfOrigin ?? null;
+  // The countries the family has already given, then the rest: most children are from one
+  // of their parents' countries, so those answers come first, under their own rule.
+  const firstChoices = [...new Set([...familyCountries, mixedHeritage])];
+  const childCountryOptions = familyCountries.length
+    ? [
+        { group: "", items: firstChoices },
+        {
+          group: " ",
+          items: countryOptions(preferNotToSay).filter((c) => !firstChoices.includes(c)),
+        },
+      ]
+    : countryOptions(preferNotToSay);
   const day = days.find((d) => d.id === form.values.preferredSessionId);
+  // A class is a level on a day, so with no day chosen every level is offered once.
+  const levelNames = [
+    ...new Set((day ? day.classes : days.flatMap((d) => d.classes)).map((c) => c.name)),
+  ].sort();
   // Shown under the date of birth as it is picked, so a mistyped year is obvious.
   const age = form.values.dateOfBirth
     ? ageOn(form.values.dateOfBirth, new Date().toISOString().slice(0, 10))
@@ -321,20 +344,18 @@ export function ApplicationWizard({
               <Stack gap="xs">
                 <Select
                   label="School year"
-                  description="At their weekday school"
+                  description="The year they are in, or would be"
                   data={yearGroupSections}
                   searchable
                   clearable
                   withAsterisk={!form.values.isHomeschooled}
-                  disabled={form.values.isHomeschooled}
                   {...form.getInputProps("schoolYearGroup")}
                 />
                 <Checkbox
-                  label="Taught at home"
+                  label="Home schooled"
                   checked={form.values.isHomeschooled}
                   onChange={(e) => {
                     form.setFieldValue("isHomeschooled", e.currentTarget.checked);
-                    if (e.currentTarget.checked) form.setFieldValue("schoolYearGroup", null);
                   }}
                 />
               </Stack>
@@ -379,18 +400,23 @@ export function ApplicationWizard({
                 value={form.values.preferredSessionId?.toString() ?? anyDay}
                 onChange={(v) => {
                   form.setFieldValue("preferredSessionId", v && v !== anyDay ? Number(v) : null);
-                  form.setFieldValue("preferredClassId", null);
+                  // Keep the level if it also runs on the newly chosen day.
+                  const next = v && v !== anyDay ? days.find((d) => String(d.id) === v) : null;
+                  const still =
+                    !next || next.classes.some((c) => c.name === form.values.preferredClassName);
+                  if (!still) form.setFieldValue("preferredClassName", "");
                 }}
                 error={form.errors.preferredSessionId}
               />
               <Select
                 label="Preferred class"
                 description="Optional — the school decides the final placement"
-                data={(day?.classes ?? []).map((c) => ({ value: String(c.id), label: c.name }))}
-                disabled={!day || day.classes.length === 0}
+                data={levelNames}
+                disabled={levelNames.length === 0}
+                searchable
                 clearable
-                value={form.values.preferredClassId?.toString() ?? null}
-                onChange={(v) => form.setFieldValue("preferredClassId", v ? Number(v) : null)}
+                value={form.values.preferredClassName || null}
+                onChange={(v) => form.setFieldValue("preferredClassName", v ?? "")}
               />
             </Group>
           </Stack>
@@ -402,24 +428,23 @@ export function ApplicationWizard({
               {sensitiveExplanation}
             </Text>
             <Group grow align="flex-start">
-              <Select
-                label="Your country of origin"
-                data={countryOptions(preferNotToSay)}
-                searchable
-                value={form.values.guardianCountry ?? preferNotToSay}
-                onChange={(v) => {
-                  const next = v === preferNotToSay ? null : v;
-                  // The child's answer follows yours until you change the child's yourself.
-                  if (form.values.childCountry === form.values.guardianCountry) {
-                    form.setFieldValue("childCountry", next);
+              <Tooltip label="This is yours, not the child's. Change it on Your account." withArrow>
+                <Select
+                  label="Your country of origin"
+                  data={countryOptions(preferNotToSay)}
+                  value={guardianCountry ?? preferNotToSay}
+                  disabled
+                  allowDeselect={false}
+                  description={
+                    <Anchor component={Link} href="/family/account" size="xs">
+                      Change it on Your account
+                    </Anchor>
                   }
-                  form.setFieldValue("guardianCountry", next);
-                }}
-                allowDeselect={false}
-              />
+                />
+              </Tooltip>
               <Select
                 label={`${form.values.firstName || "Your child"}'s country of origin`}
-                data={countryOptions(preferNotToSay)}
+                data={childCountryOptions}
                 searchable
                 value={form.values.childCountry ?? preferNotToSay}
                 onChange={(v) =>
@@ -464,7 +489,9 @@ export function ApplicationWizard({
                 ["Gender", form.values.gender === "male" ? "Boy" : "Girl"],
                 [
                   "School year",
-                  form.values.isHomeschooled ? "Taught at home" : form.values.schoolYearGroup,
+                  [form.values.schoolYearGroup, form.values.isHomeschooled && "home schooled"]
+                    .filter(Boolean)
+                    .join(" · ") || null,
                 ],
                 [
                   "Arabic level",
@@ -476,11 +503,7 @@ export function ApplicationWizard({
                 ["Medical", form.values.medicalNotes || "None"],
                 ["Notes", form.values.applicationNotes || "None"],
                 ["Preferred day", day?.label ?? "Any day"],
-                [
-                  "Preferred class",
-                  day?.classes.find((c) => c.id === form.values.preferredClassId)?.name ??
-                    "No preference",
-                ],
+                ["Preferred class", form.values.preferredClassName || "No preference"],
               ]}
             />
             <Review

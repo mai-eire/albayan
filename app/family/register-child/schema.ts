@@ -32,7 +32,8 @@ export const childFields = {
   applicationNotes: optionalText(1000),
   // Null means "any day": the family has no preference and the office places them.
   preferredSessionId: z.number().int().nullable(),
-  preferredClassId: z.number().int().nullable(),
+  // The level by name ("Level 3"); a family may name a level without naming a day.
+  preferredClassName: optionalText(60),
 };
 
 // A child taught at home has no weekday school year; everyone else must give one.

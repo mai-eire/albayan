@@ -99,8 +99,8 @@ const nav: Record<Area, NavItem[]> = {
   family: [
     { label: "Overview", href: "/family", icon: IconHome },
     { label: "Register a child", href: "/family/register-child", icon: IconUserPlus },
-    { label: "Fees", href: "/family/fees", icon: IconBuildingBank },
     { label: "Calendar", href: "/family/calendar", icon: IconCalendar },
+    { label: "Fees", href: "/family/fees", icon: IconBuildingBank },
     { label: "School rules", href: "/family/rules", icon: IconBook2 },
     { label: "Your account", href: "/family/account", icon: IconUser },
   ],

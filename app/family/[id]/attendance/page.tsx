@@ -1,30 +1,45 @@
-import { Card, Group, Text } from "@mantine/core";
+import { Card, Text } from "@mantine/core";
 import { CardTitle } from "@/components/CardTitle";
+import { EntityList } from "@/components/EntityList";
 import { StatusBadge } from "@/components/StatusBadge";
-import { listAttendanceForStudent } from "@/lib/db/queries/attendance";
+import { attendanceTally, listAttendanceForStudent } from "@/lib/db/queries/attendance";
 import { getSchoolSettings } from "@/lib/db/queries/settings";
 import { formatDate } from "@/lib/time";
 import { loadChild } from "../load";
 
 type Props = { params: Promise<{ id: string }> };
 
+// One row per date, newest first (§4.6) — a register is a day, so a day is a row.
 export default async function ChildAttendancePage({ params }: Props) {
   const [child, { timezone }] = await Promise.all([loadChild(params), getSchoolSettings()]);
-  const recent = await listAttendanceForStudent(child.id, 30);
+  const [recent, tally] = await Promise.all([
+    listAttendanceForStudent(child.id, 60),
+    attendanceTally(child.id),
+  ]);
   return (
     <Card>
-      <CardTitle>Attendance</CardTitle>
+      <CardTitle
+        context={
+          tally.total > 0 && (
+            <Text size="sm" c="dimmed">
+              Here for {tally.present} of {tally.total}
+            </Text>
+          )
+        }
+      >
+        Attendance
+      </CardTitle>
       {recent.length === 0 ? (
         <Text c="dimmed">No registers taken yet.</Text>
       ) : (
-        <Group gap="sm" wrap="wrap">
-          {recent.map((a) => (
-            <Group key={a.date} gap={6} wrap="nowrap">
-              <StatusBadge domain="attendance" value={a.status} size="md" />
-              <Text c="dimmed">{formatDate(a.date, timezone)}</Text>
-            </Group>
-          ))}
-        </Group>
+        <EntityList
+          items={recent.map((a) => ({
+            key: a.date,
+            title: formatDate(a.date, timezone, true),
+            detail: a.note ?? undefined,
+            badge: <StatusBadge domain="attendance" value={a.status} />,
+          }))}
+        />
       )}
     </Card>
   );

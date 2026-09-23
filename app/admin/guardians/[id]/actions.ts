@@ -141,7 +141,7 @@ export const addChildForGuardian = action(
     relationship: z.enum(relationships, { message: "Say who the guardian is to the child" }),
     // Null is "any day", as on the family's own form.
     preferredSessionId: z.number().int().nullable(),
-    preferredClassId: z.number().int().nullable(),
+    preferredClassName: optionalText(60),
     // The children's other guardians to put on this child too, with what they are to them.
     alsoGuardians: z
       .array(z.object({ id: z.number().int(), relationship: z.enum(relationships) }))

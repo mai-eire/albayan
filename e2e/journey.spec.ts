@@ -5,6 +5,10 @@ import { latestEmail } from "./mail";
 // for a child; the office approves; the child signs in with the emailed ID and password and
 // sees their timetable; a teacher who doesn't teach that class is kept out.
 
+// Several sign-ins and a dozen pages against a cold dev server, so these journeys get the
+// same room `pages.spec.ts` gives itself rather than the 30s default.
+test.describe.configure({ timeout: 120_000 });
+
 async function signIn(page: Page, identifier: string, password = "password") {
   await page.context().clearCookies();
   await page.goto("/login", { waitUntil: "networkidle" });

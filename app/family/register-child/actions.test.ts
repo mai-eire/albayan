@@ -69,7 +69,7 @@ const valid = {
   medicalNotes: "",
   applicationNotes: "With her cousin please",
   preferredSessionId: 1,
-  preferredClassId: 1,
+  preferredClassName: "Level 1",
   childCountry: "Egypt",
   guardianCountry: null,
   spokenLanguages: ["Arabic", "English"],
@@ -134,12 +134,12 @@ describe("submitApplication", () => {
       error: /date of birth/,
     });
     expect(
-      await submitApplication({ ...valid, preferredSessionId: 2, preferredClassId: 2 }),
+      await submitApplication({ ...valid, preferredSessionId: 2, preferredClassName: "Old class" }),
     ).toMatchObject({
       ok: false,
       error: /no longer available/,
     });
-    expect(await submitApplication({ ...valid, preferredClassId: 2 })).toMatchObject({
+    expect(await submitApplication({ ...valid, preferredClassName: "Old class" })).toMatchObject({
       ok: false,
       error: /isn't on the day/,
     });
@@ -154,7 +154,7 @@ describe("submitApplication", () => {
         schoolYearGroup: "",
         isHomeschooled: true,
         preferredSessionId: null,
-        preferredClassId: null,
+        preferredClassName: "",
       }),
     ).toMatchObject({ ok: true });
     const [child] = await db.select().from(students);
@@ -181,7 +181,7 @@ describe("submitApplication", () => {
       status: "applied",
       studentId: null,
       preferredSessionId: 1,
-      preferredClassId: 1,
+      preferredClassName: "Level 1",
       countryOfOrigin: "Egypt",
       medicalNotes: null,
       applicationNotes: "With her cousin please",

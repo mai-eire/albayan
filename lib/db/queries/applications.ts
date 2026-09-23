@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, or } from "drizzle-orm";
 import { alias } from "drizzle-orm/sqlite-core";
 import { db } from "@/lib/db";
 import {
@@ -38,7 +38,7 @@ export type Application = {
   applicationYearId: string | null;
   preferredSessionId: number | null;
   preferredSessionName: string | null;
-  preferredClassId: number | null;
+  // The level asked for, by name; with no session asked for it means "that level, any day".
   preferredClassName: string | null;
   guardian: { id: number; name: string; email: string; phone: string | null; relationship: string };
   // Brothers and sisters already attending, so the office can keep families together.
@@ -59,7 +59,6 @@ export async function listApplications(
     .select({
       student: students,
       preferredSessionName: schoolSessions.name,
-      preferredClassName: classes.name,
       placedClassId: placedClass.id,
       placedClassName: placedClass.name,
       placedSessionName: placedSession.name,
@@ -77,7 +76,6 @@ export async function listApplications(
     .innerJoin(guardians, eq(guardians.id, studentGuardians.guardianId))
     .innerJoin(users, eq(users.id, guardians.userId))
     .leftJoin(schoolSessions, eq(schoolSessions.id, students.preferredSessionId))
-    .leftJoin(classes, eq(classes.id, students.preferredClassId))
     .leftJoin(
       enrolments,
       and(eq(enrolments.studentId, students.id), eq(enrolments.status, "active")),
@@ -130,8 +128,7 @@ export async function listApplications(
     applicationYearId: r.student.applicationYearId,
     preferredSessionId: r.student.preferredSessionId,
     preferredSessionName: r.preferredSessionName,
-    preferredClassId: r.student.preferredClassId,
-    preferredClassName: r.preferredClassName,
+    preferredClassName: r.student.preferredClassName,
     guardian: {
       id: r.guardianId,
       name: r.guardianName,
@@ -152,10 +149,15 @@ export type ClassApplication = {
   guardianName: string;
 };
 
-// Children waiting for a decision who asked for this class by name — the office sees who
-// is queuing before moving anyone in or out.
+// Children waiting for a decision who asked for this class — its level by name, on its day
+// or on no day in particular. The office sees who is queuing before moving anyone in or out.
 export async function listApplicationsForClass(classId: number): Promise<ClassApplication[]> {
   const d = await db();
+  const [cls] = await d
+    .select({ name: classes.name, sessionId: classes.sessionId })
+    .from(classes)
+    .where(eq(classes.id, classId));
+  if (!cls) return [];
   return d
     .select({
       id: students.id,
@@ -172,6 +174,12 @@ export async function listApplicationsForClass(classId: number): Promise<ClassAp
     )
     .innerJoin(guardians, eq(guardians.id, studentGuardians.guardianId))
     .innerJoin(users, eq(users.id, guardians.userId))
-    .where(and(eq(students.status, "applied"), eq(students.preferredClassId, classId)))
+    .where(
+      and(
+        eq(students.status, "applied"),
+        eq(students.preferredClassName, cls.name),
+        or(isNull(students.preferredSessionId), eq(students.preferredSessionId, cls.sessionId)),
+      ),
+    )
     .orderBy(asc(students.appliedAt));
 }

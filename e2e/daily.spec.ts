@@ -4,6 +4,10 @@ import { expect, test, type Page } from "@playwright/test";
 // sees it and the office corrects it; the teacher publishes homework with a file and the
 // student opens both.
 
+// Several sign-ins and a dozen pages against a cold dev server, so these journeys get the
+// same room `pages.spec.ts` gives itself rather than the 30s default.
+test.describe.configure({ timeout: 120_000 });
+
 async function signIn(page: Page, identifier: string, password = "password") {
   await page.context().clearCookies();
   await page.goto("/login", { waitUntil: "networkidle" });

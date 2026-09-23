@@ -59,7 +59,9 @@ export const students = sqliteTable(
     // accepted applications can still be listed by year long afterwards.
     applicationYearId: text().references(() => academicYears.id),
     preferredSessionId: integer().references(() => schoolSessions.id),
-    preferredClassId: integer().references(() => classes.id),
+    // The level a family asked for, by name ("Level 3"), not by row: a class is a name
+    // on a day, and a family may name the level without naming the day.
+    preferredClassName: text(),
     applicationNotes: text(),
     // The office's word to the family when the place offered isn't the one they asked for.
     offerNote: text(),

@@ -118,15 +118,13 @@ export function DetailsForm({ student }: { student: StudentForAdmin }) {
               data={yearGroupSections}
               searchable
               clearable
-              disabled={form.values.isHomeschooled}
               {...form.getInputProps("schoolYearGroup")}
             />
             <Checkbox
-              label="Taught at home"
+              label="Home schooled"
               checked={form.values.isHomeschooled}
               onChange={(e) => {
                 form.setFieldValue("isHomeschooled", e.currentTarget.checked);
-                if (e.currentTarget.checked) form.setFieldValue("schoolYearGroup", null);
               }}
             />
           </Stack>

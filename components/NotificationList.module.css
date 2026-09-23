@@ -1,30 +1,35 @@
+/* A notification is a thing in its own right, so it gets its own container (§4.9): an
+   outlined block, unread ones marked by a saffron inline-start edge and a faint tint —
+   inline-start, not left, so RTL mirrors with the rest. */
 .row {
   display: block;
   width: 100%;
-  padding-block: var(--mantine-spacing-sm);
-  border-block-end: 1px solid var(--mantine-color-default-border);
+  padding: var(--mantine-spacing-sm);
   color: inherit;
-
-  &:last-child {
-    border-block-end: none;
-  }
+  border: 1px solid var(--mantine-color-default-border);
+  border-inline-start-width: 3px;
+  border-radius: var(--mantine-radius-md);
+  background: var(--app-ground);
+  transition: background-color 150ms ease;
 
   &:hover {
     background: var(--mantine-color-default-hover);
   }
+
+  /* A wash, not a highlighter: six unread in a row should still read as a list. */
+  &[data-unread] {
+    border-inline-start-color: var(--mantine-color-saffron-filled);
+    background: color-mix(in srgb, var(--mantine-color-saffron-6) 7%, var(--app-ground));
+  }
+
+  &[data-unread]:hover {
+    background: color-mix(in srgb, var(--mantine-color-saffron-6) 14%, var(--app-ground));
+  }
 }
 
-.dot {
-  flex: none;
-  width: 8px;
-  height: 8px;
-  margin-block-start: 8px;
-  border-radius: 50%;
-  background: transparent;
-
-  .row[data-unread] & {
-    background: var(--mantine-color-saffron-filled);
-  }
+/* Compact rows sit inside the bell's popover, where there is less room. */
+.row[data-compact] {
+  padding: var(--mantine-spacing-xs);
 }
 
 .body {

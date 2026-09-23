@@ -46,9 +46,13 @@ export const updateApplication = action(
       throw new ActionError("That day is no longer available. Choose another.");
     }
     const year = session?.academicYearId ?? before.applicationYearId;
-    if (input.preferredClassId !== null && session) {
+    if (input.preferredClassName) {
       const cls = await db.query.classes.findFirst({
-        where: and(eq(classes.id, input.preferredClassId), eq(classes.sessionId, session.id)),
+        where: and(
+          eq(classes.name, input.preferredClassName),
+          year ? eq(classes.academicYearId, year) : undefined,
+          session ? eq(classes.sessionId, session.id) : undefined,
+        ),
       });
       if (!cls) throw new ActionError("That class isn't on the day you chose.");
     }

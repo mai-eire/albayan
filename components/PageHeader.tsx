@@ -1,4 +1,4 @@
-import { Breadcrumbs, Group, Stack, Text, Title } from "@mantine/core";
+import { Box, Breadcrumbs, Group, Stack, Text, Title } from "@mantine/core";
 import { IconArrowUpRight, IconChevronLeft } from "@tabler/icons-react";
 import type { ReactNode } from "react";
 import { AppLink } from "./AppLink";
@@ -60,7 +60,10 @@ export function PageHeader({
         )}
         <Group gap="sm" align="baseline" wrap={aside ? "wrap" : "nowrap"}>
           <Title order={1}>{title}</Title>
-          {badge}
+          {/* The badge is centred on the title, not sat on its baseline: a pill beside a
+              2rem heading reads as hanging off it otherwise. The aside stays on the
+              baseline, where a line of text belongs. */}
+          {badge && <Box style={{ alignSelf: "center" }}>{badge}</Box>}
           {aside && (
             <Text size="sm" c="dimmed">
               {aside}

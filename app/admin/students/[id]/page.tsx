@@ -3,7 +3,7 @@ import { CardTitle } from "@/components/CardTitle";
 import { DateText } from "@/components/DateText";
 import { EditableCard } from "@/components/EditableCard";
 import { Field } from "@/components/Field";
-import { proficiencyLabels } from "@/lib/demographics";
+import { proficiencyLabels, schoolYearLabel } from "@/lib/demographics";
 import { DetailsForm, HealthForm } from "./forms";
 import { loadStudent } from "./load";
 
@@ -23,7 +23,7 @@ export default async function StudentDetailsPage({ params }: Props) {
             <Field label="Gender" value={student.gender === "female" ? "Girl" : "Boy"} />
             <Field
               label="School year"
-              value={student.isHomeschooled ? "Taught at home" : student.schoolYearGroup}
+              value={schoolYearLabel(student.schoolYearGroup, student.isHomeschooled)}
             />
             <Field label="Arabic level" value={proficiencyLabels[student.arabicProficiency]} />
             <Field label="Student's email" value={student.email} />

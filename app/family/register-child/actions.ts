@@ -41,9 +41,14 @@ export const submitApplication = action(applicationSchema, async (input, { user,
   }
   const year = session?.academicYearId ?? (await getCurrentYear())?.id;
   if (!year) throw new ActionError("The school hasn't opened a year for applications yet.");
-  if (input.preferredClassId !== null && session) {
+  // The level has to exist this year, and on the day they chose if they chose one.
+  if (input.preferredClassName) {
     const cls = await db.query.classes.findFirst({
-      where: and(eq(classes.id, input.preferredClassId), eq(classes.sessionId, session.id)),
+      where: and(
+        eq(classes.name, input.preferredClassName),
+        eq(classes.academicYearId, year),
+        session ? eq(classes.sessionId, session.id) : undefined,
+      ),
     });
     if (!cls) throw new ActionError("That class isn't on the day you chose.");
   }
@@ -86,7 +91,7 @@ export const submitApplication = action(applicationSchema, async (input, { user,
       // The year the family is applying for, so the office can list it by year later.
       applicationYearId: year,
       preferredSessionId: session?.id ?? null,
-      preferredClassId: input.preferredClassId,
+      preferredClassName: input.preferredClassName,
       appliedAt: new Date().toISOString(),
       createdByGuardianId: guardian.id,
     })

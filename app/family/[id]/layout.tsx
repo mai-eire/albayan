@@ -49,8 +49,8 @@ export default async function ChildLayout({ params, children }: LayoutProps<"/fa
       <ChildSwitcher kids={kids} />
       <PageHeader
         breadcrumbs={[{ label: "Your family", href: "/family" }]}
-        eyebrow={child.place ? `${child.place.className} · ${child.place.sessionName}` : undefined}
         title={child.firstName}
+        aside={child.place ? `${child.place.className} · ${child.place.sessionName}` : undefined}
         badge={<StatusBadge domain="application" value={child.status} size="md" />}
       />
       <LinkTabs base={`/family/${id}`} tabs={tabs} />

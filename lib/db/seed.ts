@@ -243,7 +243,9 @@ export async function seed(db: Db, auth: Auth) {
         isHomeschooled: id % 17 === 0,
         status: pending ? "applied" : "active",
         applicationYearId: yearId,
-        preferredSessionId: sessionId,
+        preferredSessionId: pending && id % 3 === 0 ? null : sessionId,
+        // Some applicants name a level, some leave it to the office.
+        preferredClassName: pending && id % 2 === 0 ? `Level ${level}` : null,
         applicationNotes: pending ? "Would prefer to be with their cousin if possible." : null,
         appliedAt: pending ? "2026-09-10T10:00:00.000Z" : "2026-08-20T10:00:00.000Z",
         approvedAt: pending ? null : "2026-08-25T10:00:00.000Z",

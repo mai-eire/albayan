@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/sqlite-core";
 import { db } from "@/lib/db";
 import { groupFamilies } from "@/lib/families";
@@ -45,6 +45,25 @@ export async function listChildrenForGuardian(guardianId: number): Promise<Child
     .leftJoin(schoolSessions, eq(schoolSessions.id, students.preferredSessionId))
     .where(eq(studentGuardians.guardianId, guardianId))
     .orderBy(asc(students.dateOfBirth));
+}
+
+// The other parents' countries of origin, offered first when a family says where a child
+// is from. Countries only — no names, nothing else about them.
+export async function listCoGuardianCountries(guardianId: number): Promise<string[]> {
+  const others = await listCoGuardians(guardianId);
+  if (!others.length) return [];
+  const rows = await (
+    await db()
+  )
+    .select({ countryOfOrigin: guardians.countryOfOrigin })
+    .from(guardians)
+    .where(
+      inArray(
+        guardians.id,
+        others.map((g) => g.id),
+      ),
+    );
+  return rows.flatMap((r) => r.countryOfOrigin ?? []);
 }
 
 // The guardian's own row, for pre-filling the application wizard and the account page.
@@ -182,7 +201,6 @@ export async function getStudentForAdmin(id: number): Promise<StudentForAdmin | 
   const d = await db();
   const student = await d.query.students.findFirst({ where: eq(students.id, id) });
   if (!student) return null;
-  const preferredClass = alias(classes, "preferred_class");
   const [[enrolment], guardianRows, [preferred]] = await Promise.all([
     d
       .select({
@@ -207,17 +225,16 @@ export async function getStudentForAdmin(id: number): Promise<StudentForAdmin | 
       .where(eq(studentGuardians.studentId, id))
       .orderBy(desc(studentGuardians.isPrimaryContact)),
     d
-      .select({ sessionName: schoolSessions.name, className: preferredClass.name })
+      .select({ sessionName: schoolSessions.name })
       .from(students)
       .leftJoin(schoolSessions, eq(schoolSessions.id, students.preferredSessionId))
-      .leftJoin(preferredClass, eq(preferredClass.id, students.preferredClassId))
       .where(eq(students.id, id)),
   ]);
   return {
     ...student,
     enrolment: enrolment ?? null,
     preferredSessionName: preferred?.sessionName ?? null,
-    preferredClassName: preferred?.className ?? null,
+    preferredClassName: student.preferredClassName,
     guardians: guardianRows.map(({ link, guardian, user }) => ({
       id: guardian.id,
       name: user.name,

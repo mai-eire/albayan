@@ -4,7 +4,7 @@ import dayjs from "dayjs";
 import { CardTitle } from "./CardTitle";
 import { Field } from "./Field";
 import { StatusBadge } from "./StatusBadge";
-import { proficiencyLabels } from "@/lib/demographics";
+import { proficiencyLabels, schoolYearLabel } from "@/lib/demographics";
 import type { ArabicProficiency } from "@/lib/db/schema";
 
 // What a family asked for and what became of it. The same card for the office, the family
@@ -59,7 +59,7 @@ export function ApplicationCard({
           <Field label="Class asked for" value={a.preferredClassName ?? "No preference"} />
           <Field
             label="School year then"
-            value={a.isHomeschooled ? "Taught at home" : a.schoolYearGroup}
+            value={schoolYearLabel(a.schoolYearGroup, a.isHomeschooled)}
           />
           <Field label="Arabic then" value={proficiencyLabels[a.arabicProficiency]} />
           {a.placedClassName && (

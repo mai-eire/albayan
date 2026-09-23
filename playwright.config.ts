@@ -7,6 +7,10 @@ const port = 3210;
 export default defineConfig({
   testDir: "e2e",
   timeout: 30_000,
+  // Everything here runs against `next dev`, which compiles a route the first time it is
+  // asked for, and against server actions that notify a whole class. 5s is a production
+  // default; these waits are for a development server on a busy laptop.
+  expect: { timeout: 15_000 },
   // One shared dev server and one local D1: parallel specs made requests hang under load.
   workers: 1,
   retries: process.env.CI ? 1 : 0,

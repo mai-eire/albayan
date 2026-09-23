@@ -70,11 +70,16 @@ export async function lessonDaysForStudents(
         eq(enrolments.status, "active"),
       ),
     );
-  return rows.map((r) => ({
+  const labelled = rows.map((r) => ({
     dayOfWeek: r.dayOfWeek,
     label:
       students.length > 1
         ? `${students.find((s) => s.id === r.studentId)?.firstName}: ${r.name}`
         : `${r.name} class`,
   }));
+  // Two children with the same first name, or two classes on one day, would otherwise
+  // repeat the same chip on every square of that weekday.
+  return labelled.filter(
+    (l, i) => labelled.findIndex((o) => o.dayOfWeek === l.dayOfWeek && o.label === l.label) === i,
+  );
 }

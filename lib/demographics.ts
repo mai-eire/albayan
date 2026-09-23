@@ -25,6 +25,16 @@ export const yearGroupSections = [
 
 export const yearGroups = yearGroupSections.flatMap((s) => s.items);
 
+// A home-schooled child usually still works at a year level, so both are said when both
+// are known: "3rd class · home schooled".
+export function schoolYearLabel(
+  yearGroup: string | null | undefined,
+  isHomeschooled: boolean,
+): string | null {
+  if (!isHomeschooled) return yearGroup ?? null;
+  return yearGroup ? `${yearGroup} · home schooled` : "Home schooled";
+}
+
 export const proficiencyLabels: Record<ArabicProficiency, string> = {
   none: "None yet",
   beginner: "Beginner – knows some letters",

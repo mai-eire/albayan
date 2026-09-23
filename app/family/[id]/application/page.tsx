@@ -63,7 +63,7 @@ export default async function ChildApplicationPage({ params }: Props) {
               medicalNotes: child.medicalNotes ?? "",
               applicationNotes: child.applicationNotes ?? "",
               preferredSessionId: child.preferredSessionId,
-              preferredClassId: child.preferredClassId,
+              preferredClassName: child.preferredClassName ?? "",
             }}
           />
         )

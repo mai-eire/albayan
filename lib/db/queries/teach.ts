@@ -241,7 +241,6 @@ export type StudentForTeacher = {
 export async function getStudentForTeacher(id: number): Promise<StudentForTeacher | null> {
   const d = await db();
   const preferredSession = alias(schoolSessions, "preferred_session");
-  const preferredClass = alias(classes, "preferred_class");
   const [student] = await d
     .select({
       id: students.id,
@@ -263,7 +262,7 @@ export async function getStudentForTeacher(id: number): Promise<StudentForTeache
       declinedAt: students.declinedAt,
       academicYearId: students.applicationYearId,
       preferredSessionName: preferredSession.name,
-      preferredClassName: preferredClass.name,
+      preferredClassName: students.preferredClassName,
     })
     .from(students)
     .leftJoin(
@@ -273,7 +272,6 @@ export async function getStudentForTeacher(id: number): Promise<StudentForTeache
     .leftJoin(classes, eq(classes.id, enrolments.classId))
     .leftJoin(schoolSessions, eq(schoolSessions.id, classes.sessionId))
     .leftJoin(preferredSession, eq(preferredSession.id, students.preferredSessionId))
-    .leftJoin(preferredClass, eq(preferredClass.id, students.preferredClassId))
     .where(eq(students.id, id));
   if (!student) return null;
   const {

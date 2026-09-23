@@ -2,7 +2,7 @@ import { Card, SimpleGrid, Stack, Text } from "@mantine/core";
 import { CardTitle } from "@/components/CardTitle";
 import { DateText } from "@/components/DateText";
 import { Field } from "@/components/Field";
-import { proficiencyLabels } from "@/lib/demographics";
+import { proficiencyLabels, schoolYearLabel } from "@/lib/demographics";
 import { loadChild } from "./load";
 
 type Props = { params: Promise<{ id: string }> };
@@ -19,7 +19,7 @@ export default async function ChildDetailsPage({ params }: Props) {
           <Field label="Student ID" value={child.studentId} />
           <Field
             label="School year"
-            value={child.isHomeschooled ? "Taught at home" : child.schoolYearGroup}
+            value={schoolYearLabel(child.schoolYearGroup, child.isHomeschooled)}
           />
           <Field label="Arabic" value={proficiencyLabels[child.arabicProficiency]} />
           {child.place && <Field label="Class teacher" value={child.place.classTeacherName} />}

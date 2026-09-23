@@ -24,6 +24,7 @@ import { IconInbox, IconSearch } from "@tabler/icons-react";
 import { ClassFilter, type ClassFilterOption } from "@/components/ClassFilter";
 import { Nothing } from "@/components/Nothing";
 import { EmptyState } from "@/components/EmptyState";
+import { StatusBadge } from "@/components/StatusBadge";
 import { Field } from "@/components/Field";
 import { useUrlFilters } from "@/components/useUrlFilters";
 import { FormError } from "@/components/FormError";
@@ -46,7 +47,23 @@ type Props = {
   today: string;
 };
 
-// Filters above (child or guardian, the session and class asked for), one row per child.
+// What became of an application, in the list and at the top of the drawer.
+function Outcome({ application: a }: { application: Application }) {
+  return (
+    <>
+      <StatusBadge domain="decision" value={a.status} />
+      {a.decidedAt && (
+        <Text size="sm" c="dimmed">
+          {dayjs(a.decidedAt).format("D MMM")}
+        </Text>
+      )}
+    </>
+  );
+}
+
+// Filters above (child or guardian, the session and class asked for, what became of it),
+// one row per child; the drawer holds the whole application and, while it waits, the
+// decision buttons.
 export function ApplicationsTable({
   applications,
   classes,
@@ -61,9 +78,12 @@ export function ApplicationsTable({
   const q = params.get("q")?.trim().toLowerCase();
   const session = params.get("session");
   const cls = params.get("class");
+  // Waiting for a decision unless asked otherwise; "all" shows every outcome.
+  const status = params.get("status") ?? "applied";
   const search = useDebouncedCallback((value: string) => set({ q: value }), 300);
   const shown = applications.filter(
     (a) =>
+      (status === "all" || a.status === status) &&
       (!session || String(a.preferredSessionId) === session) &&
       (!cls || String(a.preferredClassId) === cls) &&
       (!q ||
@@ -103,8 +123,21 @@ export function ApplicationsTable({
           value={cls}
           onChange={(v) => set({ class: v })}
         />
+        <Select
+          aria-label="Status"
+          data={[
+            { value: "applied", label: "Waiting" },
+            { value: "accepted", label: "Accepted" },
+            { value: "declined", label: "Declined" },
+            { value: "all", label: "Every application" },
+          ]}
+          value={status}
+          allowDeselect={false}
+          onChange={(v) => set({ status: v === "applied" ? null : v })}
+          w={180}
+        />
         <Text size="sm" c="dimmed" ms="auto">
-          {shown.length} waiting
+          {shown.length} {shown.length === 1 ? "application" : "applications"}
         </Text>
       </Group>
       {shown.length === 0 && (
@@ -122,6 +155,7 @@ export function ApplicationsTable({
             <Table.Th>Prefers</Table.Th>
             <Table.Th>Guardian</Table.Th>
             <Table.Th>Applied</Table.Th>
+            <Table.Th style={{ whiteSpace: "nowrap" }}>Outcome</Table.Th>
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
@@ -153,7 +187,12 @@ export function ApplicationsTable({
                   {relationshipLabels[a.guardian.relationship as keyof typeof relationshipLabels]}
                 </Text>
               </Table.Td>
-              <Table.Td>{dayjs(a.appliedAt).format("D MMM")}</Table.Td>
+              <Table.Td style={{ whiteSpace: "nowrap" }}>
+                {dayjs(a.appliedAt).format("D MMM")}
+              </Table.Td>
+              <Table.Td style={{ whiteSpace: "nowrap" }}>
+                <Outcome application={a} />
+              </Table.Td>
             </Table.Tr>
           ))}
         </Table.Tbody>
@@ -168,6 +207,24 @@ export function ApplicationsTable({
       >
         {open && (
           <Stack gap="lg">
+            <Group gap="xs">
+              <Outcome application={open} />
+            </Group>
+            {open.status === "accepted" && open.placedClassName && (
+              <Text size="sm">
+                Placed in{" "}
+                <Text component="span" fw={500}>
+                  {open.placedClassName} · {open.placedSessionName}
+                </Text>
+                {open.offerNote && ` — "${open.offerNote}"`}
+              </Text>
+            )}
+            {open.status === "declined" && open.declinedReason && (
+              <Stack gap={4}>
+                <Title order={4}>Why it was declined</Title>
+                <Text size="sm">{open.declinedReason}</Text>
+              </Stack>
+            )}
             <Group gap="xs">
               {open.allergies && <Badge color="clay">Allergies</Badge>}
               {open.medicalNotes && <Badge color="saffron">Medical</Badge>}
@@ -221,12 +278,14 @@ export function ApplicationsTable({
                 {open.guardian.phone && ` · ${open.guardian.phone}`}
               </Text>
             </Stack>
-            <Group justify="flex-end" mt="md">
-              <Button variant="light" color="clay" onClick={() => setDeciding("decline")}>
-                Decline
-              </Button>
-              <Button onClick={() => setDeciding("approve")}>Offer a place</Button>
-            </Group>
+            {open.status === "applied" && (
+              <Group justify="flex-end" mt="md">
+                <Button variant="light" color="clay" onClick={() => setDeciding("decline")}>
+                  Decline
+                </Button>
+                <Button onClick={() => setDeciding("approve")}>Offer a place</Button>
+              </Group>
+            )}
           </Stack>
         )}
       </Drawer>

@@ -123,7 +123,15 @@ export type StudentForGuardian = {
   allergies: string | null;
   medicalNotes: string | null;
   status: Student["status"];
+  // The application as it was made, and what became of it.
+  appliedAt: string;
+  decidedAt: string | null;
+  academicYearId: string | null;
+  applicationNotes: string | null;
+  preferredSessionId: number | null;
   preferredSessionName: string | null;
+  preferredClassId: number | null;
+  preferredClassName: string | null;
   declinedReason: string | null;
   // The office's word when the place offered wasn't the one asked for.
   offerNote: string | null;
@@ -133,6 +141,7 @@ export type StudentForGuardian = {
 
 export async function getStudentForGuardian(id: number): Promise<StudentForGuardian | null> {
   const d = await db();
+  const preferredClass = alias(classes, "preferred_class");
   const [student] = await d
     .select({
       id: students.id,
@@ -146,17 +155,28 @@ export async function getStudentForGuardian(id: number): Promise<StudentForGuard
       allergies: students.allergies,
       medicalNotes: students.medicalNotes,
       status: students.status,
+      appliedAt: students.appliedAt,
+      approvedAt: students.approvedAt,
+      declinedAt: students.declinedAt,
+      academicYearId: students.applicationYearId,
+      applicationNotes: students.applicationNotes,
       declinedReason: students.declinedReason,
       offerNote: students.offerNote,
+      preferredSessionId: students.preferredSessionId,
       preferredSessionName: schoolSessions.name,
+      preferredClassId: students.preferredClassId,
+      preferredClassName: preferredClass.name,
     })
     .from(students)
     .leftJoin(schoolSessions, eq(schoolSessions.id, students.preferredSessionId))
+    .leftJoin(preferredClass, eq(preferredClass.id, students.preferredClassId))
     .where(eq(students.id, id));
   if (!student) return null;
   const placed = await loadPlace(id);
+  const { approvedAt, declinedAt, ...rest } = student;
   return {
-    ...student,
+    ...rest,
+    decidedAt: student.status === "declined" ? declinedAt : approvedAt,
     place: placed?.place ?? null,
     fee: placed ? { cents: placed.feeCents, note: placed.feeNote } : null,
   };

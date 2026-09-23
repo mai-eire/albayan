@@ -9,7 +9,7 @@ import {
   uniqueIndex,
 } from "drizzle-orm/sqlite-core";
 import { bool, timestamps } from "../columns";
-import { classes, schoolSessions } from "./academics";
+import { academicYears, classes, schoolSessions } from "./academics";
 import { users } from "./auth";
 import { guardians } from "./people";
 
@@ -53,6 +53,9 @@ export const students = sqliteTable(
     allergies: text(),
     medicalNotes: text(),
     status: text({ enum: studentStatuses }).notNull().default("applied"),
+    // The year the family applied for; set when the application is made, so declined and
+    // accepted applications can still be listed by year long afterwards.
+    applicationYearId: text().references(() => academicYears.id),
     preferredSessionId: integer().references(() => schoolSessions.id),
     preferredClassId: integer().references(() => classes.id),
     applicationNotes: text(),
@@ -61,6 +64,7 @@ export const students = sqliteTable(
     declinedReason: text(),
     appliedAt: text().notNull(),
     approvedAt: text(),
+    declinedAt: text(),
     createdByGuardianId: integer()
       .notNull()
       .references(() => guardians.id),
@@ -68,6 +72,7 @@ export const students = sqliteTable(
   },
   (t) => [
     index("students_status").on(t.status),
+    index("students_application_year").on(t.applicationYearId),
     check("students_gender", sql`${t.gender} in ('male', 'female')`),
     check(
       "students_arabic",

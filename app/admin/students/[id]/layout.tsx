@@ -17,7 +17,7 @@ import { todayIn } from "@/lib/time";
 // Everything the offer modal needs for an applicant, straight from their page.
 async function offerProps(studentId: number) {
   const [[application], year, { timezone }] = await Promise.all([
-    listApplications([studentId]),
+    listApplications({ onlyIds: [studentId] }),
     getCurrentYear(),
     getSchoolSettings(),
   ]);
@@ -50,6 +50,7 @@ export default async function StudentLayout({
     { value: "family", label: "Family" },
     { value: "sensitive", label: "Sensitive" },
     { value: "class", label: "Class" },
+    { value: "application", label: "Application" },
     { value: "fees", label: "Fees", mark: feeTabMark(thisYear?.status ?? null) },
     { value: "notes", label: "Notes" },
   ];

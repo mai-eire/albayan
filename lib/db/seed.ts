@@ -227,6 +227,7 @@ export async function seed(db: Db, auth: Auth) {
         arabicProficiency: pick(t.arabicProficiencies),
         allergies: pick(allergies),
         status: pending ? "applied" : "active",
+        applicationYearId: yearId,
         preferredSessionId: sessionId,
         applicationNotes: pending ? "Would prefer to be with their cousin if possible." : null,
         appliedAt: pending ? "2026-09-10T10:00:00.000Z" : "2026-08-20T10:00:00.000Z",

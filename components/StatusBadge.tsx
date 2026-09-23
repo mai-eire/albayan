@@ -20,6 +20,12 @@ const statuses = {
     declined: ["clay", "Declined"],
     inactive: ["gray", "Inactive"],
   },
+  // What became of an application: waiting, a place given, or turned down.
+  decision: {
+    applied: ["saffron", "Waiting"],
+    accepted: ["tile", "Accepted"],
+    declined: ["clay", "Declined"],
+  },
   // Anything that can be switched off: subjects, teachers, sessions.
   record: {
     active: ["tile", "Active"],

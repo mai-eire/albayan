@@ -16,6 +16,7 @@ const tabs = [
   { value: "notes", label: "Notes" },
   { value: "resources", label: "Resources" },
   { value: "details", label: "Details" },
+  { value: "application", label: "Application" },
 ];
 
 export default async function ChildLayout({ params, children }: LayoutProps<"/family/[id]">) {

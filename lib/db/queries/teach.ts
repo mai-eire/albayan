@@ -215,6 +215,16 @@ export type StudentForTeacher = {
   medicalNotes: string | null;
   className: string | null;
   sessionName: string | null;
+  // How they came to be here: the facts of the application, never the family's own words
+  // or the reason a place was refused (decision 2026-09-23).
+  application: {
+    status: "applied" | "accepted" | "declined";
+    appliedAt: string;
+    decidedAt: string | null;
+    academicYearId: string | null;
+    preferredSessionName: string | null;
+    preferredClassName: string | null;
+  };
   // Names and relationships only; the office holds the contact details. Emergency
   // contacts are here because a teacher may need one during a lesson.
   guardians: {
@@ -229,6 +239,8 @@ export type StudentForTeacher = {
 
 export async function getStudentForTeacher(id: number): Promise<StudentForTeacher | null> {
   const d = await db();
+  const preferredSession = alias(schoolSessions, "preferred_session");
+  const preferredClass = alias(classes, "preferred_class");
   const [student] = await d
     .select({
       id: students.id,
@@ -243,6 +255,13 @@ export async function getStudentForTeacher(id: number): Promise<StudentForTeache
       medicalNotes: students.medicalNotes,
       className: classes.name,
       sessionName: schoolSessions.name,
+      status: students.status,
+      appliedAt: students.appliedAt,
+      approvedAt: students.approvedAt,
+      declinedAt: students.declinedAt,
+      academicYearId: students.applicationYearId,
+      preferredSessionName: preferredSession.name,
+      preferredClassName: preferredClass.name,
     })
     .from(students)
     .leftJoin(
@@ -251,8 +270,33 @@ export async function getStudentForTeacher(id: number): Promise<StudentForTeache
     )
     .leftJoin(classes, eq(classes.id, enrolments.classId))
     .leftJoin(schoolSessions, eq(schoolSessions.id, classes.sessionId))
+    .leftJoin(preferredSession, eq(preferredSession.id, students.preferredSessionId))
+    .leftJoin(preferredClass, eq(preferredClass.id, students.preferredClassId))
     .where(eq(students.id, id));
   if (!student) return null;
+  const {
+    status,
+    appliedAt,
+    approvedAt,
+    declinedAt,
+    academicYearId,
+    preferredSessionName,
+    preferredClassName,
+    ...rest
+  } = student;
+  const application = {
+    status:
+      status === "applied"
+        ? ("applied" as const)
+        : status === "declined"
+          ? ("declined" as const)
+          : ("accepted" as const),
+    appliedAt,
+    decidedAt: status === "declined" ? declinedAt : approvedAt,
+    academicYearId,
+    preferredSessionName,
+    preferredClassName,
+  };
   const guardianRows = await d
     .select({
       name: users.name,
@@ -267,7 +311,7 @@ export async function getStudentForTeacher(id: number): Promise<StudentForTeache
     .innerJoin(users, eq(users.id, guardians.userId))
     .where(eq(studentGuardians.studentId, id))
     .orderBy(asc(studentGuardians.isPrimaryContact));
-  return { ...student, guardians: guardianRows.reverse() };
+  return { ...rest, application, guardians: guardianRows.reverse() };
 }
 
 export type Lesson = {

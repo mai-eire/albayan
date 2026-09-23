@@ -1,13 +1,17 @@
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray } from "drizzle-orm";
+import { alias } from "drizzle-orm/sqlite-core";
 import { db } from "@/lib/db";
 import {
   classes,
+  enrolments,
   guardians,
   schoolSessions,
   studentGuardians,
   students,
   users,
 } from "@/lib/db/schema";
+
+export type ApplicationStatus = "applied" | "accepted" | "declined";
 
 // Admin-only: everything the office needs to place a child. Never passed to teachers.
 export type Application = {
@@ -22,6 +26,15 @@ export type Application = {
   medicalNotes: string | null;
   applicationNotes: string | null;
   appliedAt: string;
+  // Where it got to, and when — an accepted application keeps the place it was given.
+  status: ApplicationStatus;
+  decidedAt: string | null;
+  declinedReason: string | null;
+  offerNote: string | null;
+  placedClassId: number | null;
+  placedClassName: string | null;
+  placedSessionName: string | null;
+  applicationYearId: string | null;
   preferredSessionId: number | null;
   preferredSessionName: string | null;
   preferredClassId: number | null;
@@ -31,15 +44,24 @@ export type Application = {
   siblings: string[];
 };
 
-// Every application waiting, or just the ones asked for (a class's, one student's).
-export async function listApplications(onlyIds?: number[]): Promise<Application[]> {
+// Every application — waiting, accepted or declined — or just the ones asked for (a
+// class's, one student's). The office filters the list in the browser.
+export async function listApplications(
+  filter: { onlyIds?: number[]; yearId?: string } = {},
+): Promise<Application[]> {
+  const { onlyIds, yearId } = filter;
   const d = await db();
   if (onlyIds && onlyIds.length === 0) return [];
+  const placedClass = alias(classes, "placed_class");
+  const placedSession = alias(schoolSessions, "placed_session");
   const rows = await d
     .select({
       student: students,
       preferredSessionName: schoolSessions.name,
       preferredClassName: classes.name,
+      placedClassId: placedClass.id,
+      placedClassName: placedClass.name,
+      placedSessionName: placedSession.name,
       guardianId: guardians.id,
       guardianName: users.name,
       guardianEmail: users.email,
@@ -55,8 +77,20 @@ export async function listApplications(onlyIds?: number[]): Promise<Application[
     .innerJoin(users, eq(users.id, guardians.userId))
     .leftJoin(schoolSessions, eq(schoolSessions.id, students.preferredSessionId))
     .leftJoin(classes, eq(classes.id, students.preferredClassId))
-    .where(and(eq(students.status, "applied"), onlyIds ? inArray(students.id, onlyIds) : undefined))
-    .orderBy(asc(students.appliedAt));
+    .leftJoin(
+      enrolments,
+      and(eq(enrolments.studentId, students.id), eq(enrolments.status, "active")),
+    )
+    .leftJoin(placedClass, eq(placedClass.id, enrolments.classId))
+    .leftJoin(placedSession, eq(placedSession.id, placedClass.sessionId))
+    .where(
+      and(
+        inArray(students.status, ["applied", "active", "declined"]),
+        onlyIds ? inArray(students.id, onlyIds) : undefined,
+        yearId ? eq(students.applicationYearId, yearId) : undefined,
+      ),
+    )
+    .orderBy(desc(students.appliedAt));
   if (!rows.length) return [];
 
   const guardianIds = [...new Set(rows.map((r) => r.guardianId))];
@@ -78,6 +112,20 @@ export async function listApplications(onlyIds?: number[]): Promise<Application[
     medicalNotes: r.student.medicalNotes,
     applicationNotes: r.student.applicationNotes,
     appliedAt: r.student.appliedAt,
+    status:
+      r.student.status === "applied"
+        ? ("applied" as const)
+        : r.student.status === "declined"
+          ? ("declined" as const)
+          : ("accepted" as const),
+    decidedAt:
+      r.student.status === "declined" ? r.student.declinedAt : (r.student.approvedAt ?? null),
+    declinedReason: r.student.declinedReason,
+    offerNote: r.student.offerNote,
+    placedClassId: r.placedClassId,
+    placedClassName: r.placedClassName,
+    placedSessionName: r.placedSessionName,
+    applicationYearId: r.student.applicationYearId,
     preferredSessionId: r.student.preferredSessionId,
     preferredSessionName: r.preferredSessionName,
     preferredClassId: r.student.preferredClassId,

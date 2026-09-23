@@ -2,7 +2,7 @@
 
 Live document. Updated at the end of every work session, in the same commit as the work. Keep it under ~50 lines; detail belongs in the phase checklists.
 
-**Last updated:** 2026-09-20 · **Current phase:** 3 — Fees, events, reports, hardening (in progress)
+**Last updated:** 2026-09-23 · **Current phase:** 3 — Fees, events, reports, hardening (in progress)
 
 ## Phases
 
@@ -34,6 +34,7 @@ Review passes by area, feedback under `docs/feedback/<area>/`: admin passes 2–
 
 ## Recently done
 
+- 2026-09-23 — Applications are kept and searchable (Phase 3 task 2b): the year applied for and the decision date are on the record (migration 0007); the office's list covers every outcome with year, session, class, name and status filters; an Application tab on the student page for the office, the family (editable while it waits) and the teacher (facts only). Also: record a payment from a family's Fees tab, every guardian on the students list, tables without stripes, "Applications (6)" in the nav.
 - 2026-09-20 — Teacher review pass 3 ([feedback/teacher/2026-09-20-review-3.md](feedback/teacher/2026-09-20-review-3.md)): homework due today as its own card (and a hydration error fixed there); paperclip on the attach toggle; weekends in tile on calendars; dev clock day arrows.
 - 2026-09-20 — Teacher review pass 2 ([feedback/teacher/2026-09-20-review-2.md](feedback/teacher/2026-09-20-review-2.md)): "Today" as a page action (`TodayButton`); empty classes on the register page and in the overview; dark-mode `light` variant fixed in the theme; homework back to one form with a collapsed attachments section, Edit shows and removes attachments; Today lists homework due today; calendars without weekend colouring and with today ringed; a development-only clock in the header (`lib/clock.ts`) so any page can be seen as on another day.
 - 2026-09-19 — Teacher review pass 1 ([feedback/teacher/2026-09-19-review-1.md](feedback/teacher/2026-09-19-review-1.md)) and admin pass 6 ([feedback/admin/2026-09-19-review-6.md](feedback/admin/2026-09-19-review-6.md)): `/teach` → `/teacher` (old links redirect); Today shows the schedule with "Take register" as the page action for the class the teacher leads; one `RegistersTable` for the office and teachers (date filter by text, "Today" button, no separate day view); breadcrumbs follow the URL and `PageHeader` gains a `related` link (DESIGN §3.2); homework in two steps with its own attachment form, next-lesson/next-week due buttons, Publish/Unpublish in the menu, draft attachments hidden until published; teacher calendar removed; a new class starts with its class teacher on every subject and a class-teacher change offers to hand the subjects over; School rules is its own admin page with a rich-text editor (`@mantine/tiptap`, cleaned through the schema in `lib/rules.ts`). Later: staff HR view, sessions with drop-off/pick-up times.

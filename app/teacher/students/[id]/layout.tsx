@@ -7,6 +7,7 @@ const tabs = [
   { value: baseTab, label: "Overview" },
   { value: "attendance", label: "Attendance" },
   { value: "notes", label: "Notes" },
+  { value: "application", label: "Application" },
   { value: "resources", label: "Resources" },
 ];
 

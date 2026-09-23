@@ -150,7 +150,11 @@ export const declineApplication = action(
     const { student, contact } = await pendingApplication(db, input.id);
     await db
       .update(students)
-      .set({ status: "declined", declinedReason: input.reason })
+      .set({
+        status: "declined",
+        declinedReason: input.reason,
+        declinedAt: new Date().toISOString(),
+      })
       .where(eq(students.id, student.id));
     await audit(db, {
       actorUserId: user.id,

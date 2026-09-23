@@ -53,6 +53,7 @@ const routes: Record<string, string[]> = {
     "/admin/students/[id]",
     "/admin/students/[id]/class",
     "/admin/students/[id]/family",
+    "/admin/students/[id]/application",
     "/admin/students/[id]/fees",
     "/admin/students/[id]/notes",
     "/admin/students/[id]/sensitive",
@@ -72,6 +73,7 @@ const routes: Record<string, string[]> = {
     "/teacher/notifications",
     "/teacher/resources",
     "/teacher/students/[id]",
+    "/teacher/students/[id]/application",
     "/teacher/students/[id]/attendance",
     "/teacher/students/[id]/notes",
     "/teacher/students/[id]/resources",
@@ -81,6 +83,7 @@ const routes: Record<string, string[]> = {
   family: [
     "/family",
     "/family/[id]",
+    "/family/[id]/application",
     "/family/[id]/attendance",
     "/family/[id]/details",
     "/family/[id]/homework",

@@ -34,15 +34,11 @@ const {
 } = await import("./teach");
 
 // Every column a teacher must never see (CLAUDE.md "Privacy is structural"), by table.
+// What a teacher-facing query may never select. A teacher does see the neutral facts of
+// the application, including the session and class the family asked for (decision
+// 2026-09-23); what the family wrote and why a place was refused stay with the office.
 const hidden = {
-  students: [
-    "ethnicity",
-    "phone",
-    "email",
-    "application_notes",
-    "declined_reason",
-    "preferred_session_id",
-  ],
+  students: ["ethnicity", "phone", "email", "application_notes", "declined_reason"],
   guardians: [
     "address_line1",
     "address_line2",

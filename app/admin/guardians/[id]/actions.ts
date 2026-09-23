@@ -13,6 +13,7 @@ import {
   guardians,
   registrationReasons,
   relationships,
+  schoolSessions,
   studentGuardians,
   students,
   users,
@@ -148,6 +149,10 @@ export const addChildForGuardian = action(
     requireAdmin(user);
     const guardian = await db.query.guardians.findFirst({ where: eq(guardians.id, guardianId) });
     if (!guardian) throw new ActionError("That guardian no longer exists.");
+    const session = await db.query.schoolSessions.findFirst({
+      where: eq(schoolSessions.id, child.preferredSessionId),
+    });
+    if (!session) throw new ActionError("Choose a session.");
     const others = alsoGuardians.filter((g) => g.id !== guardianId);
     if (others.length) {
       const known = await db
@@ -167,6 +172,8 @@ export const addChildForGuardian = action(
       .values({
         ...child,
         status: "applied",
+        // The year they are applying for, from the session they asked for.
+        applicationYearId: session.academicYearId,
         appliedAt: new Date().toISOString(),
         createdByGuardianId: guardianId,
       })

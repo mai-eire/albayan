@@ -36,7 +36,7 @@ export default async function ClassApplicationsPage({ params }: Props) {
   ]);
   const ids = applications.map((a) => a.id);
   const [full, families] = await Promise.all([
-    listApplications(ids),
+    listApplications({ onlyIds: ids }),
     familyOverviewFor(ids, cls.academicYearId),
   ]);
   const today = todayIn(timezone, await clock());

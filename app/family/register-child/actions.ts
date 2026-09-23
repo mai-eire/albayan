@@ -71,6 +71,8 @@ export const submitApplication = action(applicationSchema, async (input, { user,
       medicalNotes: input.medicalNotes,
       applicationNotes: input.applicationNotes,
       status: "applied",
+      // The year the family is applying for, so the office can list it by year later.
+      applicationYearId: session.academicYearId,
       preferredSessionId: session.id,
       preferredClassId: input.preferredClassId,
       appliedAt: new Date().toISOString(),

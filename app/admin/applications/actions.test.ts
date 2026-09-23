@@ -40,6 +40,7 @@ vi.mock("@/lib/db/queries/settings", () => ({
 vi.mock("next/cache", () => ({ revalidatePath: () => {} }));
 
 const { approveApplication, declineApplication } = await import("./actions");
+const { listApplications } = await import("@/lib/db/queries/applications");
 
 const admin: CurrentUser = {
   id: 1,
@@ -174,9 +175,16 @@ describe("declineApplication", () => {
       {
         status: "declined",
         declinedReason: reason,
+        // The application is kept, with the day it was turned down.
+        declinedAt: expect.stringMatching(/^\d{4}-/),
         applicationNotes: "Would prefer to be with their cousin if possible.",
       },
     );
+    const listed = await listApplications({ yearId: "2026-27" });
+    expect(listed.find((a) => a.id === pending.id)).toMatchObject({
+      status: "declined",
+      declinedReason: reason,
+    });
     const mail = readdirSync(mailDir).find((f) => f.includes("about-"));
     expect(mail).toBeTruthy();
     expect(readFileSync(join(mailDir, mail!), "utf8")).toContain("We&#x27;re full");

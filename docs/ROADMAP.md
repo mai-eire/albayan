@@ -2,7 +2,7 @@
 
 Live document. Updated at the end of every work session, in the same commit as the work. Keep it under ~50 lines; detail belongs in the phase checklists.
 
-**Last updated:** 2026-09-23 · **Current phase:** 3 — Fees, events, reports, hardening (in progress)
+**Last updated:** 2026-09-26 · **Current phase:** 3 — Fees, events, reports, hardening (in progress)
 
 ## Phases
 
@@ -21,7 +21,7 @@ Phase scope and rationale: [PLAN.md §17](PLAN.md). Definition of done for the c
 
 Review passes by area, feedback under `docs/feedback/<area>/`: admin passes 2–6, teacher passes 1–3 and family pass 1 are in. Next:
 
-1. Salah reviews the **student area**; fix what comes back.
+1. Student review pass 1 is in; waiting on pass 2.
 2. Two open questions from the family pass: a family telling the school a child is leaving, and "apply again" after a decline (both answered in the feedback doc, neither built).
 3. Task 2 — a notification to every guardian when the office records a payment.
 4. Then events (tasks 3–4) and reports (task 5), parked until the reviews are through.
@@ -34,6 +34,8 @@ Review passes by area, feedback under `docs/feedback/<area>/`: admin passes 2–
 - Eircode confirmed as the postal code format? — affects the postal-area report only.
 
 ## Recently done
+
+- 2026-09-26 — Student review pass 1 ([feedback/student/2026-09-26-review-1.md](feedback/student/2026-09-26-review-1.md)): the home page shows outstanding homework, overdue first, and links to it (it used to hide anything already due); new `/student/attendance` and `/student/details`; School rules reachable at last; the phone tab bar becomes four tabs and a **More** drawer, since students have no burger and eight items would not fit. On the family side a guardian can now correct their child's name, year and health notes from the Details tab, audited.
 
 - 2026-09-23 — Family review pass 2 ([feedback/family/2026-09-23-review-2.md](feedback/family/2026-09-23-review-2.md)): a family's class preference is a **level by name**, so a parent can name a level without naming a day (migration 0010); the child page puts the class beside the name and centres the badge; attendance is a list, one row per date; "Home schooled" no longer replaces the school year; the guardian's country of origin is asked once, on their account; the child's country offers the family's own first; notifications are blocks rather than divided rows, in the popover and on the page; Fees moved after Calendar; and the duplicate-key crash on the calendar is fixed.
 

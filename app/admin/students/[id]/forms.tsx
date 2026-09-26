@@ -1,80 +1,13 @@
 "use client";
 
-import { Button, Checkbox, Group, Select, Stack, Textarea, TextInput } from "@mantine/core";
-import { useForm } from "@mantine/form";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { Checkbox, Group, Select, Stack, Textarea, TextInput } from "@mantine/core";
 import { DateField } from "@/components/DateField";
-import { useEditingDone } from "@/components/EditableCard";
-import { FormError } from "@/components/FormError";
-import { toast } from "@/components/toast";
+import { SaveRow, useSave } from "@/components/EditableCard";
 import type { StudentForAdmin } from "@/lib/db/queries/students";
 import { arabicProficiencies } from "@/lib/db/schema";
 import { preferNotToSay, proficiencyLabels, yearGroupSections } from "@/lib/demographics";
 import { countryOptions } from "@/lib/countries";
 import { updateStudentDetails, updateStudentCountry, updateStudentHealth } from "./actions";
-
-type Result =
-  { ok: true; data: unknown } | { ok: false; error: string; fieldErrors?: Record<string, string> };
-
-// The cards share one save routine: submit, show field errors or a toast, refresh, and
-// close the EditableCard they sit in.
-export function useSave<V extends Record<string, unknown>>(
-  initial: V,
-  save: (values: V) => Promise<Result>,
-  done: string,
-) {
-  const router = useRouter();
-  const close = useEditingDone();
-  const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-  const form = useForm<V>({ initialValues: initial, onValuesChange: () => setError(null) });
-  const submit = form.onSubmit(async (values) => {
-    if (saving) return;
-    setSaving(true);
-    setError(null);
-    const result = await save(values);
-    setSaving(false);
-    if (!result.ok) {
-      if (result.fieldErrors) form.setErrors(result.fieldErrors);
-      setError(result.error);
-      return;
-    }
-    toast.success(done);
-    form.resetDirty(values);
-    router.refresh();
-    close?.();
-  });
-  return { form, submit, error, saving, close };
-}
-
-export function SaveRow({
-  saving,
-  dirty,
-  error,
-  close,
-}: {
-  saving: boolean;
-  dirty: boolean;
-  error: string | null;
-  close: (() => void) | null;
-}) {
-  return (
-    <>
-      <FormError message={error} />
-      <Group justify="flex-end">
-        {close && (
-          <Button variant="default" onClick={close}>
-            Cancel
-          </Button>
-        )}
-        <Button type="submit" loading={saving} disabled={!dirty}>
-          Save changes
-        </Button>
-      </Group>
-    </>
-  );
-}
 
 export function DetailsForm({ student }: { student: StudentForAdmin }) {
   const { form, submit, error, saving, close } = useSave(

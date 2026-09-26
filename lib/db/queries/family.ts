@@ -1,4 +1,4 @@
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, desc, eq } from "drizzle-orm";
 import { alias } from "drizzle-orm/sqlite-core";
 import { db } from "@/lib/db";
 import { getCurrentYear } from "@/lib/db/queries/academics";
@@ -14,8 +14,10 @@ import { familyStart, forFamilies } from "@/lib/timetable";
 import {
   classes,
   enrolments,
+  guardians,
   schoolSessions,
   sessionPeriods,
+  studentGuardians,
   students,
   subjects,
   teachers,
@@ -189,21 +191,53 @@ export async function getStudentForGuardian(id: number): Promise<StudentForGuard
   };
 }
 
+// A student sees their own record: the facts about them, their own health notes and who
+// the school has down as looking after them — names and what they are to them, no contact
+// details, which belong to the grown-ups.
 export type StudentForStudent = {
   id: number;
   studentId: string | null;
   firstName: string;
+  lastName: string;
+  dateOfBirth: string;
+  schoolYearGroup: string | null;
+  isHomeschooled: boolean;
+  arabicProficiency: Student["arabicProficiency"];
+  allergies: string | null;
+  medicalNotes: string | null;
   place: Place | null;
+  guardians: { name: string; relationship: string }[];
 };
 
 export async function getStudentForStudent(id: number): Promise<StudentForStudent | null> {
   const d = await db();
   const [student] = await d
-    .select({ id: students.id, studentId: students.studentId, firstName: students.firstName })
+    .select({
+      id: students.id,
+      studentId: students.studentId,
+      firstName: students.firstName,
+      lastName: students.lastName,
+      dateOfBirth: students.dateOfBirth,
+      schoolYearGroup: students.schoolYearGroup,
+      isHomeschooled: students.isHomeschooled,
+      arabicProficiency: students.arabicProficiency,
+      allergies: students.allergies,
+      medicalNotes: students.medicalNotes,
+    })
     .from(students)
     .where(eq(students.id, id));
   if (!student) return null;
-  return { ...student, place: (await loadPlace(id))?.place ?? null };
+  const [placed, carers] = await Promise.all([
+    loadPlace(id),
+    d
+      .select({ name: users.name, relationship: studentGuardians.relationship })
+      .from(studentGuardians)
+      .innerJoin(guardians, eq(guardians.id, studentGuardians.guardianId))
+      .innerJoin(users, eq(users.id, guardians.userId))
+      .where(eq(studentGuardians.studentId, id))
+      .orderBy(desc(studentGuardians.isPrimaryContact)),
+  ]);
+  return { ...student, place: placed?.place ?? null, guardians: carers };
 }
 
 // Fees are the family's own money: a guardian may see every figure the office keeps about

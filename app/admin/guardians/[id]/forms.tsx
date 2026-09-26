@@ -10,7 +10,7 @@ import {
   reasonLabels,
 } from "@/lib/demographics";
 import { countryOptions } from "@/lib/countries";
-import { SaveRow, useSave } from "@/app/admin/students/[id]/forms";
+import { SaveRow, useSave } from "@/components/EditableCard";
 import { updateGuardianContact, updateGuardianSensitive } from "./actions";
 
 export function ContactForm({ guardian }: { guardian: GuardianProfile }) {

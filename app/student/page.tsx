@@ -32,10 +32,23 @@ export default async function StudentHome() {
         listNotesForStudent(me.id),
       ])
     : [[], [], []];
-  const due = homework
-    .filter((h) => h.dueDate >= today)
-    .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
-    .slice(0, 3);
+  // What is still hanging over them: anything due from here on, and anything they have
+  // missed in the last fortnight — homework due before that has been overtaken by events.
+  const fortnightAgo = new Date(Date.parse(`${today}T12:00:00Z`) - 14 * 86_400_000)
+    .toISOString()
+    .slice(0, 10);
+  const outstanding = homework
+    .filter((h) => h.dueDate >= fortnightAgo)
+    .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+  const overdue = outstanding.filter((h) => h.dueDate < today);
+  // Overdue first — that is the bit that needs doing tonight.
+  const due = [...overdue, ...outstanding.filter((h) => h.dueDate >= today)].slice(0, 3);
+  const homeworkNote = [
+    overdue.length && `${overdue.length} overdue`,
+    outstanding.length - overdue.length && `${outstanding.length - overdue.length} still to come`,
+  ]
+    .filter(Boolean)
+    .join(" · ");
   return (
     <Stack gap="lg" maw={720} mx="auto">
       <PageHeader
@@ -59,6 +72,16 @@ export default async function StudentHome() {
                 badge: <StatusBadge domain="homework" value={homeworkStatus(h.dueDate, today)} />,
                 href: "/student/homework",
               })),
+              ...(outstanding.length > due.length
+                ? [
+                    {
+                      key: "all-homework",
+                      title: "All your homework",
+                      detail: homeworkNote,
+                      href: "/student/homework",
+                    },
+                  ]
+                : []),
               ...(recent[0]
                 ? [
                     {
@@ -66,6 +89,7 @@ export default async function StudentHome() {
                       title: `Last class: ${formatDate(recent[0].date, timezone)}`,
                       detail: "How you've been doing at coming in",
                       badge: <StatusBadge domain="attendance" value={recent[0].status} />,
+                      href: "/student/attendance",
                     },
                   ]
                 : []),

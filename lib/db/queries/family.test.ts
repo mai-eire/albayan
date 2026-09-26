@@ -146,16 +146,32 @@ describe("family queries", () => {
     expect(statements.some((s) => s.includes('"guardians"'))).toBe(false);
   });
 
-  it("getStudentForStudent: name and timetable only", async () => {
+  it("getStudentForStudent: their own record, their own health, their carers' names", async () => {
     statements.length = 0;
     const me = await getStudentForStudent(1);
-    expect(me).toEqual({
+    expect(me).toMatchObject({
       id: 1,
-      studentId: null,
       firstName: "Amira",
+      lastName: "Ahmed",
+      allergies: "Penicillin",
       place: expect.objectContaining({ className: "Level 1" }),
+      // Who the school has down as looking after them, by name and relationship only.
+      guardians: [{ name: "Maryam Parent", relationship: "mother" }],
     });
-    expect(me).not.toHaveProperty("allergies");
-    expect(statements.some((s) => s.includes('"guardians"'))).toBe(false);
+    // A child sees their own health notes, never a grown-up's contact details or the
+    // sensitive columns the office keeps (decision 2026-09-26).
+    expect(JSON.stringify(me)).not.toMatch(/SECRET/);
+    const read = statements.join(" ");
+    for (const column of [
+      "country_of_origin",
+      "spoken_languages",
+      "registration_reasons",
+      "address_line1",
+      "postal_code",
+      '"users"."email"',
+      '"users"."phone"',
+    ]) {
+      expect(read, `selected ${column}`).not.toContain(column);
+    }
   });
 });

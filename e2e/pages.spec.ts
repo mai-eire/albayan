@@ -100,6 +100,8 @@ const routes: Record<string, string[]> = {
   ],
   student: [
     "/student",
+    "/student/attendance",
+    "/student/details",
     "/student/calendar",
     "/student/homework",
     "/student/notifications",

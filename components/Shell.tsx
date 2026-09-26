@@ -30,6 +30,7 @@ import {
   IconCheck,
   IconChevronDown,
   IconClipboardCheck,
+  IconDots,
   IconFolder,
   IconHome,
   IconInbox,
@@ -104,12 +105,16 @@ const nav: Record<Area, NavItem[]> = {
     { label: "School rules", href: "/family/rules", icon: IconBook2 },
     { label: "Your account", href: "/family/account", icon: IconUser },
   ],
+  // The first four are the phone's bottom tabs; the rest sit behind "More" (§3.1).
   student: [
     { label: "Home", href: "/student", icon: IconHome },
     { label: "Timetable", href: "/student/timetable", icon: IconClock },
     { label: "Homework", href: "/student/homework", icon: IconBook },
     { label: "Resources", href: "/student/resources", icon: IconFolder },
+    { label: "Attendance", href: "/student/attendance", icon: IconClipboardCheck },
     { label: "Calendar", href: "/student/calendar", icon: IconCalendar },
+    { label: "School rules", href: "/student/rules", icon: IconBook2 },
+    { label: "My details", href: "/student/details", icon: IconUser },
   ],
 };
 
@@ -147,8 +152,10 @@ export function Shell({
   const pathname = usePathname();
   const [opened, { toggle, close }] = useDisclosure();
   const items = nav[area];
-  // Student area: bottom tabs on phones instead of a drawer (§3.1).
+  // Student area: bottom tabs on phones instead of a burger (§3.1). Four of them, then
+  // "More", which opens the same drawer the other areas reach with the burger.
   const bottomTabs = area === "student";
+  const phoneTabs = 4;
 
   const isActive = (href: string) =>
     href === `/${area}` ? pathname === href : pathname.startsWith(href);
@@ -156,7 +163,7 @@ export function Shell({
   return (
     <AppShell
       header={{ height: 64 }}
-      navbar={{ width: 240, breakpoint: "sm", collapsed: { mobile: bottomTabs || !opened } }}
+      navbar={{ width: 240, breakpoint: "sm", collapsed: { mobile: !opened } }}
       footer={bottomTabs ? { height: { base: 64, sm: 0 } } : undefined}
       padding="lg"
     >
@@ -225,18 +232,32 @@ export function Shell({
       {bottomTabs && (
         <AppShell.Footer hiddenFrom="sm">
           <nav className={classes.tabs}>
-            {items.map(({ label, href, icon: Icon }) => (
+            {items.slice(0, phoneTabs).map(({ label, href, icon: Icon }) => (
               <UnstyledButton
                 key={href}
                 component={Link}
                 href={href}
                 className={classes.tab}
                 data-active={isActive(href) || undefined}
+                onClick={close}
               >
                 <Icon size={22} stroke={1.75} />
                 {label}
               </UnstyledButton>
             ))}
+            {items.length > phoneTabs && (
+              <UnstyledButton
+                className={classes.tab}
+                aria-expanded={opened}
+                data-active={
+                  opened || items.slice(phoneTabs).some((i) => isActive(i.href)) || undefined
+                }
+                onClick={toggle}
+              >
+                <IconDots size={22} stroke={1.75} />
+                More
+              </UnstyledButton>
+            )}
           </nav>
         </AppShell.Footer>
       )}

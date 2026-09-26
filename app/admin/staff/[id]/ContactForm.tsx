@@ -1,7 +1,7 @@
 "use client";
 
 import { Group, Stack, TextInput } from "@mantine/core";
-import { SaveRow, useSave } from "@/app/admin/students/[id]/forms";
+import { SaveRow, useSave } from "@/components/EditableCard";
 import { updateStaffContact } from "../actions";
 
 export function StaffContactForm({

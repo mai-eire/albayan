@@ -7,6 +7,8 @@ import type { Metadata } from "next";
 import { Bricolage_Grotesque, Figtree } from "next/font/google";
 import { ColorSchemeScript, mantineHtmlProps } from "@mantine/core";
 import { Providers } from "@/components/Providers";
+import { getSchoolSettings } from "@/lib/db/queries/settings";
+import { logoUrl } from "@/lib/logo";
 
 const figtree = Figtree({
   subsets: ["latin"],
@@ -22,10 +24,15 @@ const bricolage = Bricolage_Grotesque({
   variable: "--font-bricolage",
 });
 
-export const metadata: Metadata = {
-  title: { default: "Al-Bayan", template: "%s · Al-Bayan" },
-  icons: { icon: "/favicon.svg" },
-};
+// The tab carries the school: their own name and, once they upload one, their own logo.
+// Every route here needs a signed-in user already, so reading settings costs nothing.
+export async function generateMetadata(): Promise<Metadata> {
+  const { name, logoKey } = await getSchoolSettings();
+  return {
+    title: { default: name, template: `%s · ${name}` },
+    icons: { icon: logoUrl(logoKey) ?? "/favicon.svg" },
+  };
+}
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (

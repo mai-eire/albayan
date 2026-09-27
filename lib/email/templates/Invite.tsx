@@ -1,11 +1,12 @@
 import { ActionButton, Base, FallbackLink, Paragraph } from "./Base";
 
-type Props = { schoolName: string; name: string; url: string; role: string };
+type Props = { schoolName: string; logo?: string | null; name: string; url: string; role: string };
 
-export function InviteEmail({ schoolName, name, url, role }: Props) {
+export function InviteEmail({ schoolName, logo, name, url, role }: Props) {
   return (
     <Base
       schoolName={schoolName}
+      logo={logo}
       preview={`Set up your ${schoolName} account`}
       heading="You've been invited"
     >

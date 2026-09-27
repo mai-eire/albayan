@@ -1,11 +1,18 @@
 import { Base, Paragraph } from "./Base";
 
-type Props = { schoolName: string; name: string; childName: string; reason: string };
+type Props = {
+  schoolName: string;
+  logo?: string | null;
+  name: string;
+  childName: string;
+  reason: string;
+};
 
-export function DeclinedEmail({ schoolName, name, childName, reason }: Props) {
+export function DeclinedEmail({ schoolName, logo, name, childName, reason }: Props) {
   return (
     <Base
       schoolName={schoolName}
+      logo={logo}
       preview={`About ${childName}'s application`}
       heading={`About ${childName}'s application`}
     >

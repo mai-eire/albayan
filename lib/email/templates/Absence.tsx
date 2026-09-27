@@ -2,16 +2,18 @@ import { Base, Paragraph } from "./Base";
 
 type Props = {
   schoolName: string;
+  logo?: string | null;
   name: string;
   childName: string;
   date: string;
   className: string;
 };
 
-export function AbsenceEmail({ schoolName, name, childName, date, className }: Props) {
+export function AbsenceEmail({ schoolName, logo, name, childName, date, className }: Props) {
   return (
     <Base
       schoolName={schoolName}
+      logo={logo}
       preview={`${childName} was marked absent`}
       heading={`${childName} was marked absent`}
     >

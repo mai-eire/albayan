@@ -35,6 +35,8 @@ Review passes by area, feedback under `docs/feedback/<area>/`: admin passes 2–
 
 ## Recently done
 
+- 2026-09-26 — A school can upload its **logo** (Settings → Logo, migration 0011): it replaces the app's mark in the header, stands above the name on the sign-in pages (which now read mark → name → form), becomes the favicon and heads every email. Optional; without one nothing changes.
+
 - 2026-09-26 — Student review pass 1 ([feedback/student/2026-09-26-review-1.md](feedback/student/2026-09-26-review-1.md)): the home page shows outstanding homework, overdue first, and links to it (it used to hide anything already due); new `/student/attendance` and `/student/details`; School rules reachable at last; the phone tab bar becomes four tabs and a **More** drawer, since students have no burger and eight items would not fit. On the family side a guardian can now correct their child's name, year and health notes from the Details tab, audited.
 
 - 2026-09-23 — Family review pass 2 ([feedback/family/2026-09-23-review-2.md](feedback/family/2026-09-23-review-2.md)): a family's class preference is a **level by name**, so a parent can name a level without naming a day (migration 0010); the child page puts the class beside the name and centres the badge; attendance is a list, one row per date; "Home schooled" no longer replaces the school year; the guardian's country of origin is asked once, on their account; the child's country offers the family's own first; notifications are blocks rather than divided rows, in the popover and on the page; Fees moved after Calendar; and the duplicate-key crash on the calendar is fixed.

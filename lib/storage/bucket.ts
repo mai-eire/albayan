@@ -22,6 +22,19 @@ export async function putFile(key: string, data: ArrayBuffer, contentType: strin
   await (await bucket()).put(key, data, { httpMetadata: { contentType } });
 }
 
+// What was stored, without fetching it: used to check an upload is the right sort of
+// file before anything records its key.
+export async function fileFacts(
+  key: string,
+): Promise<{ size: number; contentType: string } | null> {
+  const object = await (await bucket()).head(key);
+  if (!object) return null;
+  return {
+    size: object.size,
+    contentType: object.httpMetadata?.contentType ?? "application/octet-stream",
+  };
+}
+
 export async function getFile(key: string): Promise<StoredFile | null> {
   const object = await (await bucket()).get(key);
   if (!object) return null;

@@ -3,6 +3,7 @@ import { AuthPage } from "@/components/AuthPage";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getSchoolSettings } from "@/lib/db/queries/settings";
+import { logoUrl } from "@/lib/logo";
 import { findInvite } from "@/lib/invites";
 import { InviteForm } from "./InviteForm";
 
@@ -12,7 +13,7 @@ type Props = { params: Promise<{ token: string }> };
 
 export default async function InvitePage({ params }: Props) {
   const { token } = await params;
-  const [{ name }, invite] = await Promise.all([
+  const [{ name, logoKey }, invite] = await Promise.all([
     getSchoolSettings(),
     findInvite(await auth(), await db(), token),
   ]);
@@ -20,6 +21,7 @@ export default async function InvitePage({ params }: Props) {
     return (
       <AuthPage
         schoolName={name}
+        logo={logoUrl(logoKey)}
         title="Link expired"
         links={[{ href: "/login", label: "Go to sign in" }]}
       >
@@ -28,7 +30,11 @@ export default async function InvitePage({ params }: Props) {
     );
   }
   return (
-    <AuthPage schoolName={name} title={`Welcome, ${invite.name.split(" ")[0]}`}>
+    <AuthPage
+      schoolName={name}
+      logo={logoUrl(logoKey)}
+      title={`Welcome, ${invite.name.split(" ")[0]}`}
+    >
       <InviteForm token={token} email={invite.email} />
     </AuthPage>
   );

@@ -88,6 +88,8 @@ Fonts load through `next/font/google` with `display: swap` and system fallbacks.
 
 ### 2.4 Iconography
 
+The **school's mark** is `components/SchoolMark.tsx`: the logo the school uploaded in Settings, or the app's own school icon in a `ThemeIcon` until they do. Fixed height, free width, capped so a wordmark cannot push the header about; the school's name is always beside or under it, so the image is decorative and its `alt` is empty. 36 in the header, 88 (56 for the fallback) on the sign-in pages, 40 at the top of an email, and the favicon.
+
 Tabler icons only (`@tabler/icons-react`), stroke 1.75. Sizes: 18 in navigation, 16 inside buttons and badges, 20 in `ThemeIcon` tiles, 12 inside small badges. Icons accompany text; an icon-only button has an `aria-label` and a tooltip. Directional icons (chevrons, arrows) come from `components/DirectionalIcon.tsx` so they mirror in RTL.
 
 ### 2.5 Motion
@@ -136,7 +138,7 @@ Staff screens (admin, teacher) may use tables and `size="sm"` controls. Family a
 
 ### 3.5 Sign-in pages
 
-Login, password reset, invite and change-password share one layout: no shell, the school mark and name centred at the top, then a single bordered card `maw={420}` on the ground colour holding the form, its one primary action and a short helper line. Links out of the form ("Forgotten your password?", "Back to sign in") are `Anchor size="sm"` under the card. Errors from the server show inline above the button in a `clay` light `Alert`, never a toast — the person is looking at the form.
+Login, password reset, invite and change-password share one layout: no shell, then **mark, name, form** stacked and centred — the school's own logo is the first thing anyone sees of them, so it gets a line to itself — then a single bordered card `maw={420}` on the ground colour holding the form, its one primary action and a short helper line. Links out of the form ("Forgotten your password?", "Back to sign in") are `Anchor size="sm"` under the card. Errors from the server show inline above the button in a `clay` light `Alert`, never a toast — the person is looking at the form.
 
 ---
 

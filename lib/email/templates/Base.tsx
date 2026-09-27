@@ -6,6 +6,7 @@ import {
   Heading,
   Hr,
   Html,
+  Img,
   Link,
   Preview,
   Section,
@@ -25,12 +26,14 @@ const font = "Figtree, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans
 
 type Props = {
   schoolName: string;
+  // Absolute URL of the school's logo, when they have one.
+  logo?: string | null;
   preview: string;
   heading: string;
   children: ReactNode;
 };
 
-export function Base({ schoolName, preview, heading, children }: Props) {
+export function Base({ schoolName, logo, preview, heading, children }: Props) {
   return (
     <Html lang="en">
       <Head />
@@ -39,6 +42,14 @@ export function Base({ schoolName, preview, heading, children }: Props) {
         style={{ backgroundColor: colors.ground, fontFamily: font, color: colors.ink, margin: 0 }}
       >
         <Container style={{ maxWidth: 560, margin: "32px auto", padding: "0 16px" }}>
+          {logo && (
+            <Img
+              src={logo}
+              alt=""
+              height={40}
+              style={{ display: "block", height: 40, width: "auto", margin: "0 0 8px" }}
+            />
+          )}
           <Text style={{ fontSize: 14, fontWeight: 700, color: colors.tile, margin: "0 0 16px" }}>
             {schoolName}
           </Text>

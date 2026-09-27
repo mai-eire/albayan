@@ -14,6 +14,9 @@ export const schoolSettings = sqliteTable("school_settings", {
   bankIban: text(),
   bankBic: text(),
   absenceEmails: bool().notNull().default(false),
+  // The R2 key of the school's logo, served to anyone by /api/logo. Null = the app's own
+  // mark is used instead.
+  logoKey: text(),
   // Plain text, paragraphs separated by blank lines; shown to families, students and staff.
   rules: text(),
   ...timestamps,

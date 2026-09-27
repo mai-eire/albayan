@@ -1,10 +1,15 @@
 import { ActionButton, Base, FallbackLink, Paragraph } from "./Base";
 
-type Props = { schoolName: string; name: string; url: string };
+type Props = { schoolName: string; logo?: string | null; name: string; url: string };
 
-export function VerifyEmail({ schoolName, name, url }: Props) {
+export function VerifyEmail({ schoolName, logo, name, url }: Props) {
   return (
-    <Base schoolName={schoolName} preview="Confirm your email address" heading="Confirm your email">
+    <Base
+      schoolName={schoolName}
+      logo={logo}
+      preview="Confirm your email address"
+      heading="Confirm your email"
+    >
       <Paragraph>Hi {name},</Paragraph>
       <Paragraph>
         Thanks for creating a {schoolName} account. Confirm this is your email address and you can

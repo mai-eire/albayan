@@ -11,7 +11,6 @@ import {
   Group,
   Menu,
   NavLink,
-  ThemeIcon,
   Title,
   UnstyledButton,
   useComputedColorScheme,
@@ -51,6 +50,7 @@ import type { Area } from "@/lib/current-user";
 import type { NotificationRow } from "@/lib/db/queries/notifications";
 import { DevClock } from "./DevClock";
 import { NotificationBell } from "./NotificationBell";
+import { SchoolMark } from "./SchoolMark";
 import classes from "./Shell.module.css";
 
 type NavItem = {
@@ -128,6 +128,8 @@ const areaLabel: Record<Area, string> = {
 type Props = {
   area: Area;
   schoolName: string;
+  // The school's own logo, if they have uploaded one; the app's mark is used otherwise.
+  logo?: string | null;
   user: { name: string };
   // Areas this user can switch between; the switcher shows only when there are several.
   roles: Area[];
@@ -142,6 +144,7 @@ type Props = {
 export function Shell({
   area,
   schoolName,
+  logo = null,
   user,
   roles,
   unread = 0,
@@ -179,9 +182,7 @@ export function Shell({
                 aria-label="Menu"
               />
             )}
-            <ThemeIcon size={36} radius="md">
-              <IconSchool size={20} stroke={1.75} />
-            </ThemeIcon>
+            <SchoolMark logo={logo} />
             <Title order={4} visibleFrom="xs">
               {schoolName}
             </Title>

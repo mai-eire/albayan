@@ -1,10 +1,15 @@
 import { ActionButton, Base, FallbackLink, Paragraph } from "./Base";
 
-type Props = { schoolName: string; name: string; url: string };
+type Props = { schoolName: string; logo?: string | null; name: string; url: string };
 
-export function PasswordResetEmail({ schoolName, name, url }: Props) {
+export function PasswordResetEmail({ schoolName, logo, name, url }: Props) {
   return (
-    <Base schoolName={schoolName} preview="Choose a new password" heading="Reset your password">
+    <Base
+      schoolName={schoolName}
+      logo={logo}
+      preview="Choose a new password"
+      heading="Reset your password"
+    >
       <Paragraph>Hi {name},</Paragraph>
       <Paragraph>
         Someone asked to reset the password for your {schoolName} account. If that was you, choose a

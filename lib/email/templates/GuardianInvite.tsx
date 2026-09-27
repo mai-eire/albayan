@@ -2,6 +2,7 @@ import { ActionButton, Base, FallbackLink, Paragraph } from "./Base";
 
 type Props = {
   schoolName: string;
+  logo?: string | null;
   name: string;
   url: string;
   // Who added them and which children they now share; none when the office invites someone
@@ -10,7 +11,7 @@ type Props = {
   childNames: string[];
 };
 
-export function GuardianInviteEmail({ schoolName, name, url, invitedBy, childNames }: Props) {
+export function GuardianInviteEmail({ schoolName, logo, name, url, invitedBy, childNames }: Props) {
   const kids =
     childNames.length === 1
       ? childNames[0]
@@ -18,6 +19,7 @@ export function GuardianInviteEmail({ schoolName, name, url, invitedBy, childNam
   return (
     <Base
       schoolName={schoolName}
+      logo={logo}
       preview={
         childNames.length
           ? `${invitedBy} has added you as a parent at ${schoolName}`

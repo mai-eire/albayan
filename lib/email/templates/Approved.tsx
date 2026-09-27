@@ -2,6 +2,7 @@ import { ActionButton, Base, FallbackLink, Paragraph } from "./Base";
 
 type Props = {
   schoolName: string;
+  logo?: string | null;
   name: string;
   childName: string;
   studentId: string;

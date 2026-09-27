@@ -184,19 +184,25 @@ export function ApplicationWizard({
     setStep(1);
   };
 
-  const guardianCountry = guardian?.countryOfOrigin ?? null;
+  // Your own country is yours, not the child's, so it is normally read-only here and
+  // changed on your account. Until you have given one there is nothing to protect and
+  // nowhere else you would think to look, so the first time it is asked right here.
+  const askGuardianCountry = !guardian?.countryOfOrigin;
   // The countries the family has already given, then the rest: most children are from one
   // of their parents' countries, so those answers come first, under their own rule.
-  const firstChoices = [...new Set([...familyCountries, mixedHeritage])];
-  const childCountryOptions = familyCountries.length
-    ? [
-        { group: "", items: firstChoices },
-        {
-          group: " ",
-          items: countryOptions(preferNotToSay).filter((c) => !firstChoices.includes(c)),
-        },
-      ]
-    : countryOptions(preferNotToSay);
+  const firstChoices = [
+    ...new Set([...familyCountries, form.values.guardianCountry ?? [], mixedHeritage].flat()),
+  ];
+  const childCountryOptions =
+    firstChoices.length > 1
+      ? [
+          { group: "", items: firstChoices },
+          {
+            group: " ",
+            items: countryOptions(preferNotToSay).filter((c) => !firstChoices.includes(c)),
+          },
+        ]
+      : countryOptions(preferNotToSay);
   const day = days.find((d) => d.id === form.values.preferredSessionId);
   // A class is a level on a day, so with no day chosen every level is offered once.
   const levelNames = [
@@ -428,20 +434,42 @@ export function ApplicationWizard({
               {sensitiveExplanation}
             </Text>
             <Group grow align="flex-start">
-              <Tooltip label="This is yours, not the child's. Change it on Your account." withArrow>
+              {askGuardianCountry ? (
                 <Select
                   label="Your country of origin"
+                  description="Saved to your account, not to this child"
                   data={countryOptions(preferNotToSay)}
-                  value={guardianCountry ?? preferNotToSay}
-                  disabled
+                  searchable
+                  value={form.values.guardianCountry ?? preferNotToSay}
+                  onChange={(v) => {
+                    const next = v === preferNotToSay ? null : v;
+                    // The child's answer follows yours until you change the child's.
+                    if (form.values.childCountry === form.values.guardianCountry) {
+                      form.setFieldValue("childCountry", next);
+                    }
+                    form.setFieldValue("guardianCountry", next);
+                  }}
                   allowDeselect={false}
-                  description={
-                    <Anchor component={Link} href="/family/account" size="xs">
-                      Change it on Your account
-                    </Anchor>
-                  }
                 />
-              </Tooltip>
+              ) : (
+                <Tooltip
+                  label="This is yours, not the child's. Change it on Your account."
+                  withArrow
+                >
+                  <Select
+                    label="Your country of origin"
+                    data={countryOptions(preferNotToSay)}
+                    value={guardian?.countryOfOrigin ?? preferNotToSay}
+                    disabled
+                    allowDeselect={false}
+                    description={
+                      <Anchor component={Link} href="/family/account" size="xs">
+                        Change it on Your account
+                      </Anchor>
+                    }
+                  />
+                </Tooltip>
+              )}
               <Select
                 label={`${form.values.firstName || "Your child"}'s country of origin`}
                 data={childCountryOptions}

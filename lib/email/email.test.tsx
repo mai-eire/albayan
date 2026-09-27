@@ -37,6 +37,30 @@ describe("email", () => {
     log.mockRestore();
   });
 
+  it("carries the school's logo when there is one, and nothing when there isn't", async () => {
+    const render = async (logo: string | null) => {
+      await sendEmail(
+        {
+          to: "parent@example.com",
+          subject: `Logo ${logo ? "yes" : "no"}`,
+          body: (
+            <Base schoolName="Al-Bayan" logo={logo} preview="Hello" heading="Hello">
+              <Paragraph>Hello.</Paragraph>
+            </Base>
+          ),
+        },
+        fileTransport(dir),
+      );
+      const file = readdirSync(dir).find((f) => f.includes(logo ? "yes" : "no"))!;
+      return readFileSync(join(dir, file), "utf8");
+    };
+    // Absolute, because an email is read outside the app.
+    expect(await render("https://school.example/api/logo?v=abc")).toContain(
+      "https://school.example/api/logo?v=abc",
+    );
+    expect(await render(null)).not.toContain("<img");
+  });
+
   it("defaults to the file transport and refuses a half-configured resend", () => {
     expect(transportFromEnv({})).toBeDefined();
     expect(() => transportFromEnv({ EMAIL_TRANSPORT: "resend" })).toThrow(/RESEND_API_KEY/);

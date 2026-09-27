@@ -1,3 +1,4 @@
+import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import type { Db } from "@/lib/db";
 import { auditLog, schoolSettings, users } from "@/lib/db/schema";
@@ -15,7 +16,18 @@ vi.mock("@/lib/db", async (importOriginal) => ({
 vi.mock("@/lib/current-user", () => ({ getCurrentUser: async () => current }));
 vi.mock("next/cache", () => ({ revalidatePath: () => {} }));
 
-const { updateSchoolSettings } = await import("./actions");
+// The bucket stands in for R2: the action checks what was actually stored rather than
+// trusting the browser, and deletes the image it replaces.
+const stored = new Map<string, { size: number; contentType: string }>();
+const deleted: string[] = [];
+vi.mock("@/lib/storage/bucket", () => ({
+  fileFacts: async (key: string) => stored.get(key) ?? null,
+  deleteFile: async (key: string) => {
+    deleted.push(key);
+  },
+}));
+
+const { updateSchoolLogo, updateSchoolSettings } = await import("./actions");
 
 const base = {
   name: "X",
@@ -99,5 +111,60 @@ describe("updateSchoolSettings", () => {
       entityId: "1",
       changes: { name: ["Al-Bayan Weekend School", "Al-Bayan"] },
     });
+  });
+});
+
+describe("updateSchoolLogo", () => {
+  it("takes an image, records the key and audits it", async () => {
+    current = admin;
+    stored.set("uploads/a/logo.png", { size: 40_000, contentType: "image/png" });
+    expect(await updateSchoolLogo({ storageKey: "uploads/a/logo.png" })).toMatchObject({
+      ok: true,
+    });
+    const [row] = await db.select().from(schoolSettings);
+    expect(row.logoKey).toBe("uploads/a/logo.png");
+    const [entry] = await db
+      .select()
+      .from(auditLog)
+      .where(eq(auditLog.action, "school_settings.set_logo"));
+    expect(entry.changes).toMatchObject({ logoKey: [null, "uploads/a/logo.png"] });
+  });
+
+  it("throws away the one it replaces, and the file when the logo is removed", async () => {
+    current = admin;
+    stored.set("uploads/b/new.svg", { size: 9_000, contentType: "image/svg+xml" });
+    expect(await updateSchoolLogo({ storageKey: "uploads/b/new.svg" })).toMatchObject({ ok: true });
+    expect(deleted).toContain("uploads/a/logo.png");
+
+    expect(await updateSchoolLogo({ storageKey: null })).toMatchObject({ ok: true });
+    const [row] = await db.select().from(schoolSettings);
+    expect(row.logoKey).toBeNull();
+    expect(deleted).toContain("uploads/b/new.svg");
+  });
+
+  it("refuses anything that isn't a small image, and non-admins", async () => {
+    current = admin;
+    stored.set("uploads/c/prospectus.pdf", { size: 1_000, contentType: "application/pdf" });
+    stored.set("uploads/c/huge.png", { size: 5 * 1024 * 1024, contentType: "image/png" });
+    expect(await updateSchoolLogo({ storageKey: "uploads/c/prospectus.pdf" })).toMatchObject({
+      ok: false,
+      error: /PNG, JPEG, WebP or SVG/,
+    });
+    expect(await updateSchoolLogo({ storageKey: "uploads/c/huge.png" })).toMatchObject({
+      ok: false,
+      error: /up to 2 MB/,
+    });
+    expect(await updateSchoolLogo({ storageKey: "uploads/c/never-arrived.png" })).toMatchObject({
+      ok: false,
+      error: /didn't arrive/,
+    });
+
+    current = teacher;
+    expect(await updateSchoolLogo({ storageKey: "uploads/c/huge.png" })).toMatchObject({
+      ok: false,
+      error: /access/,
+    });
+    const [row] = await db.select().from(schoolSettings);
+    expect(row.logoKey).toBeNull();
   });
 });

@@ -1,0 +1,7 @@
+/* A school's own logo in place of the app's mark: fixed height, free width, never
+   stretched. A wide wordmark is capped so it cannot push the header about. */
+.logo {
+  display: block;
+  width: auto;
+  object-fit: contain;
+}

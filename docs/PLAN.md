@@ -148,7 +148,7 @@ Rules: no code path may call a network service in dev unless `NODE_ENV=productio
 | Event / Activity | `Event` with type, optional class/session targeting, `EventParticipant` for registration & consent. |
 | Calendar | Not a table: union of terms, session schedules (weekly) and events. |
 | Parent-Teacher Meeting | `Event` of that type. Slots later. |
-| Application | Not a table: a `Student` with `status = applied` plus `preferredSessionId` / `preferredClassId`. |
+| Application | Not a table: a `Student` with `status = applied` plus `preferredSessionId` / `preferredClassName`. |
 | Notification / AuditLog | Per-user rows / sensitive-action rows. |
 
 ### Relationship summary
@@ -196,8 +196,14 @@ students
   email?, phone?,                                               -- student's own, optional
   allergies?, medicalNotes?,                                    -- safety; visible to their teachers
   status (applied|active|inactive|declined),
-  preferredSessionId?, preferredClassId?, applicationNotes?,    -- from the guardian's application
-  appliedAt, approvedAt?, createdByGuardianId
+  preferredSessionId?, preferredClassName?, applicationNotes?,  -- from the guardian's application;
+                                                                -- the class preference is a level by
+                                                                -- name, since a family may name the
+                                                                -- level without naming the day
+  applicationYearId?,                                           -- the year applied for, kept so a
+                                                                -- decided application is still findable
+  offerNote?, declinedReason?,                                  -- the office's word to the family
+  appliedAt, approvedAt?, declinedAt?, createdByGuardianId
 
 student_guardians
   studentId, guardianId, relationship (mother|father|guardian|grandparent|other),
@@ -277,13 +283,16 @@ Holidays and closures are events. A Saturday-only closure targets the Saturday s
 ### Platform
 
 ```
-notifications     id, userId, type, title, body?, href?, readAt?
+notifications     id, userId, type, title, body?, href?, readAt?,
+                  subjectId?, studentId?                        -- what it is about, when it is
+                                                                -- about one: a subject badge and
+                                                                -- the child's name on the row
 audit_log         id, actorUserId?, action, entityType, entityId, changes JSON, ip?
 ```
 
 ### Deliberately absent
 
-No `roles`/`permissions`, `campuses`, `class_subjects`, `fee_charges`/`invoices`/`ledger`, polymorphic `documents`, key-value `settings`. School-level config (name, timezone, ID prefix, bank details for the "how to pay" box) is a single `school_settings` row.
+No `roles`/`permissions`, `campuses`, `class_subjects`, `fee_charges`/`invoices`/`ledger`, polymorphic `documents`, key-value `settings`. School-level config (name, timezone, ID prefix, bank details for the "how to pay" box, the school rules, and the R2 key of their logo) is a single `school_settings` row.
 
 ---
 
@@ -315,16 +324,17 @@ canViewResource(viewer, resource)
 
 | | Admin | Teacher | Guardian | Student |
 |---|---|---|---|---|
-| Students | all, RW | own classes, limited fields | own children | self |
+| Students | all, RW | own classes, limited fields | own children; name, year and health RW (audited) | self, R |
 | Sensitive demographics (country of origin, languages, reasons, address) | RW | **hidden** | own only | — |
-| Allergies / medical notes | RW | **visible** for own students | own children RW | — |
+| Allergies / medical notes | RW | **visible** for own students | own children RW | own, R |
 | Emergency contact (on guardian) | RW | **visible** for own students' guardians | own RW | — |
-| Guardian phone/email | RW | hidden (name + relationship only) | own | — |
+| Guardian phone/email | RW | hidden (name + relationship only) | own; other parents by name and relationship only | hidden (name + relationship only) |
 | Attendance | RW (audited after the day) | RW own classes | R | R |
 | Homework | RW | RW own class+subject | R | R |
 | Notes | RW | RW own; R others' on own students | R by visibility | R by visibility |
 | Resources | RW | RW own | R by audience | R by audience |
 | Fees / payments | RW | — | R own children | — |
+| The school's logo | RW (Settings) | R | R | R |
 | Events | RW | R | R + register/consent | R |
 | Reports | R | — | — | — |
 
@@ -337,7 +347,9 @@ Field policy: country of origin (guardian and student), spoken languages and reg
 ## 7. Routes / pages
 
 ```
-/login  /register  /forgot-password  /reset-password  /invite/[token]  /forgot-student-id
+/login  /register  /forgot-password  /reset-password  /change-password  /invite/[token]
+/forgot-student-id        (with task 7, when students get their own email)
+/dev/ui                   Every component in both colour schemes; development only
 
 /admin                    Dashboard: registers due today (by session), pending applications,
                           outstanding fees, upcoming events, headline diversity charts
@@ -355,40 +367,52 @@ Field policy: country of origin (guardian and student), spoken languages and reg
                           gender, age band, session, Arabic proficiency, registration reasons
 /admin/audit              Audit log
 /admin/rules              School rules (rich text, shown in every area)
-/admin/settings           School details, timezone, ID prefix, bank details
+/admin/settings           School details, timezone, ID prefix, bank details, the school's logo
 
 /teacher                  Today: my schedule, the register to take (class teacher), homework due
 /teacher/classes          My classes → /[classId]: roster, timetable, attendance, homework, resources
-/teacher/students/[id]    Limited profile incl. allergies/medical + emergency contact
+/teacher/students/[id]    Limited profile incl. allergies/medical + emergency contact; /application
 /teacher/attendance       This term's registers for my classes; /[classId]?date= takes one
 /teacher/homework         Mine across classes; create/edit
 /teacher/resources        Mine
 /teacher/timetable        My week
+/teacher/rules            School rules
 
-/family                   Child switcher + overview
-/family/[studentId]/timetable | attendance | homework | notes | resources | fees | events | details
+/family                   Children, and the other parents on them
+/family/[studentId]       Details (the base tab), then timetable | attendance | homework | notes
+                          | resources | fees | application | events
+/family/fees              What the household owes this year and every payment recorded
 /family/register-child    Application wizard
+/family/parents           Add another parent
+/family/calendar  /family/rules
 /family/account           Own details, emergency contact, sensitive info, email preference
 
-/student                  Home: today's lessons, homework due, latest notes, attendance summary
-/student/timetable | homework | resources | calendar | notes | account
+/student                  Home: next class, homework outstanding, last register, latest note
+/student/timetable | homework | resources | calendar | attendance | details | rules
+
+Every area also has /{area}/notifications. Anonymous: /api/logo (the school's logo, §12).
 ```
 
 ---
 
 ## 8. Guardian UX
 
-- Child switcher in the URL (`/family/[studentId]/...`); hidden when one child.
-- **Overview** cards: next lesson, this week's attendance, homework due, latest note, upcoming events, fee balance.
+- Child switcher in the URL (`/family/[studentId]/...`); hidden when one child. `/family` itself lists the children and the other parents on them, by name and relationship only.
+- A child's tabs open on **Details**, which the family may correct: the name, date of birth, gender, school year and health notes are theirs to keep right (audited); the student ID, the Arabic level and the class are the school's. Each tab says what is inside — counts, "3 / 6" for attendance, a mark for the fee.
 - **Application wizard**: (1) your details incl. emergency contact, (2) child: name, DOB, gender, year group, Arabic proficiency, allergies/medical, preferred session (Saturday/Sunday) and optionally preferred class, (3) optional diversity questions with the statistics explanation, (4) review & submit. Add another child from the same wizard with guardian details pre-filled.
 - Pending child shows "Application received — we'll email you when it's reviewed".
-- **Fees tab**: fee for the year, payments made, balance; family total; "How to pay" box with bank details.
+- **Fees**: a tab per child with that child's fee, what has been paid and the balance, and `/family/fees` for the household — every child and every payment the office has recorded, with the "How to pay" box. Read-only; the office records payments.
+- **Application**: what they asked for and what became of it, editable by the family until the office decides.
 - **Events**: one-tap register/consent, recorded with name and timestamp.
 - Guardians see "Level 2 · Saturday" — never "academic year", "session id" or "enrolment".
 
 ## 9. Student UX
 
-Home · Timetable · Homework · Resources · Calendar. Attendance and notes are cards on Home. Phone-first, big targets, plain language. Notes shown only when teachers opted the student in.
+Home · Timetable · Homework · Resources · Attendance · Calendar · School rules · My details. Phone-first, big targets, plain language: the bottom bar carries the first four and a **More** tab for the rest (DESIGN §3.1), because a student has no burger.
+
+- **Home** answers "what do I have to do?": the next class, homework still outstanding with overdue first, the last register, the latest note. Every row leads to the page it summarises.
+- **My details** is read-only — what the school has written down, their own allergies and medical notes, and who it has down as looking after them by name and relationship. Corrections go through a parent, and the page says so.
+- Notes shown only when teachers opted the student in.
 
 ## 10. Teacher UX
 
@@ -421,15 +445,18 @@ The suggested top-level set is a good *admin* IA but wrong for the other roles. 
 
 - Private R2 bucket bound to the Worker. **All file traffic goes through the Worker**, never via presigned URLs:
   - Upload: `POST /api/files` route handler → access check → stream the request body into `env.BUCKET.put(key, stream)` → create the `resources` row. Workers stream uploads without buffering; 25 MB is well within limits.
-  - Download: `GET /api/files/[resourceId]` → `canViewResource` → `env.BUCKET.get(key)` → stream back with `Content-Disposition` and cache headers. Cloudflare's cache can serve repeats.
+  - Download: `GET /api/files/[...key]` → `canViewResource` on the resource that owns the key (a key with no resource row yet is admin-only) → `env.BUCKET.get(key)` → stream back with `Content-Disposition` and cache headers. Cloudflare's cache can serve repeats.
   - This is one code path that works identically against the local emulator, and it keeps the authorisation check in one place. Presigned URLs were rejected because they don't work offline and would add a second auth path.
 - 25 MB limit; PDF, images, Office docs, audio, MP4. Links stored as `kind = link`.
-- Key layout `resources/{resourceId}/{filename}`. Bucket versioning on.
+- Key layout `uploads/{uuid}/{filename}`. Bucket versioning on.
+- **One public exception**, `GET /api/logo`: the sign-in page needs the school's logo before anyone has a session. It serves nothing but the key held in `school_settings`, so no other object is reachable through it, and it sends a sandbox CSP so an SVG opened at that URL cannot run script. The upload still goes through `/api/files`; the action then asks R2 what actually landed rather than trusting the browser.
 
 ## 13. Notifications
 
 - `notifications` rows + Resend emails, created by a `notify()` helper inside the causing server action, dispatched with `waitUntil`.
 - v1 triggers: application approved/declined; new homework; new family-visible note; new resource; event published / registration confirmed; payment recorded; absence marked (per-school toggle); staff invite; student OTP issued.
+- A notification may record **what it is about** — a subject and a child — and the row then shows the subject's badge and the child's first name, so a parent of three knows which one it concerns. Those are the only two things a notification is ever about; there is no generic entity reference.
+- The bell opens a popover with the unread ones and the two actions anyone wants there (mark all as read, see them all); the full list is `/{area}/notifications`.
 - One per-user "email me about updates" toggle. No digests/push/SMS.
 - Email goes through `lib/email/transport.ts` with two implementations: `resend` (production) and `file` (dev/test, writes HTML to `.dev/mail/`). Templates are React Email components rendered to HTML in both cases, so what you see locally is what gets sent.
 

@@ -182,7 +182,9 @@ Filtering happens in the browser: the page loads the whole list once and a clien
 
 ### 4.6 Lists (family & student)
 
-`components/EntityList.tsx`: rounded rows on the ground colour inside a card (`bg` = ground, `radius="md"`, `p="sm"`), tappable, with a subject/status badge and a one-line title. No tables in the family or student areas.
+`components/EntityList.tsx`: rounded rows on the ground colour inside a card (`bg` = ground, `radius="md"`, `p="sm"`), tappable, with a subject/status badge and a one-line title. Anything a family or a student reads as a list of things — children, dates in a register, notifications, homework — is one of these, not a table.
+
+**One exception: a ledger.** Money the office has recorded is a table (`components/PaymentHistory.tsx` on `/family/fees` and a child's Fees tab): a parent checks it against their own records line by line, and columns are how that is read. It is read-only — corrections are the office's — and it carries no actions, no links into staff pages and no sorting. A second exception needs a line here.
 
 ### 4.7 Forms
 
@@ -226,7 +228,7 @@ Initials on `tile.0`/`tile.8` for people; `gray` when the person is inactive or 
 
 ### 4.12 Tab marks
 
-An entity whose history matters keeps a read-only card of it — `ApplicationCard` for what a family asked for and what the office decided — shown to each audience with only what that audience may see. A tab may carry a **count** after its label ("Students 12", dimmed) and/or a small **mark** (`LinkTabs` `mark`) that tells the state of what is inside before it is opened: a check (tile) for good, a half circle (saffron) for partial, a cross (clay) for bad, each with a tooltip and `aria-label` in words. Shape and colour together, never colour alone. A fourth kind, **warning** (triangle, saffron), is something to do rather than a state: registers not taken on a class's Attendance tab ("3 of 15 registers not taken", `registersStanding` — the same words as the register status), for the office and the teacher alike. Used for fee status on a student's Fees tab and a guardian's Payments tab (`feeTabMark` in `lib/fees.ts`); a new use needs a line here.
+An entity whose history matters keeps a read-only card of it — `ApplicationCard` for what a family asked for and what the office decided — shown to each audience with only what that audience may see. A tab may carry a **count** after its label ("Students 12", dimmed) and/or a small **mark** (`LinkTabs` `mark`) that tells the state of what is inside before it is opened: a check (tile) for good, a half circle (saffron) for partial, a cross (clay) for bad, each with a tooltip and `aria-label` in words. Shape and colour together, never colour alone. A fourth kind, **warning** (triangle, saffron), is something to do rather than a state: registers not taken on a class's Attendance tab ("3 of 15 registers not taken", `registersStanding` — the same words as the register status), for the office and the teacher alike. Used for fee status on a student's Fees tab, a guardian's Payments tab and a child's Fees tab in the family area (`feeTabMark` in `lib/fees.ts`); a new use needs a line here. A count may be a fraction where the whole matters — "Attendance 3 / 6" on a child's tabs, present out of registers taken.
 
 ---
 

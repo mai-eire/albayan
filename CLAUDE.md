@@ -13,7 +13,7 @@ Guiding principle: **build the simplest system that makes the school's common wo
 - **All writes are server actions** shaped as: Zod parse → access check (`lib/access.ts`) → write → audit (if sensitive) → notify. No API routes for writes except file upload.
 - **Authorisation lives only in `lib/access.ts`.** Roles are derived: `users.isAdmin` plus the existence of a `guardians` / `teachers` / `students` row for the user. A user can hold several roles. Do not add role/permission tables.
 - **Local development has zero service dependencies.** `pnpm dev` and `pnpm test` must work offline: local D1 (a SQLite file under `.wrangler/state/`), local R2 emulation, `EMAIL_TRANSPORT=file` writing to `.dev/mail/`. Anything cloud-specific sits behind an adapter in `lib/email/` or `lib/storage/` with a local implementation. Never add Docker or a hosted service to the dev loop.
-- **Files go through the Worker** (`/api/files`), never presigned URLs.
+- **Files go through the Worker** (`/api/files`), never presigned URLs. The one public exception is `/api/logo`, which serves the school's own logo to the sign-in page before there is a session; it can serve no key but the one in `school_settings`.
 
 ## Data conventions (D1 = SQLite)
 
@@ -30,8 +30,6 @@ Guiding principle: **build the simplest system that makes the school's common wo
 Next.js 16 App Router on Cloudflare Workers via `@opennextjs/cloudflare` · Drizzle + D1 · Better Auth · Mantine 9 (+ `@mantine/dates`, `@mantine/charts`, Tabler icons) · Zod · Resend (prod) · Vitest + Playwright · pnpm. No Tailwind.
 
 ## Commands
-
-(Filled in as Phase 0 lands.)
 
 - `pnpm dev` — app with local bindings, offline
 - `pnpm preview` — OpenNext build served by the Workers runtime, still local

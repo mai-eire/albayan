@@ -363,8 +363,9 @@ Field policy: country of origin (guardian and student), spoken languages and reg
 /admin/fees               Outstanding balances, record payment, payment history
 /admin/events             Events & calendar
 /admin/resources          School-wide resources
-/admin/reports            Diversity & demographics: country of origin, languages, postal area,
-                          gender, age band, session, Arabic proficiency, registration reasons
+/admin/reports            Diversity & demographics: ages, sessions, boys and girls, Arabic at
+                          registration, country of origin, languages, postal area, why they
+                          came; year picker; /export for all of them as one CSV
 /admin/audit              Audit log
 /admin/rules              School rules (rich text, shown in every area)
 /admin/settings           School details, timezone, ID prefix, bank details, the school's logo
@@ -431,7 +432,7 @@ Home · Timetable · Homework · Resources · Attendance · Calendar · School r
 - **Schedule editor** (per session): set the start time, then an ordered list of periods — pick a subject or type a title (Break), set duration in minutes, drag to reorder. A live preview shows the computed timeline (10:00 Quran · 10:50 Arabic · 11:40 Break · 11:55 Islamic Studies). No times are typed.
 - **Class teachers** (per class): a table with one row per subject in the session's schedule and a teacher dropdown on each row, plus the class teacher. The class timetable renders underneath. A teacher assigned to the same subject in two classes of the same session is shown as a warning (they'd be in two rooms at once), not blocked.
 - **Fees**: outstanding balances by session/class; record payment (choose child's enrolment, amount, method, who paid); payment history per student and per guardian; export CSV.
-- **Reports**: bar/pie charts of active students by country of origin, spoken language, postal area, gender, age band, session, Arabic proficiency, registration reasons; filter by academic year. Counts only; CSV export. Headline versions (two or three charts) on the dashboard.
+- **Reports**: bar charts of the children who have a place in the year — age (one bar per year of age, not bands), session, gender, Arabic at registration, country of origin, languages spoken at home, postal area, why the family came; year picker. Counts only, and the page says so; one CSV holds every report. The household answers (address, languages, reasons) live on a guardian, so a child's are taken from the guardian who registered them — the person who answered those questions. Two of the eight (ages, countries) also sit on the dashboard, linking here.
 - **Attendance**: by date → sessions → classes → submitted/missing; drill in and edit (audited).
 - **Year rollover** (end of year, Phase 3): create the next academic year, copy sessions/schedules/classes, then a roll-over screen listing every active student with a proposed next class (default: same level name, admin adjusts) → creates next year's enrolments at the new standard fee and marks the old ones ended. Guardians get a "confirm your child's place for 2027-28" notification. Students who don't return are marked `inactive`. This is the only annual workflow beyond setup, and the first one isn't needed until the end of year one.
 
@@ -456,6 +457,7 @@ The suggested top-level set is a good *admin* IA but wrong for the other roles. 
 - `notifications` rows + Resend emails, created by a `notify()` helper inside the causing server action, dispatched with `waitUntil`.
 - v1 triggers: application approved/declined; new homework; new family-visible note; new resource; event published / registration confirmed; payment recorded; absence marked (per-school toggle); staff invite; student OTP issued.
 - A notification may record **what it is about** — a subject and a child — and the row then shows the subject's badge and the child's first name, so a parent of three knows which one it concerns. Those are the only two things a notification is ever about; there is no generic entity reference.
+- A recorded payment tells **every guardian of that child** what came in and what is left ("€100 received for Amira" · "Cash on Saturday 3 October. Still to pay: €50."), linking to that child's fees. A correction or a deletion does not: the family was told what the office received, and a second message about the same money would confuse more than it corrects.
 - The bell opens a popover with the unread ones and the two actions anyone wants there (mark all as read, see them all); the full list is `/{area}/notifications`.
 - One per-user "email me about updates" toggle. No digests/push/SMS.
 - Email goes through `lib/email/transport.ts` with two implementations: `resend` (production) and `file` (dev/test, writes HTML to `.dev/mail/`). Templates are React Email components rendered to HTML in both cases, so what you see locally is what gets sent.

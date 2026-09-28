@@ -42,6 +42,7 @@ const routes: Record<string, string[]> = {
     "/admin/guardians/[id]/payments",
     "/admin/guardians/[id]/sensitive",
     "/admin/notifications",
+    "/admin/reports",
     "/admin/resources",
     "/admin/settings",
     "/admin/staff",

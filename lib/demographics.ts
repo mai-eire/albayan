@@ -43,6 +43,15 @@ export const proficiencyLabels: Record<ArabicProficiency, string> = {
   native: "Speaks Arabic at home",
 };
 
+// The same scale in one word each: a chart axis has no room for the sentences above.
+export const proficiencyShortLabels: Record<ArabicProficiency, string> = {
+  none: "None yet",
+  beginner: "Beginner",
+  intermediate: "Intermediate",
+  advanced: "Advanced",
+  native: "Native",
+};
+
 export const guardianGenderOptions = [
   { value: "female", label: "Female" },
   { value: "male", label: "Male" },

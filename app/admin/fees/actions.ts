@@ -5,11 +5,28 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/access";
 import { action, ActionError } from "@/lib/actions";
+import { appUrl } from "@/lib/app-url";
 import { audit, diff } from "@/lib/audit";
 import type { Db } from "@/lib/db";
-import { enrolments, paymentMethods, payments, studentGuardians } from "@/lib/db/schema";
+import { listFeesForStudent } from "@/lib/db/queries/fees";
+import { getSchoolSettings } from "@/lib/db/queries/settings";
+import {
+  classes,
+  enrolments,
+  guardians,
+  paymentMethods,
+  payments,
+  studentGuardians,
+  students,
+  users,
+  type PaymentMethod,
+} from "@/lib/db/schema";
+import { sendNotice } from "@/lib/email";
+import { methodLabels } from "@/lib/fees";
 import { optionalText } from "@/lib/fields";
-import { eurosField } from "@/lib/money";
+import { eurosField, formatEuros } from "@/lib/money";
+import { notify } from "@/lib/notify";
+import { formatDate } from "@/lib/time";
 
 const paymentFields = {
   amount: eurosField.refine((cents) => cents > 0, { message: "Enter the amount paid" }),
@@ -30,6 +47,52 @@ async function checkPaidBy(db: Db, studentId: number, guardianId: number | null)
     ),
   });
   if (!link) throw new ActionError("That person isn't one of this child's guardians.");
+}
+
+// What came in and what is left, to every guardian of that child and nobody else: the
+// audience is the guardian links on this student, so another family never hears of it.
+async function tellTheFamily(
+  db: Db,
+  studentId: number,
+  academicYearId: string,
+  payment: { amountCents: number; paidOn: string; method: PaymentMethod },
+) {
+  const [settings, child, contacts, years] = await Promise.all([
+    getSchoolSettings(),
+    db.query.students.findFirst({
+      columns: { firstName: true },
+      where: eq(students.id, studentId),
+    }),
+    db
+      .select({ userId: users.id, name: users.name, email: users.email })
+      .from(studentGuardians)
+      .innerJoin(guardians, eq(guardians.id, studentGuardians.guardianId))
+      .innerJoin(users, eq(users.id, guardians.userId))
+      .where(eq(studentGuardians.studentId, studentId)),
+    listFeesForStudent(studentId),
+  ]);
+  if (!child || contacts.length === 0) return;
+  const account = years.find((y) => y.enrolment.academicYearId === academicYearId);
+  const owed = account ? Math.max(0, account.balanceCents) : 0;
+  const title = `${formatEuros(payment.amountCents)} received for ${child.firstName}`;
+  const body = `${methodLabels[payment.method]} on ${formatDate(payment.paidOn, settings.timezone)}. ${
+    owed > 0
+      ? `Still to pay: ${formatEuros(owed)}.`
+      : `${child.firstName}'s fees for ${academicYearId} are paid in full.`
+  }`;
+  const href = `/family/${studentId}/fees`;
+  const url = await appUrl(href);
+  for (const contact of contacts) {
+    await notify(db, {
+      userId: contact.userId,
+      type: "payment.recorded",
+      title,
+      body,
+      href,
+      studentId,
+      email: () => sendNotice(contact, { title, body, url }, settings.name),
+    });
+  }
 }
 
 function revalidateFees(studentId: number) {
@@ -58,6 +121,17 @@ export const recordPayment = action(
       entityId: created.id,
       changes: { ...row, studentId: enrolment.studentId },
     });
+    const cls = await db.query.classes.findFirst({
+      columns: { academicYearId: true },
+      where: eq(classes.id, enrolment.classId),
+    });
+    if (cls) {
+      await tellTheFamily(db, enrolment.studentId, cls.academicYearId, {
+        amountCents: amount,
+        paidOn: rest.paidOn,
+        method: rest.method,
+      });
+    }
     revalidateFees(enrolment.studentId);
     return { id: created.id, studentId: enrolment.studentId };
   },

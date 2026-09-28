@@ -15,6 +15,7 @@ type Props = {
 
 export function ApprovedEmail({
   schoolName,
+  logo,
   name,
   childName,
   studentId,
@@ -26,6 +27,7 @@ export function ApprovedEmail({
   return (
     <Base
       schoolName={schoolName}
+      logo={logo}
       preview={`${childName} has a place at ${schoolName}`}
       heading={`${childName} has a place`}
     >

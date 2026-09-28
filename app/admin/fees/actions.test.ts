@@ -8,6 +8,7 @@ import {
   classes,
   enrolments,
   guardians,
+  notifications,
   payments,
   schoolSessions,
   studentGuardians,
@@ -19,12 +20,23 @@ import { testDb } from "@/test/db";
 let db: Db;
 let dispose: () => Promise<void>;
 let current: CurrentUser | null = null;
+const emails: string[] = [];
 
 vi.mock("@/lib/db", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/db")>()),
   db: async () => db,
 }));
 vi.mock("@/lib/current-user", () => ({ getCurrentUser: async () => current }));
+vi.mock("@/lib/db/queries/settings", () => ({
+  getSchoolSettings: async () => ({ name: "Test", timezone: "UTC" }),
+}));
+vi.mock("@/lib/app-url", () => ({ appUrl: async (p: string) => `http://localhost:3000${p}` }));
+vi.mock("@/lib/email", () => ({
+  sendNotice: async (to: { email: string }) => {
+    emails.push(to.email);
+  },
+}));
+vi.mock("next/server", () => ({ after: (work: () => Promise<void>) => void work() }));
 vi.mock("next/cache", () => ({ revalidatePath: () => {} }));
 
 const { recordPayment, updatePayment, deletePayment, updateEnrolmentFee } =
@@ -62,10 +74,12 @@ beforeAll(async () => {
     { id: 1, name: "Admin", email: "a@example.com", isAdmin: true },
     { id: 2, name: "Parent", email: "p@example.com" },
     { id: 3, name: "Other parent", email: "o@example.com" },
+    { id: 4, name: "Amira's dad", email: "d@example.com" },
   ]);
   await db.insert(guardians).values([
     { id: 1, userId: 2 },
     { id: 2, userId: 3 },
+    { id: 3, userId: 4 },
   ]);
   await db.insert(academicYears).values({
     id: "2026-27",
@@ -109,6 +123,7 @@ beforeAll(async () => {
   await db.insert(studentGuardians).values([
     { studentId: 1, guardianId: 1, relationship: "mother", isPrimaryContact: true },
     { studentId: 2, guardianId: 2, relationship: "father", isPrimaryContact: true },
+    { studentId: 1, guardianId: 3, relationship: "father", isPrimaryContact: false },
   ]);
   await db.insert(enrolments).values([
     // Amira moved class: payments against the old place still count for her year.
@@ -270,5 +285,38 @@ describe("fee queries", () => {
   it("lists a family's payments and never another family's", async () => {
     expect((await listPaymentsForGuardian(1)).map((p) => p.studentName)).toEqual(["Amira A"]);
     expect(await listPaymentsForGuardian(2)).toEqual([]);
+  });
+});
+
+describe("the family hears about a payment", () => {
+  it("tells every guardian of that child what came in and what is left", async () => {
+    await db.delete(notifications);
+    emails.length = 0;
+    // Fee €200, €50 already paid; this €100 leaves €50.
+    expect(await recordPayment({ enrolmentId: 11, ...payment })).toMatchObject({ ok: true });
+    const rows = await db.select().from(notifications).orderBy(notifications.id);
+    // Both of Amira's parents; Bilal's father (user 3) hears nothing.
+    expect(rows.map((r) => r.userId).sort()).toEqual([2, 4]);
+    expect(rows[0]).toMatchObject({
+      type: "payment.recorded",
+      title: "€100 received for Amira",
+      body: "Cash on Saturday 3 October. Still to pay: €50.",
+      href: "/family/1/fees",
+      studentId: 1,
+      readAt: null,
+    });
+    expect(emails.sort()).toEqual(["d@example.com", "p@example.com"]);
+  });
+
+  it("says so when the year is settled", async () => {
+    await db.delete(notifications);
+    expect(await recordPayment({ enrolmentId: 11, ...payment, amount: "50" })).toMatchObject({
+      ok: true,
+    });
+    const [row] = await db.select().from(notifications).orderBy(notifications.id);
+    expect(row).toMatchObject({
+      title: "€50 received for Amira",
+      body: "Cash on Saturday 3 October. Amira's fees for 2026-27 are paid in full.",
+    });
   });
 });

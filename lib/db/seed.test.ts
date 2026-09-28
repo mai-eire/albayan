@@ -1,14 +1,22 @@
 import { count, eq } from "drizzle-orm";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { createAuth, type Auth } from "@/lib/auth";
 import type { Db } from "@/lib/db";
 import * as t from "@/lib/db/schema";
-import { seed, seedPassword } from "@/lib/db/seed";
+import { seed, seedPassword, yearId } from "@/lib/db/seed";
+import { reports } from "@/lib/reports";
 import { testDb } from "@/test/db";
 
 let db: Db;
 let auth: Auth;
 let dispose: () => Promise<void>;
+
+vi.mock("@/lib/db", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/db")>()),
+  db: async () => db,
+}));
+
+const { reportData } = await import("@/lib/db/queries/reports");
 
 beforeAll(async () => {
   process.env.BETTER_AUTH_URL = "http://localhost:3000";
@@ -77,5 +85,22 @@ describe("seed", () => {
     const pending = await db.select().from(t.students).where(eq(t.students.status, "applied"));
     expect(pending).toHaveLength(6);
     expect(pending.every((s) => s.studentId === null && s.userId === null)).toBe(true);
+  });
+
+  // The reports read the demographics of a real school, so they are counted here rather
+  // than only against a fixture: every placed child appears in every report exactly once.
+  it("gives the reports a school to count", async () => {
+    const data = await reportData(yearId);
+    expect(data.children).toHaveLength(54);
+    expect(data.sessions).toEqual(["Saturday", "Sunday"]);
+    const total = (rows: { count: number }[]) => rows.reduce((sum, r) => sum + r.count, 0);
+    const byId = Object.fromEntries(reports(data, "2026-10-03").map((r) => [r.id, r.data]));
+    for (const id of ["age", "sessions", "gender", "arabic", "countries", "areas"]) {
+      expect(total(byId[id]), id).toBe(54);
+    }
+    // Multi-valued answers count a child once per answer, so these are at least the total.
+    expect(total(byId.languages)).toBeGreaterThan(54);
+    expect(total(byId.reasons)).toBeGreaterThan(54);
+    expect(byId.countries.every((r) => r.count > 0)).toBe(true);
   });
 });

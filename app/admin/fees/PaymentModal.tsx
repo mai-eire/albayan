@@ -1,7 +1,18 @@
 "use client";
 
-import { Button, Group, Modal, Select, Stack, Text, TextInput } from "@mantine/core";
+import {
+  Alert,
+  Button,
+  Checkbox,
+  Group,
+  Modal,
+  Select,
+  Stack,
+  Text,
+  TextInput,
+} from "@mantine/core";
 import { useForm } from "@mantine/form";
+import { IconAlertTriangle } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { DateField } from "@/components/DateField";
@@ -10,7 +21,7 @@ import { toast } from "@/components/toast";
 import type { PaymentRow, PaymentTarget } from "@/lib/db/queries/fees";
 import { paymentMethods } from "@/lib/db/schema";
 import { methodLabels } from "@/lib/fees";
-import { formatEuros } from "@/lib/money";
+import { eurosToCents, formatEuros } from "@/lib/money";
 import { recordPayment, updatePayment } from "./actions";
 
 type Props = {
@@ -53,6 +64,13 @@ export function PaymentModal({ opened, onClose, targets, existing, today }: Prop
     },
   });
   const target = targets.find((t) => t.enrolmentId === form.values.enrolmentId);
+  // What the year still owes before this payment. A payment being corrected doesn't count
+  // against itself, so the office sees the balance it is editing towards.
+  const paidBefore = target ? target.paidCents - (existing?.amountCents ?? 0) : 0;
+  const owedCents = target ? Math.max(0, target.feeCents - paidBefore) : 0;
+  const typedCents = centsOf(form.values.amount);
+  const tooMuch = target !== undefined && typedCents !== null && typedCents > owedCents;
+  const [confirmed, setConfirmed] = useState(false);
 
   const submit = form.onSubmit(async (values) => {
     setSaving(true);
@@ -64,6 +82,7 @@ export function PaymentModal({ opened, onClose, targets, existing, today }: Prop
       paidByGuardianId: values.paidByGuardianId,
       reference: values.reference || null,
       note: values.note || null,
+      overPayment: tooMuch && confirmed,
     };
     const result = existing
       ? await updatePayment({ id: existing.id, ...fields })
@@ -105,15 +124,22 @@ export function PaymentModal({ opened, onClose, targets, existing, today }: Prop
               error={form.errors.enrolmentId}
             />
           )}
-          {target && !existing && (
+          {target && (
             <Text size="sm" c="dimmed">
-              {target.feeCents === 0
-                ? "The fee is waived."
-                : `Paid ${formatEuros(target.paidCents)} of ${formatEuros(target.feeCents)} · ${
-                    target.paidCents >= target.feeCents
-                      ? "nothing outstanding"
-                      : `${formatEuros(target.feeCents - target.paidCents)} outstanding`
-                  }`}
+              {target.feeCents === 0 ? (
+                "The fee is waived — nothing is outstanding."
+              ) : (
+                <>
+                  Paid {formatEuros(paidBefore)} of {formatEuros(target.feeCents)} ·{" "}
+                  {owedCents > 0 ? (
+                    <Text span fw={700} c="saffron">
+                      {formatEuros(owedCents)} outstanding
+                    </Text>
+                  ) : (
+                    "nothing outstanding"
+                  )}
+                </>
+              )}
             </Text>
           )}
           <Group grow align="flex-start">
@@ -157,12 +183,29 @@ export function PaymentModal({ opened, onClose, targets, existing, today }: Prop
             />
             <TextInput label="Note" {...form.getInputProps("note")} />
           </Group>
+          {tooMuch && (
+            <Alert
+              color="saffron"
+              variant="light"
+              icon={<IconAlertTriangle size={16} stroke={1.75} />}
+            >
+              {owedCents > 0
+                ? `That's ${formatEuros((typedCents ?? 0) - owedCents)} more than the ${formatEuros(owedCents)} still owed.`
+                : `Nothing is owed${target?.feeCents === 0 ? " — the fee is waived" : ""}.`}
+              <Checkbox
+                mt="sm"
+                label="Record it anyway — the family will be in credit"
+                checked={confirmed}
+                onChange={(e) => setConfirmed(e.currentTarget.checked)}
+              />
+            </Alert>
+          )}
           <FormError message={error} />
           <Group justify="flex-end">
             <Button variant="default" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" loading={saving}>
+            <Button type="submit" loading={saving} disabled={tooMuch && !confirmed}>
               {existing ? "Save payment" : "Record payment"}
             </Button>
           </Group>
@@ -170,4 +213,13 @@ export function PaymentModal({ opened, onClose, targets, existing, today }: Prop
       </form>
     </Modal>
   );
+}
+
+// The typed amount in cents, or null while it isn't a number yet.
+function centsOf(amount: string): number | null {
+  try {
+    return eurosToCents(amount.trim() || "0");
+  } catch {
+    return null;
+  }
 }

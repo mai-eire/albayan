@@ -6,7 +6,7 @@ import type { ClassFilterOption } from "@/components/ClassFilter";
 import { EmptyState } from "@/components/EmptyState";
 import { Figures } from "@/components/Figures";
 import { useUrlFilters } from "@/components/useUrlFilters";
-import type { FeeAccountRow } from "@/lib/db/queries/fees";
+import type { FeeAccountRow, PaymentTarget } from "@/lib/db/queries/fees";
 import { outstandingCents } from "@/lib/fees";
 import { formatEuros } from "@/lib/money";
 import { FeesFilters } from "./FeesFilters";
@@ -19,6 +19,9 @@ type Props = {
   year: string;
   sessions: { id: number; name: string }[];
   classes: ClassFilterOption[];
+  // Passed down so a row can record a payment for its own child.
+  targets: PaymentTarget[];
+  today: string;
 };
 
 // "(63%)" of the fees; nothing when there are no fees to be a share of.
@@ -26,7 +29,7 @@ const share = (part: number, whole: number) =>
   whole > 0 ? `(${Math.round((part / whole) * 100)}%)` : undefined;
 
 // The year's accounts, narrowed in the browser: totals above the table, then who owes what.
-export function FeesList({ accounts, years, year, sessions, classes }: Props) {
+export function FeesList({ accounts, years, year, sessions, classes, targets, today }: Props) {
   const { query, set } = useUrlFilters();
   const filters = parseFeeFilters(query);
   const rows = applyFeeFilters(accounts, filters);
@@ -89,7 +92,7 @@ export function FeesList({ accounts, years, year, sessions, classes }: Props) {
           }
         />
       ) : (
-        <FeesTable rows={rows} />
+        <FeesTable rows={rows} targets={targets} today={today} />
       )}
     </>
   );

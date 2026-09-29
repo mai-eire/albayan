@@ -2,7 +2,7 @@
 
 Live document. Updated at the end of every work session, in the same commit as the work. Keep it under ~50 lines; detail belongs in the phase checklists.
 
-**Last updated:** 2026-09-28 · **Current phase:** 3 — Fees, events, reports, hardening (in progress)
+**Last updated:** 2026-09-29 · **Current phase:** 3 — Fees, events, reports, hardening (in progress)
 
 ## Phases
 
@@ -39,6 +39,8 @@ Review passes by area, feedback under `docs/feedback/<area>/`: admin 2–6, teac
 Newest first. Older work lives in the phase checklists and in [feedback/](feedback/).
 
 - 2026-09-28 — **Reports** (task 5): `/admin/reports` counts the children of a year eight ways — ages, sessions, boys and girls, Arabic at registration, countries of origin, languages at home, where they live, why families came — with a year picker and one CSV; ages and countries also sit on the dashboard. Counts only, and the page says so. Charts are `@mantine/charts`, their rules in DESIGN §4.13. Also **task 2**: recording a payment now tells every guardian of that child what came in and what is still to pay, in the app and by email.
+
+- 2026-09-29 — The payment form puts the **outstanding balance** where the office types (bold saffron) and asks for a tick before taking more than is owed — the action refuses an unticked overpayment, as it does an unticked overfill of a class. Every row of the fees list can open the form on its own child.
 
 - 2026-09-27 — A school can upload its **logo** (Settings → Logo, migration 0011): it replaces the app's mark in the header, stands above the name on the sign-in pages (which now read mark → name → form), becomes the favicon and heads every email. Optional; without one nothing changes.
 

@@ -320,3 +320,52 @@ describe("the family hears about a payment", () => {
     });
   });
 });
+
+describe("more than is owed", () => {
+  // Bilal's place, untouched by the tests above: fee €200, nothing paid.
+  const forBilal = { ...payment, enrolmentId: 12, paidByGuardianId: 2 };
+
+  it("refuses an overpayment without the tick, and takes it with one", async () => {
+    await db.delete(notifications);
+    expect(await recordPayment({ ...forBilal, amount: "250" })).toMatchObject({
+      ok: false,
+      error: "That's more than the €200 still owed for 2026-27. Tick the box to record it anyway.",
+    });
+    expect(await recordPayment({ ...forBilal, amount: "250", overPayment: true })).toMatchObject({
+      ok: true,
+    });
+    const account = (await listFeeAccounts("2026-27")).find((a) => a.enrolment.studentId === 2);
+    expect(account).toMatchObject({ paidCents: 25000, balanceCents: -5000, status: "paid" });
+    // His father still hears, and hears that nothing is left.
+    const rows = await db.select().from(notifications);
+    expect(rows.map((r) => r.userId)).toEqual([3]);
+    expect(rows[0].body).toMatch(/paid in full/);
+  });
+
+  it("says so plainly when the year is already settled", async () => {
+    expect(await recordPayment({ ...forBilal, amount: "10" })).toMatchObject({
+      ok: false,
+      error: "Nothing is owed for 2026-27. Tick the box to record it anyway.",
+    });
+  });
+
+  it("keeps a corrected payment's own amount out of the sum", async () => {
+    const [{ id }] = await db
+      .select({ id: payments.id })
+      .from(payments)
+      .where(eq(payments.enrolmentId, 12));
+    // €250 down to €120 is well inside the fee, though the year is overpaid as it stands.
+    expect(await updatePayment({ id, ...forBilal, amount: "120" })).toEqual({
+      ok: true,
+      data: undefined,
+    });
+    expect(await updatePayment({ id, ...forBilal, amount: "260" })).toMatchObject({
+      ok: false,
+      error: /more than the €200 still owed/,
+    });
+    expect(await updatePayment({ id, ...forBilal, amount: "260", overPayment: true })).toEqual({
+      ok: true,
+      data: undefined,
+    });
+  });
+});

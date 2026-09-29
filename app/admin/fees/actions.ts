@@ -35,7 +35,32 @@ const paymentFields = {
   paidByGuardianId: z.number().int().nullable(),
   reference: optionalText(80),
   note: optionalText(300),
+  // The office has seen that this is more than the year still owes and means it.
+  overPayment: z.boolean().default(false),
 };
+
+// Taking more than the year still owes is allowed — a family pays ahead, or hands over a
+// round sum — but on purpose, the same way a child goes into a full class: the form warns
+// and asks for a tick, and this refuses without it. `insteadOfCents` is the amount being
+// replaced when a payment is corrected, which shouldn't count against itself.
+async function checkAmount(
+  studentId: number,
+  academicYearId: string,
+  amountCents: number,
+  { overPayment, insteadOfCents = 0 }: { overPayment: boolean; insteadOfCents?: number },
+) {
+  if (overPayment) return;
+  const years = await listFeesForStudent(studentId);
+  const account = years.find((y) => y.enrolment.academicYearId === academicYearId);
+  if (!account) return;
+  const owed = Math.max(0, account.feeCents - (account.paidCents - insteadOfCents));
+  if (amountCents <= owed) return;
+  throw new ActionError(
+    owed === 0
+      ? `Nothing is owed for ${academicYearId}. Tick the box to record it anyway.`
+      : `That's more than the ${formatEuros(owed)} still owed for ${academicYearId}. Tick the box to record it anyway.`,
+  );
+}
 
 // "Paid by" must be one of the child's guardians, so a payment can't be pinned on a stranger.
 async function checkPaidBy(db: Db, studentId: number, guardianId: number | null) {
@@ -105,13 +130,22 @@ function revalidateFees(studentId: number) {
 
 export const recordPayment = action(
   z.object({ enrolmentId: z.number().int(), ...paymentFields }),
-  async ({ enrolmentId, amount, ...rest }, { user, db }) => {
+  async ({ enrolmentId, amount, overPayment, ...rest }, { user, db }) => {
     requireAdmin(user);
     const enrolment = await db.query.enrolments.findFirst({
       where: and(eq(enrolments.id, enrolmentId), eq(enrolments.status, "active")),
     });
     if (!enrolment) throw new ActionError("That place no longer exists.");
     await checkPaidBy(db, enrolment.studentId, rest.paidByGuardianId);
+    const cls = await db.query.classes.findFirst({
+      columns: { academicYearId: true },
+      where: eq(classes.id, enrolment.classId),
+    });
+    if (cls) {
+      await checkAmount(enrolment.studentId, cls.academicYearId, amount, {
+        overPayment,
+      });
+    }
     const row = { enrolmentId, amountCents: amount, ...rest, recordedByUserId: user.id };
     const [created] = await db.insert(payments).values(row).returning({ id: payments.id });
     await audit(db, {
@@ -120,10 +154,6 @@ export const recordPayment = action(
       entityType: "payment",
       entityId: created.id,
       changes: { ...row, studentId: enrolment.studentId },
-    });
-    const cls = await db.query.classes.findFirst({
-      columns: { academicYearId: true },
-      where: eq(classes.id, enrolment.classId),
     });
     if (cls) {
       await tellTheFamily(db, enrolment.studentId, cls.academicYearId, {
@@ -139,9 +169,14 @@ export const recordPayment = action(
 
 async function existingPayment(db: Db, id: number) {
   const [row] = await db
-    .select({ payment: payments, studentId: enrolments.studentId })
+    .select({
+      payment: payments,
+      studentId: enrolments.studentId,
+      academicYearId: classes.academicYearId,
+    })
     .from(payments)
     .innerJoin(enrolments, eq(enrolments.id, payments.enrolmentId))
+    .innerJoin(classes, eq(classes.id, enrolments.classId))
     .where(eq(payments.id, id));
   if (!row) throw new ActionError("That payment no longer exists.");
   return row;
@@ -150,10 +185,14 @@ async function existingPayment(db: Db, id: number) {
 // A mis-entered payment is corrected in place; the audit row keeps what it said before.
 export const updatePayment = action(
   z.object({ id: z.number().int(), ...paymentFields }),
-  async ({ id, amount, ...rest }, { user, db }) => {
+  async ({ id, amount, overPayment, ...rest }, { user, db }) => {
     requireAdmin(user);
-    const { payment, studentId } = await existingPayment(db, id);
+    const { payment, studentId, academicYearId } = await existingPayment(db, id);
     await checkPaidBy(db, studentId, rest.paidByGuardianId);
+    await checkAmount(studentId, academicYearId, amount, {
+      overPayment,
+      insteadOfCents: payment.amountCents,
+    });
     const changes = { amountCents: amount, ...rest };
     const changed = diff(payment, changes);
     if (Object.keys(changed).length === 0) return;

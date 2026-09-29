@@ -77,6 +77,8 @@ export default async function FeesPage({ searchParams }: Props) {
           sessionId: c.sessionId,
           sessionName: c.sessionName,
         }))}
+        targets={targets}
+        today={today}
       />
     </Stack>
   );

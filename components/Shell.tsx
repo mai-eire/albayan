@@ -93,7 +93,8 @@ const nav: Record<Area, NavItem[]> = {
     { label: "Attendance", href: "/teacher/attendance", icon: IconClipboardCheck },
     { label: "Homework", href: "/teacher/homework", icon: IconBook },
     { label: "Resources", href: "/teacher/resources", icon: IconFolder },
-    { label: "Timetable", href: "/teacher/timetable", icon: IconCalendarTime },
+    { label: "Calendar", href: "/teacher/calendar", icon: IconCalendar },
+    { label: "My timetable", href: "/teacher/timetable", icon: IconCalendarTime },
     { label: "School rules", href: "/teacher/rules", icon: IconBook2 },
   ],
   family: [

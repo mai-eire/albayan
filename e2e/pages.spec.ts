@@ -67,6 +67,8 @@ const routes: Record<string, string[]> = {
     "/teacher",
     "/teacher/attendance",
     "/teacher/attendance/[classId]?date=2026-09-12",
+    "/teacher/calendar",
+    "/teacher/calendar?view=schedule",
     "/teacher/classes",
     "/teacher/classes/[id]",
     "/teacher/classes/[id]/attendance",

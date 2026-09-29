@@ -86,12 +86,17 @@ export async function listEventsForAdmin(range: Range): Promise<EventRow[]> {
   return withTargets(rows);
 }
 
-export type ViewerScope = { sessionIds: number[]; classIds: number[] };
+export type ViewerScope = {
+  sessionIds: number[];
+  classIds: number[];
+  // Set only for teachers: staff meetings are theirs too.
+  staff?: boolean;
+};
 
 // What this viewer's calendar shows: published entries for the whole school, plus any aimed
 // at a session or class of theirs. A Sunday family never sees a Saturday trip. A staff-only
-// entry is neither, so it never reaches a family or a student; the office reads those
-// through listEventsForAdmin.
+// entry is neither, so it never reaches a family or a student; a teacher asks for those
+// through their scope, and the office reads everything through listEventsForAdmin.
 export async function listEventsForViewer(range: Range, scope: ViewerScope): Promise<EventRow[]> {
   const d = await db();
   const mine = d
@@ -111,7 +116,11 @@ export async function listEventsForViewer(range: Range, scope: ViewerScope): Pro
         eq(events.isPublished, true),
         gte(events.endAt, range.from),
         lte(events.startAt, `${range.to}T99`),
-        or(eq(events.audience, "whole_school"), inArray(events.id, mine)),
+        or(
+          eq(events.audience, "whole_school"),
+          inArray(events.id, mine),
+          scope.staff ? eq(events.audience, "staff") : undefined,
+        ),
       ),
     )
     .orderBy(asc(events.startAt));

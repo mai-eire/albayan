@@ -4,10 +4,13 @@ import { lessonDaysForStudents, scopeForStudents } from "@/lib/db/queries/calend
 
 export const metadata = { title: "Calendar" };
 
-type Props = { searchParams: Promise<{ month?: string; view?: string }> };
+type Props = { searchParams: Promise<{ month?: string; view?: string; classDays?: string }> };
 
 export default async function StudentCalendarPage({ searchParams }: Props) {
-  const [user, { month, view }] = await Promise.all([requireArea("student"), searchParams]);
+  const [user, { month, view, classDays }] = await Promise.all([
+    requireArea("student"),
+    searchParams,
+  ]);
   const me = user.student ? [{ id: user.student.id, firstName: user.student.firstName }] : [];
   const [lessonDays, scope] = await Promise.all([
     lessonDaysForStudents(me),
@@ -18,6 +21,7 @@ export default async function StudentCalendarPage({ searchParams }: Props) {
       base="/student/calendar"
       month={month}
       view={view}
+      classDays={classDays}
       lessonDays={lessonDays}
       scope={scope}
     />

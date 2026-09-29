@@ -2,7 +2,15 @@
 // Pure: dates are YYYY-MM-DD strings, weeks start on Monday.
 
 export type CalendarTerm = { name: string; startDate: string; endDate: string };
-export type LessonDay = { dayOfWeek: number; label: string };
+// A weekday the viewer is in school, with the hours they are there: a family's day starts
+// at the first slot they see, a teacher's at the staff slot before it (lib/timetable.ts).
+export type LessonDay = {
+  sessionId: number;
+  dayOfWeek: number;
+  label: string;
+  startTime: string;
+  endTime: string;
+};
 // What a day carries from the school calendar. The row itself lives in the page's state;
 // the grid only needs enough to draw the chip and open its popover.
 export type CalendarEvent = { id: number; date: string; title: string; type: string };
@@ -13,8 +21,8 @@ export type CalendarDay = {
   inMonth: boolean;
   isToday: boolean;
   termName: string | null;
-  // Lesson labels that fall on this day and inside a term ("Saturday class").
-  lessons: string[];
+  // Lesson days falling on this date and inside a term ("Saturday class").
+  lessons: LessonDay[];
   events: CalendarEvent[];
 };
 
@@ -73,9 +81,7 @@ export function buildMonth(input: {
         inMonth: cursor.getUTCMonth() === m - 1,
         isToday: date === input.today,
         termName: term?.name ?? null,
-        lessons: term
-          ? input.lessonDays.filter((l) => l.dayOfWeek === cursor.getUTCDay()).map((l) => l.label)
-          : [],
+        lessons: term ? input.lessonDays.filter((l) => l.dayOfWeek === cursor.getUTCDay()) : [],
         events: (input.events ?? []).filter((e) => e.date === date),
       });
       cursor.setUTCDate(cursor.getUTCDate() + 1);
@@ -90,3 +96,33 @@ export function buildMonth(input: {
     next: shift(input.month, 1),
   };
 }
+
+// Every lesson day of the year, in date order: the schedule view's own rows, so a family
+// reads "Saturday class" between the trip and the mid-term break the way a diary would.
+export function lessonDatesInTerms(
+  terms: CalendarTerm[],
+  lessonDays: LessonDay[],
+): { date: string; lesson: LessonDay }[] {
+  const rows = terms.flatMap((term) =>
+    lessonDays.flatMap((lesson) =>
+      lessonDatesBetween(lesson.dayOfWeek, term.startDate, term.endDate).map((date) => ({
+        date,
+        lesson,
+      })),
+    ),
+  );
+  return rows.sort(
+    (a, b) => a.date.localeCompare(b.date) || a.lesson.label.localeCompare(b.lesson.label),
+  );
+}
+
+export function addDays(date: string, days: number): string {
+  const d = new Date(`${date}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+// How far ahead the schedule lists class days. A school year holds eighty of them, which
+// would bury the eleven dates that actually need reading; four weeks is what a family
+// plans around, and the dates and activities still run to the end of the year.
+export const lessonHorizonDays = 28;

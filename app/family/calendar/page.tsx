@@ -5,10 +5,13 @@ import { listChildrenForGuardian } from "@/lib/db/queries/students";
 
 export const metadata = { title: "Calendar" };
 
-type Props = { searchParams: Promise<{ month?: string; view?: string }> };
+type Props = { searchParams: Promise<{ month?: string; view?: string; classDays?: string }> };
 
 export default async function FamilyCalendarPage({ searchParams }: Props) {
-  const [user, { month, view }] = await Promise.all([requireArea("family"), searchParams]);
+  const [user, { month, view, classDays }] = await Promise.all([
+    requireArea("family"),
+    searchParams,
+  ]);
   const kids = user.guardian ? await listChildrenForGuardian(user.guardian.id) : [];
   const active = kids.filter((k) => k.status === "active");
   const [lessonDays, scope] = await Promise.all([
@@ -20,6 +23,7 @@ export default async function FamilyCalendarPage({ searchParams }: Props) {
       base="/family/calendar"
       month={month}
       view={view}
+      classDays={classDays}
       lessonDays={lessonDays}
       scope={scope}
     />

@@ -6,21 +6,38 @@ import type { ReactNode } from "react";
 import { EmptyState } from "@/components/EmptyState";
 import { EventIcon } from "@/components/EventIcon";
 import { EventPopover } from "@/components/EventPopover";
+import { SessionPopover } from "@/components/SessionPopover";
 import { StatusBadge } from "@/components/StatusBadge";
+import { IconSchool } from "@tabler/icons-react";
+import { addDays, lessonHorizonDays, type LessonDay } from "@/lib/calendar";
 import type { EventRow } from "@/lib/db/queries/events";
-import { eventLook, eventTypeLabels, isStaffOnly, isUpcoming, whenLabel } from "@/lib/events";
+import {
+  dateOf,
+  eventLook,
+  eventTypeLabels,
+  isStaffOnly,
+  isUpcoming,
+  whenLabel,
+} from "@/lib/events";
 import { formatEuros } from "@/lib/money";
 import { formatDate } from "@/lib/time";
 import classes from "./ScheduleList.module.css";
 
 type Props = {
   events: EventRow[];
+  // Class days, already expanded across the year's terms; they read between the entries
+  // the way a diary would. Only the ones still to come — a list of past Saturdays is no
+  // use to anyone and would bury what matters.
+  lessons?: { date: string; lesson: LessonDay }[];
   today: string;
   timezone: string;
   // The office sees drafts and can act on a row; nobody else does.
   showDrafts?: boolean;
   onEdit?: (event: EventRow) => void;
+  onDelete?: (event: EventRow) => void;
   action?: (event: EventRow) => ReactNode;
+  // The office: a session row can open the session itself.
+  staff?: boolean;
   emptyMessage?: string;
 };
 
@@ -29,11 +46,14 @@ type Props = {
 // opens the same popover.
 export function ScheduleList({
   events,
+  lessons = [],
   today,
   timezone,
   showDrafts,
   onEdit,
+  onDelete,
   action,
+  staff,
   emptyMessage,
 }: Props) {
   const upcoming = events.filter((e) => isUpcoming(e, today));
@@ -56,7 +76,7 @@ export function ScheduleList({
     return (
       <div key={event.id} className={classes.row} data-color={eventLook(event.type).color}>
         <Group justify="space-between" wrap="nowrap" gap="sm">
-          <EventPopover event={event} timezone={timezone} onEdit={onEdit}>
+          <EventPopover event={event} timezone={timezone} onEdit={onEdit} onDelete={onDelete}>
             {(open) => (
               <UnstyledButton onClick={open} className={classes.main}>
                 <Group gap="sm" wrap="nowrap">
@@ -84,7 +104,41 @@ export function ScheduleList({
     );
   };
 
-  if (events.length === 0) {
+  // A class day reads as its own row, in date order among the entries.
+  const lessonRow = ({ date, lesson }: { date: string; lesson: LessonDay }) => (
+    <div key={`${date}-${lesson.sessionId}-${lesson.label}`} className={classes.row} data-lesson="">
+      <SessionPopover lesson={lesson} date={date} timezone={timezone} staff={staff}>
+        {(open) => (
+          <UnstyledButton onClick={open} className={classes.main}>
+            <Group gap="sm" wrap="nowrap">
+              <ThemeIcon variant="light" color="tile" radius="md">
+                <IconSchool size={16} stroke={1.75} />
+              </ThemeIcon>
+              <div className={classes.text}>
+                <Text fw={500} truncate>
+                  {lesson.label}
+                </Text>
+                <Text size="sm" c="dimmed" truncate>
+                  {`${formatDate(date, timezone)} · ${lesson.startTime} – ${lesson.endTime}`}
+                </Text>
+              </div>
+            </Group>
+          </UnstyledButton>
+        )}
+      </SessionPopover>
+    </div>
+  );
+
+  // Entries and class days in one order, the way a diary reads. Class days stop at the
+  // horizon; the dates and activities run to the end of the year.
+  const horizon = addDays(today, lessonHorizonDays);
+  const shownLessons = lessons.filter((l) => l.date >= today && l.date <= horizon);
+  const coming = [
+    ...upcoming.map((event) => ({ date: dateOf(event.startAt), node: row(event) })),
+    ...shownLessons.map((l) => ({ date: l.date, node: lessonRow(l) })),
+  ].sort((a, b) => a.date.localeCompare(b.date));
+
+  if (events.length === 0 && coming.length === 0) {
     return (
       <EmptyState
         icon={<IconCalendar size={20} stroke={1.75} />}
@@ -94,12 +148,12 @@ export function ScheduleList({
   }
   return (
     <Stack gap="lg">
-      {upcoming.length > 0 && (
+      {coming.length > 0 && (
         <Stack gap="xs">
           <Text size="sm" c="dimmed" fw={500}>
             Coming up
           </Text>
-          {upcoming.map(row)}
+          {coming.map((item) => item.node)}
         </Stack>
       )}
       {past.length > 0 && (

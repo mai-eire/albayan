@@ -18,7 +18,7 @@ import { DateField } from "@/components/DateField";
 import { FormError } from "@/components/FormError";
 import { toast } from "@/components/toast";
 import type { EventRow } from "@/lib/db/queries/events";
-import { eventTypes, type EventAudience } from "@/lib/db/schema";
+import { type EventAudience } from "@/lib/db/schema";
 import { dateOf, eventTypeLabels, isActivity, timeOf } from "@/lib/events";
 import { formatEuros } from "@/lib/money";
 import { saveEvent } from "./actions";
@@ -27,6 +27,8 @@ type Props = {
   opened: boolean;
   onClose: () => void;
   existing?: EventRow | null;
+  // Adding from a day on the grid: that day is where the entry starts.
+  startDate?: string;
   sessions: { id: number; name: string }[];
   classes: { id: number; name: string; sessionName: string }[];
   today: string;
@@ -54,7 +56,15 @@ const audienceOptions: { value: EventAudience; label: string }[] = [
   { value: "staff", label: "Staff only" },
 ];
 
-export function EventModal({ opened, onClose, existing, sessions, classes, today }: Props) {
+export function EventModal({
+  opened,
+  onClose,
+  existing,
+  startDate,
+  sessions,
+  classes,
+  today,
+}: Props) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -63,8 +73,8 @@ export function EventModal({ opened, onClose, existing, sessions, classes, today
       title: existing?.title ?? "",
       type: existing?.type ?? "holiday",
       description: existing?.description ?? "",
-      startDate: existing ? dateOf(existing.startAt) : today,
-      endDate: existing ? dateOf(existing.endAt) : today,
+      startDate: existing ? dateOf(existing.startAt) : (startDate ?? today),
+      endDate: existing ? dateOf(existing.endAt) : (startDate ?? today),
       startTime: existing ? (timeOf(existing.startAt) ?? "") : "",
       endTime: existing ? (timeOf(existing.endAt) ?? "") : "",
       location: existing?.location ?? "",

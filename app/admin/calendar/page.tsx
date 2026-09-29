@@ -8,19 +8,19 @@ import { listClasses, listSessions, getCurrentYear } from "@/lib/db/queries/acad
 import { lessonDaysForSchool, listTermsForYear } from "@/lib/db/queries/calendar";
 import { listEventsForAdmin } from "@/lib/db/queries/events";
 import { getSchoolSettings } from "@/lib/db/queries/settings";
-import { buildMonth } from "@/lib/calendar";
+import { buildMonth, lessonDatesInTerms } from "@/lib/calendar";
 import { datesCovered } from "@/lib/events";
 import { formatHijri, todayIn } from "@/lib/time";
 import { AdminCalendar } from "./AdminCalendar";
 
 export const metadata = { title: "Calendar" };
 
-type Props = { searchParams: Promise<{ month?: string; view?: string }> };
+type Props = { searchParams: Promise<{ month?: string; view?: string; classDays?: string }> };
 
 // The calendar everyone else sees, with the school's own dates on it and the office's way
 // of putting them there. Drafts show here and nowhere else.
 export default async function AdminCalendarPage({ searchParams }: Props) {
-  const [{ month, view }, { timezone }, year] = await Promise.all([
+  const [{ month, view, classDays }, { timezone }, year] = await Promise.all([
     searchParams,
     getSchoolSettings(),
     getCurrentYear(),
@@ -65,11 +65,13 @@ export default async function AdminCalendarPage({ searchParams }: Props) {
       <AdminCalendar
         month={built}
         events={events}
+        lessons={lessonDatesInTerms(terms, lessonDays)}
         sessions={sessions.map((session) => ({ id: session.id, name: session.name }))}
         classes={classes.map((c) => ({ id: c.id, name: c.name, sessionName: c.sessionName }))}
         today={today}
         timezone={timezone}
         view={view}
+        classDays={classDays}
         noTerms={terms.length === 0}
       />
     </Stack>

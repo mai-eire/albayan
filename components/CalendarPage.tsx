@@ -1,7 +1,7 @@
 import { Card, Stack, Text } from "@mantine/core";
 import { CalendarViews } from "@/components/CalendarViews";
 import { PageHeader } from "@/components/PageHeader";
-import { buildMonth, type LessonDay } from "@/lib/calendar";
+import { buildMonth, lessonDatesInTerms, type LessonDay } from "@/lib/calendar";
 import { getCurrentYear } from "@/lib/db/queries/academics";
 import { listTermsForYear } from "@/lib/db/queries/calendar";
 import { listEventsForViewer, type ViewerScope } from "@/lib/db/queries/events";
@@ -16,12 +16,14 @@ export async function CalendarPage({
   base,
   month,
   view,
+  classDays,
   lessonDays,
   scope,
 }: {
   base: string;
   month?: string;
   view?: string;
+  classDays?: string;
   lessonDays: LessonDay[];
   // Which sessions and classes the viewer belongs to, so a Sunday family is not told about
   // a Saturday trip. No scope at all still sees whole-school entries.
@@ -51,7 +53,9 @@ export async function CalendarPage({
           month={built}
           base={base}
           initialView={view}
+          initialClassDays={classDays}
           events={events}
+          lessons={lessonDatesInTerms(terms, lessonDays)}
           today={today}
           timezone={timezone}
           emptyMessage="Nothing on the calendar yet. Term dates, holidays and trips appear here."

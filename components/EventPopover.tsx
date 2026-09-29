@@ -13,15 +13,16 @@ import { formatDate } from "@/lib/time";
 type Props = {
   event: EventRow;
   timezone: string;
-  // The office's Edit; nobody else gets one.
+  // The office's Edit and Delete; nobody else gets either.
   onEdit?: (event: EventRow) => void;
+  onDelete?: (event: EventRow) => void;
   children: (open: () => void) => ReactNode;
 };
 
 // What the school knows about one entry (DESIGN §4.10), opened from a chip on the grid or a
 // row in the schedule. The only place a description is shown on a calendar.
-export function EventPopover({ event, timezone, onEdit, children }: Props) {
-  const [opened, { open, close, toggle }] = useDisclosure(false);
+export function EventPopover({ event, timezone, onEdit, onDelete, children }: Props) {
+  const [opened, { close, toggle }] = useDisclosure(false);
   const look = eventLook(event.type);
   const when = whenLabel(event, (date) => formatDate(date, timezone, true));
   const who = isStaffOnly(event)
@@ -58,17 +59,34 @@ export function EventPopover({ event, timezone, onEdit, children }: Props) {
               {event.description}
             </Text>
           )}
-          {onEdit && (
-            <Button
-              variant="light"
-              size="xs"
-              onClick={() => {
-                close();
-                onEdit(event);
-              }}
-            >
-              Edit entry
-            </Button>
+          {(onEdit || onDelete) && (
+            <Group gap="xs" grow>
+              {onEdit && (
+                <Button
+                  variant="light"
+                  size="xs"
+                  onClick={() => {
+                    close();
+                    onEdit(event);
+                  }}
+                >
+                  Edit
+                </Button>
+              )}
+              {onDelete && (
+                <Button
+                  variant="light"
+                  color="clay"
+                  size="xs"
+                  onClick={() => {
+                    close();
+                    onDelete(event);
+                  }}
+                >
+                  Delete
+                </Button>
+              )}
+            </Group>
           )}
         </Stack>
       </Popover.Dropdown>

@@ -22,6 +22,11 @@
   &[data-color="gray"] {
     border-inline-start-color: var(--mantine-color-gray-filled);
   }
+
+  /* A class day: the same tile as its chip on the grid. */
+  &[data-lesson] {
+    border-inline-start-color: var(--mantine-color-tile-filled);
+  }
 }
 
 .main {

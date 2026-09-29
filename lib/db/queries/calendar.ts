@@ -1,8 +1,51 @@
-import { and, eq, inArray, or } from "drizzle-orm";
+import { and, asc, eq, inArray, or } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { classes, enrolments, schoolSessions, teachingAssignments, terms } from "@/lib/db/schema";
+import {
+  classes,
+  enrolments,
+  schoolSessions,
+  sessionPeriods,
+  teachingAssignments,
+  terms,
+} from "@/lib/db/schema";
 import type { CalendarTerm, LessonDay } from "@/lib/calendar";
+import { familyStart, forFamilies, sessionEndTime } from "@/lib/timetable";
 import type { ViewerScope } from "./events";
+
+// The hours a session runs, for whoever is asking: staff see the whole day including the
+// slots before the children arrive, a family sees the day their child is there
+// (lib/timetable.ts, DESIGN §4.10).
+async function hoursOf(
+  sessions: { id: number; name: string; dayOfWeek: number; startTime: string }[],
+  who: "staff" | "family",
+  label: (session: { id: number; name: string }) => string = (session) => `${session.name} class`,
+): Promise<LessonDay[]> {
+  if (!sessions.length) return [];
+  const periods = await (
+    await db()
+  )
+    .select()
+    .from(sessionPeriods)
+    .where(
+      inArray(
+        sessionPeriods.sessionId,
+        sessions.map((s) => s.id),
+      ),
+    )
+    .orderBy(asc(sessionPeriods.sortOrder));
+  return sessions.map((session) => {
+    const mine = periods.filter((p) => p.sessionId === session.id);
+    const shown = who === "staff" ? mine : forFamilies(mine);
+    const startTime = who === "staff" ? session.startTime : familyStart(session.startTime, mine);
+    return {
+      sessionId: session.id,
+      dayOfWeek: session.dayOfWeek,
+      label: label(session),
+      startTime,
+      endTime: sessionEndTime(startTime, shown),
+    };
+  });
+}
 
 export async function listTermsForYear(academicYearId: string): Promise<CalendarTerm[]> {
   return (await db())
@@ -17,8 +60,14 @@ export async function lessonDaysForTeacher(
   academicYearId: string,
 ): Promise<LessonDay[]> {
   const d = await db();
+  const columns = {
+    id: schoolSessions.id,
+    dayOfWeek: schoolSessions.dayOfWeek,
+    name: schoolSessions.name,
+    startTime: schoolSessions.startTime,
+  };
   const rows = await d
-    .selectDistinct({ dayOfWeek: schoolSessions.dayOfWeek, name: schoolSessions.name })
+    .selectDistinct(columns)
     .from(classes)
     .innerJoin(schoolSessions, eq(schoolSessions.id, classes.sessionId))
     .where(
@@ -35,18 +84,19 @@ export async function lessonDaysForTeacher(
       ),
     );
   const led = await d
-    .selectDistinct({ dayOfWeek: schoolSessions.dayOfWeek, name: schoolSessions.name })
+    .selectDistinct(columns)
     .from(classes)
     .innerJoin(schoolSessions, eq(schoolSessions.id, classes.sessionId))
     .where(and(eq(classes.academicYearId, academicYearId), eq(classes.classTeacherId, teacherId)));
   const all = [...rows, ...led];
-  return all
-    .filter((r, i) => all.findIndex((o) => o.dayOfWeek === r.dayOfWeek) === i)
-    .map((r) => ({ dayOfWeek: r.dayOfWeek, label: `${r.name} class` }));
+  return hoursOf(
+    all.filter((r, i) => all.findIndex((o) => o.id === r.id) === i),
+    "staff",
+  );
 }
 
-// The weekday each of these students' classes meets, labelled with the child's name when
-// there are several children.
+// The weekday each of these students' classes meets, labelled with the children's names
+// when there are several children.
 export async function lessonDaysForStudents(
   students: { id: number; firstName: string }[],
 ): Promise<LessonDay[]> {
@@ -56,8 +106,10 @@ export async function lessonDaysForStudents(
   )
     .select({
       studentId: enrolments.studentId,
+      id: schoolSessions.id,
       dayOfWeek: schoolSessions.dayOfWeek,
       name: schoolSessions.name,
+      startTime: schoolSessions.startTime,
     })
     .from(enrolments)
     .innerJoin(classes, eq(classes.id, enrolments.classId))
@@ -71,18 +123,22 @@ export async function lessonDaysForStudents(
         eq(enrolments.status, "active"),
       ),
     );
-  const labelled = rows.map((r) => ({
-    dayOfWeek: r.dayOfWeek,
-    label:
-      students.length > 1
-        ? `${students.find((s) => s.id === r.studentId)?.firstName}: ${r.name}`
-        : `${r.name} class`,
-  }));
-  // Two children with the same first name, or two classes on one day, would otherwise
-  // repeat the same chip on every square of that weekday.
-  return labelled.filter(
-    (l, i) => labelled.findIndex((o) => o.dayOfWeek === l.dayOfWeek && o.label === l.label) === i,
-  );
+  // Siblings usually share a session: one chip per session naming whoever is in it, rather
+  // than the same day at the same time repeated once per child.
+  const names = new Map<number, string[]>();
+  for (const row of rows) {
+    const first = students.find((s) => s.id === row.studentId)?.firstName;
+    const theirs = names.get(row.id) ?? [];
+    if (first && !theirs.includes(first)) theirs.push(first);
+    names.set(row.id, theirs);
+  }
+  const unique = rows.filter((r, i) => rows.findIndex((o) => o.id === r.id) === i);
+  return hoursOf(unique, "family", (session) => {
+    const theirs = names.get(session.id) ?? [];
+    return students.length > 1 && theirs.length
+      ? `${theirs.join(" & ")}: ${session.name}`
+      : `${session.name} class`;
+  });
 }
 
 // Every day the school runs, for the office's calendar.
@@ -90,12 +146,17 @@ export async function lessonDaysForSchool(academicYearId: string): Promise<Lesso
   const rows = await (
     await db()
   )
-    .selectDistinct({ dayOfWeek: schoolSessions.dayOfWeek, name: schoolSessions.name })
+    .selectDistinct({
+      id: schoolSessions.id,
+      dayOfWeek: schoolSessions.dayOfWeek,
+      name: schoolSessions.name,
+      startTime: schoolSessions.startTime,
+    })
     .from(schoolSessions)
     .where(
       and(eq(schoolSessions.academicYearId, academicYearId), eq(schoolSessions.isActive, true)),
     );
-  return rows.map((r) => ({ dayOfWeek: r.dayOfWeek, label: `${r.name} class` }));
+  return hoursOf(rows, "staff");
 }
 
 // The sessions and classes some children belong to: which of the school's dates are theirs.
@@ -141,5 +202,6 @@ export async function scopeForTeacher(
   return {
     sessionIds: [...new Set(rows.map((r) => r.sessionId))],
     classIds: [...new Set(rows.map((r) => r.classId))],
+    staff: true,
   };
 }

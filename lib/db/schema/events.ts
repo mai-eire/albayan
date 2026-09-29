@@ -6,6 +6,8 @@ import { users } from "./auth";
 import { guardians } from "./people";
 import { students } from "./students";
 
+// Two families of entry, and the UI groups them this way: the school's own dates, which
+// nobody opts into, and the activities a family may choose. `lib/events.ts` holds the split.
 export const eventTypes = [
   "trip",
   "camp",
@@ -14,6 +16,7 @@ export const eventTypes = [
   "sports_day",
   "community",
   "parent_teacher_meeting",
+  "exam",
   "holiday",
   "closure",
   "other",
@@ -25,8 +28,10 @@ export type EventType = (typeof eventTypes)[number];
 export type EventAudience = (typeof eventAudiences)[number];
 export type ParticipantStatus = (typeof participantStatuses)[number];
 
-// Holidays and closures are events too; they only differ in type. A fee is shown, never
-// collected here (decision 2026-09-16).
+// Holidays, exams and closures are events too; they only differ in type. A fee is shown,
+// never collected here (decision 2026-09-16). `startAt`/`endAt` are a plain date
+// (YYYY-MM-DD) for an all-day entry and a date and time (YYYY-MM-DDTHH:MM) for one that
+// starts at a time — both sort and compare as text, and `lib/events.ts` reads them.
 export const events = sqliteTable(
   "events",
   {
@@ -51,7 +56,7 @@ export const events = sqliteTable(
     index("events_start").on(t.startAt),
     check(
       "events_type",
-      sql`${t.type} in ('trip', 'camp', 'summer_school', 'club', 'sports_day', 'community', 'parent_teacher_meeting', 'holiday', 'closure', 'other')`,
+      sql`${t.type} in ('trip', 'camp', 'summer_school', 'club', 'sports_day', 'community', 'parent_teacher_meeting', 'exam', 'holiday', 'closure', 'other')`,
     ),
     check(
       "events_audience",

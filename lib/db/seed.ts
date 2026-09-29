@@ -458,6 +458,86 @@ export async function seed(db: Db, auth: Auth) {
     });
   }
   await bulk(db, t.notifications, notifications);
+
+  // The school's own calendar: the dates it announces and a few things families may join,
+  // including one draft, so the office can see what a draft looks like and nobody else can.
+  // Fixed dates, never random(): a draw here would reshuffle every child after it.
+  const calendar: (Omit<typeof t.events.$inferInsert, "createdByUserId"> & {
+    targets?: number[];
+  })[] = [
+    { title: "Mid-term break", type: "holiday", startAt: "2026-10-24", endAt: "2026-11-01" },
+    {
+      title: "Closed for maintenance",
+      type: "closure",
+      startAt: "2026-10-10",
+      endAt: "2026-10-10",
+      audience: "selected_sessions",
+      targets: [1],
+    },
+    {
+      title: "Level 4 trip to the mosque",
+      type: "trip",
+      startAt: "2026-10-17T10:00",
+      endAt: "2026-10-17T13:00",
+      location: "Dublin Mosque",
+      feeCents: 1000,
+      audience: "selected_classes",
+      targets: [4],
+    },
+    {
+      title: "Parent–teacher meetings",
+      type: "parent_teacher_meeting",
+      startAt: "2026-11-21T10:00",
+      endAt: "2026-11-21T14:00",
+      location: "The school hall",
+      description: "Ten minutes with each class teacher. Times go out the week before.",
+    },
+    {
+      title: "Family bazaar",
+      type: "community",
+      startAt: "2026-11-28T11:00",
+      endAt: "2026-11-28T15:00",
+      location: "The school hall",
+    },
+    { title: "Quran assessments", type: "exam", startAt: "2026-12-12", endAt: "2026-12-13" },
+    { title: "Winter break", type: "holiday", startAt: "2026-12-21", endAt: "2027-01-08" },
+    {
+      title: "Sports day",
+      type: "sports_day",
+      startAt: "2027-05-15T10:00",
+      endAt: "2027-05-15T14:00",
+      location: "Bushy Park",
+    },
+    {
+      title: "Summer school",
+      type: "summer_school",
+      startAt: "2027-06-21",
+      endAt: "2027-06-25",
+      feeCents: 5000,
+      isPublished: false,
+    },
+  ];
+  await bulk(
+    db,
+    t.events,
+    calendar.map(({ targets: _targets, ...event }, i) => ({
+      id: i + 1,
+      isPublished: true,
+      createdByUserId: 1,
+      ...event,
+    })),
+  );
+  await bulk(
+    db,
+    t.eventTargets,
+    calendar.flatMap((event, i) =>
+      (event.targets ?? []).map((target) => ({
+        eventId: i + 1,
+        sessionId: event.audience === "selected_sessions" ? target : null,
+        classId: event.audience === "selected_classes" ? target : null,
+      })),
+    ),
+  );
   // Most families have paid in full, some half, a few nothing yet — so the fees page and
   // the dashboard tile have something to show.
   const placed = await db

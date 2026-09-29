@@ -85,6 +85,13 @@
       "when": 1790400000000,
       "tag": "0011_school_logo",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1790500000000,
+      "tag": "0012_event_exam_type",
+      "breakpoints": true
     }
   ]
 }

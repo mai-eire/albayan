@@ -12,7 +12,7 @@ Live document. Updated at the end of every work session, in the same commit as t
 | 0 — Foundation | Offline dev loop, schema v1, auth, roles, access layer, seed, CI, Cloudflare staging | ✅ Done (deploy deferred) | [PHASE-0.md](PHASE-0.md) |
 | 1 — Registration & setup | Guardian signup, applications, approvals, academics setup, timetable, staff invites | ✅ Done | [PHASE-1.md](PHASE-1.md) |
 | 2 — Daily workflows | Teacher Today, registers, homework, notes, resources, family/student views, notifications | ✅ Done | [PHASE-2.md](PHASE-2.md) |
-| 3 — Fees, events, reports | Fees & payments, events with consent, reports, audit viewer, year rollover, GDPR actions, deploy | 🔄 In progress (9/20) | [PHASE-3.md](PHASE-3.md) |
+| 3 — Fees, events, reports | Fees & payments, events with consent, reports, audit viewer, year rollover, GDPR actions, deploy | 🔄 In progress (10/20) | [PHASE-3.md](PHASE-3.md) |
 | Later | Stripe, PTM slots, Arabic/RTL, SMS, co-teachers, staff HR view, session drop-off/pick-up times | — | — |
 
 Phase scope and rationale: [PLAN.md §17](PLAN.md). Definition of done for the current phase is at the top of its checklist.
@@ -21,8 +21,8 @@ Phase scope and rationale: [PLAN.md §17](PLAN.md). Definition of done for the c
 
 Review passes by area, feedback under `docs/feedback/<area>/`: admin 2–6, teacher 1–3, family 1–2 and student 1 are all in and done. Next:
 
-1. **The school calendar** — agreed 2026-09-28 to design it before building: the office sets the year's dates (first day, last day, exams, holidays, parent–teacher meetings) and everyone's calendar shows them. Events (tasks 3–4) become **extra-curricular activities** — summer camps, bazaars, optional outings — a separate, smaller thing. Task 17 is now the head of this, not a corner of task 3. Nothing built until the shape is agreed.
-2. Salah's next review pass, whenever it comes; every area has had at least one.
+1. **The rest of events (tasks 3–4)**, now the calendar is in: telling the targeted families when an entry is published, then one-tap register and consent for an activity, and the participants list for the office. The school's own dates need none of that, which is why they went first.
+2. Salah's review pass on the calendar, and on whatever else comes next.
 3. Two open questions from the family pass: a family telling the school a child is leaving, and "apply again" after a decline (both answered in [feedback/family/2026-09-23-review-1.md](feedback/family/2026-09-23-review-1.md), neither built — the second needs a decision on whether the two applications are linked).
 4. Then task 6 (audit viewer), 7 (accounts) and 8 (data protection), none of which need a decision first.
 5. Offered, not done: seeding resources, teacher notes and student notifications, which are the three things still empty in the student area.
@@ -39,6 +39,8 @@ Review passes by area, feedback under `docs/feedback/<area>/`: admin 2–6, teac
 Newest first. Older work lives in the phase checklists and in [feedback/](feedback/).
 
 - 2026-09-28 — **Reports** (task 5): `/admin/reports` counts the children of a year eight ways — ages, sessions, boys and girls, Arabic at registration, countries of origin, languages at home, where they live, why families came — with a year picker and one CSV; ages and countries also sit on the dashboard. Counts only, and the page says so. Charts are `@mantine/charts`, their rules in DESIGN §4.13. Also **task 2**: recording a payment now tells every guardian of that child what came in and what is still to pay, in the app and by email.
+
+- 2026-09-29 — **The school calendar** (task 17, and the calendar half of task 3): `/admin/calendar` replaces the Events page — the month everyone else sees, with the year's dates and activities listed below it and one **Add entry** form covering holidays, closures, exams, parent–teacher meetings and trips alike. An entry can be for the whole school, for some days or for some classes, and stays a draft until it is published. Every area's calendar gained a **Month / Schedule** switch, the schedule being the year as a list, scoped so a Sunday family never reads about a Saturday trip. Migration 0012 added the `exam` type; the seed now has a term's worth of dates.
 
 - 2026-09-29 — The payment form puts the **outstanding balance** where the office types (bold saffron) and asks for a tick before taking more than is owed — the action refuses an unticked overpayment, as it does an unticked overfill of a class. Every row of the fees list can open the form on its own child.
 

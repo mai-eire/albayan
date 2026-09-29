@@ -278,7 +278,13 @@ event_targets     eventId, sessionId? | classId?        -- only when audience is
 event_participants id, eventId, studentId, status (registered|withdrawn),
                   consentGivenByGuardianId?, consentAt?
 ```
-Holidays and closures are events. A Saturday-only closure targets the Saturday session.
+Holidays, exams and closures are events. A Saturday-only closure targets the Saturday session.
+`startAt`/`endAt` hold a plain date (`2026-10-24`) for an all-day entry and a date and time
+(`2026-11-21T10:00`) for one that starts at a time; both sort as text, and `lib/events.ts`
+reads them. The types split into two families there: the **dates the school announces**
+(holiday, closure, exam, parent–teacher meeting, other), which nobody opts into, and the
+**activities** a family may choose (trip, camp, summer school, club, sports day, community).
+Every screen groups them that way.
 
 ### Platform
 
@@ -361,7 +367,8 @@ Field policy: country of origin (guardian and student), spoken languages and reg
 /admin/academics/classes  Classes for current year → /[id]: roster, timetable, attendance summary
 /admin/attendance         By date and session: registers submitted / missing; edit
 /admin/fees               Outstanding balances, record payment, payment history
-/admin/events             Events & calendar
+/admin/calendar           The school calendar: the month or the year as a list, with the
+                          dates and activities below it and the one place to add them
 /admin/resources          School-wide resources
 /admin/reports            Diversity & demographics: ages, sessions, boys and girls, Arabic at
                           registration, country of origin, languages, postal area, why they
@@ -426,7 +433,7 @@ Home · Timetable · Homework · Resources · Attendance · Calendar · School r
 
 ## 11. Admin UX
 
-- Sidebar: **Dashboard · Applications · Students · Guardians · Staff · Academics · Attendance · Fees · Events · Resources · Reports · Settings**. Audit log lives under Settings to keep the list at twelve.
+- Sidebar: **Dashboard · Applications · Students · Guardians · Staff · Academics · Attendance · Fees · Calendar · Resources · Reports · Settings**. Audit log lives under Settings to keep the list at twelve.
 - **Applications inbox**: applied children with age, year group, Arabic proficiency, preferred session, guardian and siblings already enrolled. Approve = confirm session/class, confirm fee (defaults to the year's standard fee, editable), generate student ID + OTP, notify guardian.
 - **Academics setup**, once a year: year → terms → subjects → sessions (with their schedule) → classes (pick session) → teachers per subject for each class. "Copy last year's structure" pre-fills sessions, schedules and classes.
 - **Schedule editor** (per session): set the start time, then an ordered list of periods — pick a subject or type a title (Break), set duration in minutes, drag to reorder. A live preview shows the computed timeline (10:00 Quran · 10:50 Arabic · 11:40 Break · 11:55 Islamic Studies). No times are typed.

@@ -15,6 +15,9 @@ export type EntityListItem = {
   // A SubjectBadge or StatusBadge on the end side.
   badge?: ReactNode;
   href?: string;
+  // Something to do with this row (a menu), after the badge. A row with an action is not
+  // itself a link: one of the two, never both.
+  action?: ReactNode;
 };
 
 // Family and student lists (§4.6): rounded rows on the ground colour, tappable.
@@ -36,6 +39,7 @@ export function EntityList({ items }: { items: EntityListItem[] }) {
             </div>
             <Group gap="xs" wrap="nowrap" className={classes.end}>
               {item.badge}
+              {item.action}
               {item.href && (
                 <DirectionalIcon
                   icon={IconChevronRight}

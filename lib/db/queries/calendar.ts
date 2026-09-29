@@ -1,7 +1,8 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, or } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { classes, enrolments, schoolSessions, teachingAssignments, terms } from "@/lib/db/schema";
 import type { CalendarTerm, LessonDay } from "@/lib/calendar";
+import type { ViewerScope } from "./events";
 
 export async function listTermsForYear(academicYearId: string): Promise<CalendarTerm[]> {
   return (await db())
@@ -82,4 +83,63 @@ export async function lessonDaysForStudents(
   return labelled.filter(
     (l, i) => labelled.findIndex((o) => o.dayOfWeek === l.dayOfWeek && o.label === l.label) === i,
   );
+}
+
+// Every day the school runs, for the office's calendar.
+export async function lessonDaysForSchool(academicYearId: string): Promise<LessonDay[]> {
+  const rows = await (
+    await db()
+  )
+    .selectDistinct({ dayOfWeek: schoolSessions.dayOfWeek, name: schoolSessions.name })
+    .from(schoolSessions)
+    .where(
+      and(eq(schoolSessions.academicYearId, academicYearId), eq(schoolSessions.isActive, true)),
+    );
+  return rows.map((r) => ({ dayOfWeek: r.dayOfWeek, label: `${r.name} class` }));
+}
+
+// The sessions and classes some children belong to: which of the school's dates are theirs.
+export async function scopeForStudents(studentIds: number[]): Promise<ViewerScope> {
+  if (!studentIds.length) return { sessionIds: [], classIds: [] };
+  const rows = await (
+    await db()
+  )
+    .select({ classId: classes.id, sessionId: classes.sessionId })
+    .from(enrolments)
+    .innerJoin(classes, eq(classes.id, enrolments.classId))
+    .where(and(inArray(enrolments.studentId, studentIds), eq(enrolments.status, "active")));
+  return {
+    sessionIds: [...new Set(rows.map((r) => r.sessionId))],
+    classIds: [...new Set(rows.map((r) => r.classId))],
+  };
+}
+
+// The classes a teacher leads or teaches in, and their sessions.
+export async function scopeForTeacher(
+  teacherId: number,
+  academicYearId: string,
+): Promise<ViewerScope> {
+  const d = await db();
+  const rows = await d
+    .selectDistinct({ classId: classes.id, sessionId: classes.sessionId })
+    .from(classes)
+    .where(
+      and(
+        eq(classes.academicYearId, academicYearId),
+        or(
+          eq(classes.classTeacherId, teacherId),
+          inArray(
+            classes.id,
+            d
+              .select({ id: teachingAssignments.classId })
+              .from(teachingAssignments)
+              .where(eq(teachingAssignments.teacherId, teacherId)),
+          ),
+        ),
+      ),
+    );
+  return {
+    sessionIds: [...new Set(rows.map((r) => r.sessionId))],
+    classIds: [...new Set(rows.map((r) => r.classId))],
+  };
 }

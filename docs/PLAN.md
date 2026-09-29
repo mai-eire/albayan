@@ -270,10 +270,11 @@ payments          id, enrolmentId, amountCents, paidOn, method (cash|bank_transf
 
 ```
 events            id, title, description?, type
-                  (trip|camp|summer_school|club|sports_day|community|parent_teacher_meeting|holiday|closure|other),
+                  (trip|camp|summer_school|club|sports_day|community|parent_teacher_meeting|
+                   staff_meeting|exam|holiday|closure|other),
                   startAt, endAt, location?, isPublished bool,
                   requiresRegistration bool, requiresConsent bool, feeCents?,
-                  audience (whole_school|selected_sessions|selected_classes), createdByUserId
+                  audience (whole_school|selected_sessions|selected_classes|staff), createdByUserId
 event_targets     eventId, sessionId? | classId?        -- only when audience is selected_*
 event_participants id, eventId, studentId, status (registered|withdrawn),
                   consentGivenByGuardianId?, consentAt?
@@ -282,9 +283,12 @@ Holidays, exams and closures are events. A Saturday-only closure targets the Sat
 `startAt`/`endAt` hold a plain date (`2026-10-24`) for an all-day entry and a date and time
 (`2026-11-21T10:00`) for one that starts at a time; both sort as text, and `lib/events.ts`
 reads them. The types split into two families there: the **dates the school announces**
-(holiday, closure, exam, parent–teacher meeting, other), which nobody opts into, and the
+(holiday, closure, exam, parent–teacher meeting, staff meeting, other), which nobody opts
+into, and the
 **activities** a family may choose (trip, camp, summer school, club, sports day, community).
-Every screen groups them that way.
+Every screen groups them that way, and each type has a colour and an icon (DESIGN §4.10).
+An entry whose audience is `staff` is the office's and the teachers' alone: it is neither
+whole-school nor targeted, so no family or student query can return it.
 
 ### Platform
 

@@ -39,7 +39,9 @@ export async function CalendarPage({
     today,
     terms,
     lessonDays,
-    events: events.flatMap((e) => datesCovered(e).map((date) => ({ date, title: e.title }))),
+    events: events.flatMap((e) =>
+      datesCovered(e).map((date) => ({ id: e.id, date, title: e.title, type: e.type })),
+    ),
   });
   return (
     <Stack gap="lg" maw={960} mx="auto">

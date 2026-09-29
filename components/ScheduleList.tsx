@@ -1,52 +1,88 @@
 "use client";
 
-import { Stack, Text } from "@mantine/core";
-import type { ReactNode } from "react";
-import { EntityList, type EntityListItem } from "@/components/EntityList";
-import { EmptyState } from "@/components/EmptyState";
+import { Group, Stack, Text, ThemeIcon, UnstyledButton } from "@mantine/core";
 import { IconCalendar } from "@tabler/icons-react";
+import type { ReactNode } from "react";
+import { EmptyState } from "@/components/EmptyState";
+import { EventIcon } from "@/components/EventIcon";
+import { EventPopover } from "@/components/EventPopover";
 import { StatusBadge } from "@/components/StatusBadge";
 import type { EventRow } from "@/lib/db/queries/events";
-import { eventTypeLabels, isUpcoming, whenLabel } from "@/lib/events";
+import { eventLook, eventTypeLabels, isStaffOnly, isUpcoming, whenLabel } from "@/lib/events";
 import { formatEuros } from "@/lib/money";
 import { formatDate } from "@/lib/time";
+import classes from "./ScheduleList.module.css";
 
 type Props = {
   events: EventRow[];
   today: string;
-  // The school's timezone. A function can't cross the server boundary, and formatting is
-  // pure, so the dates are turned into words here.
   timezone: string;
   // The office sees drafts and can act on a row; nobody else does.
   showDrafts?: boolean;
+  onEdit?: (event: EventRow) => void;
   action?: (event: EventRow) => ReactNode;
   emptyMessage?: string;
 };
 
 // The year as a list rather than a grid (§4.10): what is coming up, then what has been.
-// The same rows for the office and for a family; only the actions differ.
-export function ScheduleList({ events, today, timezone, showDrafts, action, emptyMessage }: Props) {
+// Each row wears its kind — the colour and icon of the chip it has on the month — and
+// opens the same popover.
+export function ScheduleList({
+  events,
+  today,
+  timezone,
+  showDrafts,
+  onEdit,
+  action,
+  emptyMessage,
+}: Props) {
   const upcoming = events.filter((e) => isUpcoming(e, today));
   const past = events.filter((e) => !isUpcoming(e, today)).reverse();
 
-  const item = (event: EventRow): EntityListItem => ({
-    key: event.id,
-    title: event.title,
-    detail: [
+  const row = (event: EventRow) => {
+    const detail = [
       whenLabel(event, (date) => formatDate(date, timezone)),
       eventTypeLabels[event.type],
       event.location,
-      event.targetNames.length ? event.targetNames.join(", ") : null,
+      isStaffOnly(event)
+        ? "Staff only"
+        : event.targetNames.length
+          ? event.targetNames.join(", ")
+          : null,
       event.feeCents ? formatEuros(event.feeCents) : null,
     ]
       .filter(Boolean)
-      .join(" · "),
-    badge:
-      showDrafts && !event.isPublished ? (
-        <StatusBadge domain="publication" value="draft" />
-      ) : undefined,
-    action: action?.(event),
-  });
+      .join(" · ");
+    return (
+      <div key={event.id} className={classes.row} data-color={eventLook(event.type).color}>
+        <Group justify="space-between" wrap="nowrap" gap="sm">
+          <EventPopover event={event} timezone={timezone} onEdit={onEdit}>
+            {(open) => (
+              <UnstyledButton onClick={open} className={classes.main}>
+                <Group gap="sm" wrap="nowrap">
+                  <ThemeIcon variant="light" color={eventLook(event.type).color} radius="md">
+                    <EventIcon type={event.type} size={16} />
+                  </ThemeIcon>
+                  <div className={classes.text}>
+                    <Text fw={500} truncate>
+                      {event.title}
+                    </Text>
+                    <Text size="sm" c="dimmed" truncate>
+                      {detail}
+                    </Text>
+                  </div>
+                </Group>
+              </UnstyledButton>
+            )}
+          </EventPopover>
+          <Group gap="xs" wrap="nowrap">
+            {showDrafts && !event.isPublished && <StatusBadge domain="publication" value="draft" />}
+            {action?.(event)}
+          </Group>
+        </Group>
+      </div>
+    );
+  };
 
   if (events.length === 0) {
     return (
@@ -63,7 +99,7 @@ export function ScheduleList({ events, today, timezone, showDrafts, action, empt
           <Text size="sm" c="dimmed" fw={500}>
             Coming up
           </Text>
-          <EntityList items={upcoming.map(item)} />
+          {upcoming.map(row)}
         </Stack>
       )}
       {past.length > 0 && (
@@ -71,7 +107,7 @@ export function ScheduleList({ events, today, timezone, showDrafts, action, empt
           <Text size="sm" c="dimmed" fw={500}>
             Earlier this year
           </Text>
-          <EntityList items={past.map(item)} />
+          {past.map(row)}
         </Stack>
       )}
     </Stack>

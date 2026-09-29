@@ -16,12 +16,19 @@ export const eventTypes = [
   "sports_day",
   "community",
   "parent_teacher_meeting",
+  "staff_meeting",
   "exam",
   "holiday",
   "closure",
   "other",
 ] as const;
-export const eventAudiences = ["whole_school", "selected_sessions", "selected_classes"] as const;
+export const eventAudiences = [
+  "whole_school",
+  "selected_sessions",
+  "selected_classes",
+  // Staff only: teachers and the office see it, families and students never do.
+  "staff",
+] as const;
 export const participantStatuses = ["registered", "withdrawn"] as const;
 
 export type EventType = (typeof eventTypes)[number];
@@ -56,11 +63,11 @@ export const events = sqliteTable(
     index("events_start").on(t.startAt),
     check(
       "events_type",
-      sql`${t.type} in ('trip', 'camp', 'summer_school', 'club', 'sports_day', 'community', 'parent_teacher_meeting', 'exam', 'holiday', 'closure', 'other')`,
+      sql`${t.type} in ('trip', 'camp', 'summer_school', 'club', 'sports_day', 'community', 'parent_teacher_meeting', 'staff_meeting', 'exam', 'holiday', 'closure', 'other')`,
     ),
     check(
       "events_audience",
-      sql`${t.audience} in ('whole_school', 'selected_sessions', 'selected_classes')`,
+      sql`${t.audience} in ('whole_school', 'selected_sessions', 'selected_classes', 'staff')`,
     ),
     check("events_dates", sql`${t.endAt} >= ${t.startAt}`),
     check("events_fee", sql`${t.feeCents} is null or ${t.feeCents} >= 0`),

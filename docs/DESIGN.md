@@ -225,7 +225,21 @@ A teacher's day (Today) is derived, not stored: every session running on that we
 
 `WeekTimetable` is that grid for a person's week: one column per day with lessons, each block showing time, class and room, linking to the class. Teachers get it as "My week"; the month calendar stays for term dates and events.
 
-Month calendars (`MonthCalendar`) are a seven-column grid, Monday first: term days sit on the ground colour, lesson days on the tile tint with their label, events in plum, today ringed in saffron. On phones labels collapse to dots and stay in the day's `aria-label`. An entry spanning days marks every day it covers.
+Month calendars (`MonthCalendar`) are a seven-column grid, Monday first: term days sit on the ground colour, lesson days on the tile tint with their label, today ringed in saffron.
+
+**A calendar entry is coloured by what it is, and carries its icon** (`eventLook` in `lib/events.ts`), so a month reads at a glance and never by colour alone:
+
+| Entry | Colour | Why |
+|---|---|---|
+| Holiday, closure | `clay` | the school is shut that day — the one thing a parent must not miss |
+| Exam | `saffron` | something to prepare for |
+| Parent–teacher meeting | `tile` | the school and the family meeting |
+| Staff meeting | `gray` | staff only, the same grey a staff-only slot takes in a timetable |
+| Trip, camp, summer school, club, sports day, community | `plum` | an activity a family may choose |
+
+That is five meanings, four of them the tokens' own (§2.1) plus one extension: **clay also marks "the school is closed"**, which is not a fault but is the strongest "stop" a calendar has. Subject colours are never used here — a chip's colour says what kind of day it is, never which subject. Chips are tinted blocks (the colour's light variant) with the type's Tabler icon at 12 and the title; on phones they collapse to a dot in that colour and the label stays in the day's `aria-label`.
+
+**A chip is a button.** Pressing it opens a `Popover` with what the school knows — when, where, who it is for, what it costs, and the description — and, for the office, an Edit button that opens the same form the list below uses. The popover is the only place the description appears on a calendar; a grid square has no room for it. On phones labels collapse to dots and stay in the day's `aria-label`. An entry spanning days marks every day it covers.
 
 Every calendar offers the same two views through `CalendarViews`: **Month**, the grid, and **Schedule**, the year as a list (`ScheduleList`) — what is coming up, then "Earlier this year", each row carrying the date in words, what kind of thing it is, where, who it is for and what it costs. A `SegmentedControl` switches them; the choice lives in the URL (`?view=schedule`) so a link keeps it, and both views are already in the browser, so switching never goes back to the server. The month is for "what is happening that week", the schedule for "what is coming"; neither is a filter of the other.
 

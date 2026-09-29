@@ -16,6 +16,7 @@ type Props = {
   today: string;
   timezone: string;
   showDrafts?: boolean;
+  onEdit?: (event: EventRow) => void;
   action?: (event: EventRow) => ReactNode;
   emptyMessage?: string;
   initialView?: string;
@@ -42,7 +43,17 @@ export function CalendarViews({ month, base, initialView, ...list }: Props) {
         size="xs"
         w="fit-content"
       />
-      {view === "month" ? <MonthCalendar month={month} base={base} /> : <ScheduleList {...list} />}
+      {view === "month" ? (
+        <MonthCalendar
+          month={month}
+          base={base}
+          events={list.events}
+          timezone={list.timezone}
+          onEdit={list.onEdit}
+        />
+      ) : (
+        <ScheduleList {...list} />
+      )}
     </Stack>
   );
 }

@@ -1,17 +1,33 @@
 "use client";
 
-import { ActionIcon, Group, Stack, Text, Title } from "@mantine/core";
+import { ActionIcon, Group, Stack, Text, Title, UnstyledButton } from "@mantine/core";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import Link from "next/link";
 import { DirectionalIcon } from "@/components/DirectionalIcon";
+import { EventIcon } from "@/components/EventIcon";
+import { EventPopover } from "@/components/EventPopover";
 import type { CalendarMonth } from "@/lib/calendar";
+import type { EventRow } from "@/lib/db/queries/events";
+import { eventLook } from "@/lib/events";
 import classes from "./MonthCalendar.module.css";
 
 const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
+type Props = {
+  month: CalendarMonth;
+  // The page the month arrows link to (?month=).
+  base: string;
+  // The year's entries, so a chip can open what the school knows about it.
+  events: EventRow[];
+  timezone: string;
+  onEdit?: (event: EventRow) => void;
+};
+
 // A month grid (§4.10): term days on the ground colour, lesson days carry their label,
-// today is ringed in saffron. `base` is the page the month links go to (?month=).
-export function MonthCalendar({ month, base }: { month: CalendarMonth; base: string }) {
+// today is ringed in saffron, and each entry is a chip in its own colour that opens a
+// popover.
+export function MonthCalendar({ month, base, events, timezone, onEdit }: Props) {
+  const byId = new Map(events.map((e) => [e.id, e]));
   return (
     <Stack gap="sm">
       <Group justify="space-between">
@@ -49,7 +65,7 @@ export function MonthCalendar({ month, base }: { month: CalendarMonth; base: str
             data-term={day.termName ? "" : undefined}
             data-today={day.isToday || undefined}
             data-lesson={day.lessons.length ? "" : undefined}
-            aria-label={[day.date, ...day.lessons, ...day.events].join(", ")}
+            aria-label={[day.date, ...day.lessons, ...day.events.map((e) => e.title)].join(", ")}
           >
             <span className={classes.number}>{day.dayOfMonth}</span>
             {day.lessons.map((l, i) => (
@@ -57,11 +73,25 @@ export function MonthCalendar({ month, base }: { month: CalendarMonth; base: str
                 {l}
               </span>
             ))}
-            {day.events.map((e, i) => (
-              <span key={`${e}-${i}`} className={classes.event}>
-                {e}
-              </span>
-            ))}
+            {day.events.map((entry) => {
+              const event = byId.get(entry.id);
+              if (!event) return null;
+              return (
+                <EventPopover key={entry.id} event={event} timezone={timezone} onEdit={onEdit}>
+                  {(open) => (
+                    <UnstyledButton
+                      onClick={open}
+                      className={classes.event}
+                      data-color={eventLook(event.type).color}
+                      aria-label={`${event.title} — ${entry.date}`}
+                    >
+                      <EventIcon type={event.type} size={12} />
+                      <span className={classes.eventTitle}>{event.title}</span>
+                    </UnstyledButton>
+                  )}
+                </EventPopover>
+              );
+            })}
           </div>
         ))}
       </div>

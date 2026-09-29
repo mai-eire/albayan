@@ -1,6 +1,5 @@
-import { Card, Stack, Text } from "@mantine/core";
+import { Stack } from "@mantine/core";
 import { IconCalendar } from "@tabler/icons-react";
-import { CalendarViews } from "@/components/CalendarViews";
 import { EmptyState } from "@/components/EmptyState";
 import { LinkButton } from "@/components/LinkButton";
 import { PageHeader } from "@/components/PageHeader";
@@ -12,7 +11,7 @@ import { getSchoolSettings } from "@/lib/db/queries/settings";
 import { buildMonth } from "@/lib/calendar";
 import { datesCovered } from "@/lib/events";
 import { formatHijri, todayIn } from "@/lib/time";
-import { EventsCard } from "./EventsCard";
+import { AdminCalendar } from "./AdminCalendar";
 
 export const metadata = { title: "Calendar" };
 
@@ -52,7 +51,9 @@ export default async function AdminCalendarPage({ searchParams }: Props) {
     today,
     terms,
     lessonDays,
-    events: events.flatMap((e) => datesCovered(e).map((date) => ({ date, title: e.title }))),
+    events: events.flatMap((e) =>
+      datesCovered(e).map((date) => ({ id: e.id, date, title: e.title, type: e.type })),
+    ),
   });
   return (
     <Stack gap="lg" maw={960}>
@@ -61,29 +62,15 @@ export default async function AdminCalendarPage({ searchParams }: Props) {
         eyebrow={formatHijri(new Date(), timezone)}
         subtitle={`Term dates, holidays and activities for ${year.id}`}
       />
-      <Card>
-        <CalendarViews
-          month={built}
-          base="/admin/calendar"
-          initialView={view}
-          events={events}
-          today={today}
-          timezone={timezone}
-          showDrafts
-          emptyMessage="Nothing on the calendar yet."
-        />
-        {terms.length === 0 && (
-          <Text size="sm" c="dimmed" mt="md">
-            Term dates haven&apos;t been set yet — add them under Academics.
-          </Text>
-        )}
-      </Card>
-      <EventsCard
+      <AdminCalendar
+        month={built}
         events={events}
-        sessions={sessions.map((s) => ({ id: s.id, name: s.name }))}
+        sessions={sessions.map((session) => ({ id: session.id, name: session.name }))}
         classes={classes.map((c) => ({ id: c.id, name: c.name, sessionName: c.sessionName }))}
         today={today}
         timezone={timezone}
+        view={view}
+        noTerms={terms.length === 0}
       />
     </Stack>
   );

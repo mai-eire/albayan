@@ -39,10 +39,10 @@ describe("buildMonth", () => {
       today: "2026-12-01",
       terms,
       lessonDays,
-      events: [{ date: "2026-12-19", title: "Last day of term" }],
+      events: [{ id: 1, date: "2026-12-19", title: "Last day of term", type: "holiday" }],
     });
     expect(month.weeks.flat().find((d) => d.date === "2026-12-19")?.events).toEqual([
-      "Last day of term",
+      { id: 1, date: "2026-12-19", title: "Last day of term", type: "holiday" },
     ]);
     expect(month.next).toBe("2027-01");
   });

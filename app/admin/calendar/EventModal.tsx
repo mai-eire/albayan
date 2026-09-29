@@ -36,7 +36,7 @@ type Props = {
 const typeOptions = [
   {
     group: "School dates",
-    items: ["holiday", "closure", "exam", "parent_teacher_meeting", "other"],
+    items: ["holiday", "closure", "exam", "parent_teacher_meeting", "staff_meeting", "other"],
   },
   {
     group: "Activities",
@@ -51,6 +51,7 @@ const audienceOptions: { value: EventAudience; label: string }[] = [
   { value: "whole_school", label: "The whole school" },
   { value: "selected_sessions", label: "Some days" },
   { value: "selected_classes", label: "Some classes" },
+  { value: "staff", label: "Staff only" },
 ];
 
 export function EventModal({ opened, onClose, existing, sessions, classes, today }: Props) {
@@ -129,6 +130,11 @@ export function EventModal({ opened, onClose, existing, sessions, classes, today
               allowDeselect={false}
               withAsterisk
               {...form.getInputProps("type")}
+              onChange={(value) => {
+                form.setFieldValue("type", (value ?? "holiday") as never);
+                // A staff meeting is staff-only unless the office says otherwise.
+                if (value === "staff_meeting") form.setFieldValue("audience", "staff");
+              }}
             />
           </Group>
           <Group grow align="flex-start">

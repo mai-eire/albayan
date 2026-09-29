@@ -500,6 +500,22 @@ export async function seed(db: Db, auth: Auth) {
       location: "The school hall",
     },
     { title: "Quran assessments", type: "exam", startAt: "2026-12-12", endAt: "2026-12-13" },
+    {
+      title: "Staff meeting",
+      type: "staff_meeting",
+      startAt: "2026-10-03T09:00",
+      endAt: "2026-10-03T09:45",
+      location: "The staff room",
+      audience: "staff",
+      description: "Registers, the term's homework plan, and the trip rota.",
+    },
+    {
+      title: "Staff training day",
+      type: "staff_meeting",
+      startAt: "2026-11-07",
+      endAt: "2026-11-07",
+      audience: "staff",
+    },
     { title: "Winter break", type: "holiday", startAt: "2026-12-21", endAt: "2027-01-08" },
     {
       title: "Sports day",

@@ -79,6 +79,16 @@ beforeAll(async () => {
       createdByUserId: 1,
     },
     {
+      id: 6,
+      title: "Staff meeting",
+      type: "staff_meeting",
+      startAt: "2026-10-03T09:00",
+      endAt: "2026-10-03T09:45",
+      audience: "staff",
+      isPublished: true,
+      createdByUserId: 1,
+    },
+    {
       id: 5,
       title: "Last year's outing",
       type: "trip",
@@ -111,9 +121,10 @@ describe("listEventsForViewer", () => {
     expect(titles(sunday)).toEqual(["Mid-term break", "Level 1 Sunday trip"]);
   });
 
-  it("never shows a draft, and never last year's", async () => {
+  it("never shows a draft, a staff meeting, or last year's", async () => {
     const rows = await listEventsForViewer(year, { sessionIds: [1, 2], classIds: [1, 2] });
     expect(titles(rows)).not.toContain("Summer school");
+    expect(titles(rows)).not.toContain("Staff meeting");
     expect(titles(rows)).not.toContain("Last year's outing");
   });
 
@@ -128,6 +139,7 @@ describe("listEventsForAdmin", () => {
   it("shows the year's entries including drafts, and leaves other years out", async () => {
     const rows = await listEventsForAdmin(year);
     expect(rows.map((r) => r.title)).toEqual([
+      "Staff meeting",
       "Saturday closed",
       "Mid-term break",
       "Level 1 Sunday trip",

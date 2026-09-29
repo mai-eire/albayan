@@ -10,6 +10,7 @@ export const schoolDateTypes = [
   "closure",
   "exam",
   "parent_teacher_meeting",
+  "staff_meeting",
   "other",
 ] as const satisfies readonly EventType[];
 
@@ -22,6 +23,7 @@ export const eventTypeLabels: Record<EventType, string> = {
   closure: "Closure",
   exam: "Exam",
   parent_teacher_meeting: "Parent–teacher meeting",
+  staff_meeting: "Staff meeting",
   other: "Other",
   trip: "Trip",
   camp: "Camp",
@@ -30,6 +32,30 @@ export const eventTypeLabels: Record<EventType, string> = {
   sports_day: "Sports day",
   community: "Community event",
 };
+
+// What an entry looks like on a calendar (DESIGN §4.10): a colour for the kind of day it
+// is and an icon, so it reads at a glance and never by colour alone. Subject colours are
+// never used here — a chip says what kind of day it is, not which subject.
+export type EventLook = { color: "clay" | "saffron" | "tile" | "gray" | "plum"; icon: string };
+
+export function eventLook(type: EventType): EventLook {
+  switch (type) {
+    case "holiday":
+      return { color: "clay", icon: "holiday" };
+    case "closure":
+      return { color: "clay", icon: "closure" };
+    case "exam":
+      return { color: "saffron", icon: "exam" };
+    case "parent_teacher_meeting":
+      return { color: "tile", icon: "meeting" };
+    case "staff_meeting":
+      return { color: "gray", icon: "staff" };
+    case "other":
+      return { color: "gray", icon: "other" };
+    default:
+      return { color: "plum", icon: type };
+  }
+}
 
 // A date on its own is an all-day entry; a date and time is one that starts at a time.
 // Both sort as text, so the database can order by the column either way.
@@ -75,4 +101,9 @@ export function whenLabel(event: Spanning, formatDate: (date: string) => string)
   const time = timeOf(event.startAt);
   if (from === to) return time ? `${formatDate(from)} · ${time}` : formatDate(from);
   return `${formatDate(from)} – ${formatDate(to)}`;
+}
+
+// Staff see it, families and students never do.
+export function isStaffOnly(event: { audience: string }): boolean {
+  return event.audience === "staff";
 }

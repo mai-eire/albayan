@@ -3,7 +3,9 @@
 
 export type CalendarTerm = { name: string; startDate: string; endDate: string };
 export type LessonDay = { dayOfWeek: number; label: string };
-export type CalendarEvent = { date: string; title: string };
+// What a day carries from the school calendar. The row itself lives in the page's state;
+// the grid only needs enough to draw the chip and open its popover.
+export type CalendarEvent = { id: number; date: string; title: string; type: string };
 
 export type CalendarDay = {
   date: string;
@@ -13,7 +15,7 @@ export type CalendarDay = {
   termName: string | null;
   // Lesson labels that fall on this day and inside a term ("Saturday class").
   lessons: string[];
-  events: string[];
+  events: CalendarEvent[];
 };
 
 export type CalendarMonth = {
@@ -74,7 +76,7 @@ export function buildMonth(input: {
         lessons: term
           ? input.lessonDays.filter((l) => l.dayOfWeek === cursor.getUTCDay()).map((l) => l.label)
           : [],
-        events: (input.events ?? []).filter((e) => e.date === date).map((e) => e.title),
+        events: (input.events ?? []).filter((e) => e.date === date),
       });
       cursor.setUTCDate(cursor.getUTCDate() + 1);
     }

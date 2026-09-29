@@ -1,6 +1,6 @@
 // https://developers.cloudflare.com/workers/wrangler/configuration/
 // Top level = production; "staging" is a separate Worker with its own D1 and R2.
-// database_ids are placeholders until the resources exist (Phase 0 task 14).
+// Both D1 databases live in WEUR: the school and its families are in Ireland.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "albayan",
@@ -17,11 +17,12 @@
     {
       "binding": "DB",
       "database_name": "albayan",
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "99f52e83-0957-45f4-8ab9-c40e7a75e880",
       "migrations_dir": "drizzle",
     },
   ],
-  "r2_buckets": [{ "binding": "BUCKET", "bucket_name": "albayan-files" }],
+  // EU jurisdiction, like the databases: the files are children's work and a school logo.
+  "r2_buckets": [{ "binding": "BUCKET", "bucket_name": "albayan-files", "jurisdiction": "eu" }],
   "vars": {
     "EMAIL_TRANSPORT": "resend",
     "EMAIL_FROM": "Al-Bayan <noreply@example.com>",
@@ -39,11 +40,13 @@
         {
           "binding": "DB",
           "database_name": "albayan-staging",
-          "database_id": "00000000-0000-0000-0000-000000000001",
+          "database_id": "141866ba-5473-4fec-8d9b-0100a2575ac5",
           "migrations_dir": "drizzle",
         },
       ],
-      "r2_buckets": [{ "binding": "BUCKET", "bucket_name": "albayan-files-staging" }],
+      "r2_buckets": [
+        { "binding": "BUCKET", "bucket_name": "albayan-files-staging", "jurisdiction": "eu" },
+      ],
       "vars": {
         "EMAIL_TRANSPORT": "resend",
         "EMAIL_FROM": "Al-Bayan staging <noreply@example.com>",

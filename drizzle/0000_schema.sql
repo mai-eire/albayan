@@ -42,6 +42,7 @@ CREATE TABLE `users` (
 	`is_admin` integer DEFAULT false NOT NULL,
 	`status` text DEFAULT 'active' NOT NULL,
 	`must_change_password` integer DEFAULT false NOT NULL,
+	`email_notifications` integer DEFAULT true NOT NULL,
 	`last_login_at` text,
 	`created_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')) NOT NULL,
 	`updated_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')) NOT NULL,
@@ -63,6 +64,7 @@ CREATE INDEX `verifications_identifier` ON `verifications` (`identifier`);--> st
 CREATE TABLE `guardians` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`user_id` integer NOT NULL,
+	`gender` text,
 	`address_line1` text,
 	`address_line2` text,
 	`city` text,
@@ -72,7 +74,7 @@ CREATE TABLE `guardians` (
 	`emergency_contact_phone` text,
 	`emergency_contact_relationship` text,
 	`spoken_languages` text DEFAULT '[]' NOT NULL,
-	`ethnicity` text,
+	`country_of_origin` text,
 	`registration_reasons` text DEFAULT '[]' NOT NULL,
 	`registration_reason_other` text,
 	`created_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')) NOT NULL,
@@ -87,6 +89,7 @@ CREATE TABLE `teachers` (
 	`user_id` integer NOT NULL,
 	`title` text,
 	`is_active` integer DEFAULT true NOT NULL,
+	`deactivated_at` text,
 	`created_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')) NOT NULL,
 	`updated_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')) NOT NULL,
 	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action
@@ -140,6 +143,7 @@ CREATE TABLE `session_periods` (
 	`subject_id` text,
 	`title` text,
 	`duration_minutes` integer NOT NULL,
+	`staff_only` integer DEFAULT false NOT NULL,
 	`created_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')) NOT NULL,
 	`updated_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')) NOT NULL,
 	FOREIGN KEY (`session_id`) REFERENCES `school_sessions`(`id`) ON UPDATE no action ON DELETE cascade,
@@ -224,7 +228,8 @@ CREATE TABLE `students` (
 	`last_name` text NOT NULL,
 	`gender` text NOT NULL,
 	`date_of_birth` text NOT NULL,
-	`ethnicity` text,
+	`country_of_origin` text,
+	`is_homeschooled` integer DEFAULT false NOT NULL,
 	`school_year_group` text,
 	`arabic_proficiency` text DEFAULT 'none' NOT NULL,
 	`email` text,
@@ -232,17 +237,21 @@ CREATE TABLE `students` (
 	`allergies` text,
 	`medical_notes` text,
 	`status` text DEFAULT 'applied' NOT NULL,
+	`application_year_id` text,
 	`preferred_session_id` integer,
-	`preferred_class_id` integer,
+	`preferred_class_name` text,
 	`application_notes` text,
+	`offer_note` text,
+	`declined_reason` text,
 	`applied_at` text NOT NULL,
 	`approved_at` text,
+	`declined_at` text,
 	`created_by_guardian_id` integer NOT NULL,
 	`created_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')) NOT NULL,
 	`updated_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')) NOT NULL,
 	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`application_year_id`) REFERENCES `academic_years`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`preferred_session_id`) REFERENCES `school_sessions`(`id`) ON UPDATE no action ON DELETE no action,
-	FOREIGN KEY (`preferred_class_id`) REFERENCES `classes`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`created_by_guardian_id`) REFERENCES `guardians`(`id`) ON UPDATE no action ON DELETE no action,
 	CONSTRAINT "students_gender" CHECK("students"."gender" in ('male', 'female')),
 	CONSTRAINT "students_arabic" CHECK("students"."arabic_proficiency" in ('none', 'beginner', 'intermediate', 'advanced', 'native')),
@@ -252,6 +261,7 @@ CREATE TABLE `students` (
 CREATE UNIQUE INDEX `students_studentId_unique` ON `students` (`student_id`);--> statement-breakpoint
 CREATE UNIQUE INDEX `students_userId_unique` ON `students` (`user_id`);--> statement-breakpoint
 CREATE INDEX `students_status` ON `students` (`status`);--> statement-breakpoint
+CREATE INDEX `students_application_year` ON `students` (`application_year_id`);--> statement-breakpoint
 CREATE TABLE `audit_log` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`actor_user_id` integer,
@@ -272,10 +282,14 @@ CREATE TABLE `notifications` (
 	`title` text NOT NULL,
 	`body` text,
 	`href` text,
+	`subject_id` text,
+	`student_id` integer,
 	`read_at` text,
 	`created_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')) NOT NULL,
 	`updated_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')) NOT NULL,
-	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE cascade
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE cascade,
+	FOREIGN KEY (`subject_id`) REFERENCES `subjects`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`student_id`) REFERENCES `students`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
 CREATE INDEX `notifications_user` ON `notifications` (`user_id`,`read_at`);--> statement-breakpoint
@@ -288,6 +302,167 @@ CREATE TABLE `school_settings` (
 	`bank_iban` text,
 	`bank_bic` text,
 	`absence_emails` integer DEFAULT false NOT NULL,
+	`logo_key` text,
+	`rules` text,
 	`created_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')) NOT NULL,
 	`updated_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')) NOT NULL
 );
+--> statement-breakpoint
+CREATE TABLE `attendance` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`student_id` integer NOT NULL,
+	`class_id` integer NOT NULL,
+	`date` text NOT NULL,
+	`status` text DEFAULT 'present' NOT NULL,
+	`note` text,
+	`recorded_by_user_id` integer NOT NULL,
+	`created_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')) NOT NULL,
+	`updated_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')) NOT NULL,
+	FOREIGN KEY (`student_id`) REFERENCES `students`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`class_id`) REFERENCES `classes`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`recorded_by_user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action,
+	CONSTRAINT "attendance_status" CHECK("attendance"."status" in ('present', 'absent', 'late', 'excused'))
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX `attendance_student_date` ON `attendance` (`student_id`,`date`);--> statement-breakpoint
+CREATE INDEX `attendance_class_date` ON `attendance` (`class_id`,`date`);--> statement-breakpoint
+CREATE TABLE `homework` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`class_id` integer NOT NULL,
+	`subject_id` text NOT NULL,
+	`title` text NOT NULL,
+	`description` text,
+	`due_date` text NOT NULL,
+	`created_by_user_id` integer NOT NULL,
+	`published_at` text,
+	`created_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')) NOT NULL,
+	`updated_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')) NOT NULL,
+	FOREIGN KEY (`class_id`) REFERENCES `classes`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`subject_id`) REFERENCES `subjects`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`created_by_user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE INDEX `homework_class_due` ON `homework` (`class_id`,`due_date`);--> statement-breakpoint
+CREATE TABLE `resources` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`title` text NOT NULL,
+	`description` text,
+	`kind` text NOT NULL,
+	`storage_key` text,
+	`mime_type` text,
+	`size_bytes` integer,
+	`url` text,
+	`uploaded_by_user_id` integer NOT NULL,
+	`audience` text DEFAULT 'students_and_guardians' NOT NULL,
+	`is_school_wide` integer DEFAULT false NOT NULL,
+	`class_id` integer,
+	`subject_id` text,
+	`homework_id` integer,
+	`student_id` integer,
+	`created_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')) NOT NULL,
+	`updated_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')) NOT NULL,
+	FOREIGN KEY (`uploaded_by_user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`class_id`) REFERENCES `classes`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`subject_id`) REFERENCES `subjects`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`homework_id`) REFERENCES `homework`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`student_id`) REFERENCES `students`(`id`) ON UPDATE no action ON DELETE no action,
+	CONSTRAINT "resources_kind" CHECK("resources"."kind" in ('file', 'link')),
+	CONSTRAINT "resources_audience" CHECK("resources"."audience" in ('students_and_guardians', 'guardians_only', 'staff_only')),
+	CONSTRAINT "resources_kind_fields" CHECK(("resources"."kind" = 'file' and "resources"."storage_key" is not null and "resources"."url" is null) or ("resources"."kind" = 'link' and "resources"."url" is not null and "resources"."storage_key" is null)),
+	CONSTRAINT "resources_one_target" CHECK(("resources"."is_school_wide") + ("resources"."class_id" is not null) + ("resources"."homework_id" is not null) + ("resources"."student_id" is not null) = 1 and ("resources"."subject_id" is null or "resources"."class_id" is not null))
+);
+--> statement-breakpoint
+CREATE INDEX `resources_class` ON `resources` (`class_id`);--> statement-breakpoint
+CREATE INDEX `resources_homework` ON `resources` (`homework_id`);--> statement-breakpoint
+CREATE INDEX `resources_student` ON `resources` (`student_id`);--> statement-breakpoint
+CREATE TABLE `student_notes` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`student_id` integer NOT NULL,
+	`author_user_id` integer NOT NULL,
+	`body` text NOT NULL,
+	`category` text DEFAULT 'general' NOT NULL,
+	`visibility` text DEFAULT 'staff' NOT NULL,
+	`deleted_at` text,
+	`created_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')) NOT NULL,
+	`updated_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')) NOT NULL,
+	FOREIGN KEY (`student_id`) REFERENCES `students`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`author_user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action,
+	CONSTRAINT "student_notes_category" CHECK("student_notes"."category" in ('general', 'praise', 'concern', 'behaviour')),
+	CONSTRAINT "student_notes_visibility" CHECK("student_notes"."visibility" in ('staff', 'guardians', 'guardians_and_student'))
+);
+--> statement-breakpoint
+CREATE INDEX `student_notes_student` ON `student_notes` (`student_id`);--> statement-breakpoint
+CREATE TABLE `payments` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`enrolment_id` integer NOT NULL,
+	`amount_cents` integer NOT NULL,
+	`paid_on` text NOT NULL,
+	`method` text NOT NULL,
+	`reference` text,
+	`paid_by_guardian_id` integer,
+	`recorded_by_user_id` integer NOT NULL,
+	`provider_ref` text,
+	`note` text,
+	`created_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')) NOT NULL,
+	`updated_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')) NOT NULL,
+	FOREIGN KEY (`enrolment_id`) REFERENCES `enrolments`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`paid_by_guardian_id`) REFERENCES `guardians`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`recorded_by_user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action,
+	CONSTRAINT "payments_amount" CHECK("payments"."amount_cents" > 0),
+	CONSTRAINT "payments_method" CHECK("payments"."method" in ('cash', 'bank_transfer', 'card'))
+);
+--> statement-breakpoint
+CREATE INDEX `payments_enrolment` ON `payments` (`enrolment_id`);--> statement-breakpoint
+CREATE INDEX `payments_guardian` ON `payments` (`paid_by_guardian_id`);--> statement-breakpoint
+CREATE TABLE `event_participants` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`event_id` integer NOT NULL,
+	`student_id` integer NOT NULL,
+	`status` text DEFAULT 'registered' NOT NULL,
+	`consent_given_by_guardian_id` integer,
+	`consent_at` text,
+	`created_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')) NOT NULL,
+	`updated_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')) NOT NULL,
+	FOREIGN KEY (`event_id`) REFERENCES `events`(`id`) ON UPDATE no action ON DELETE cascade,
+	FOREIGN KEY (`student_id`) REFERENCES `students`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`consent_given_by_guardian_id`) REFERENCES `guardians`(`id`) ON UPDATE no action ON DELETE no action,
+	CONSTRAINT "event_participants_status" CHECK("event_participants"."status" in ('registered', 'withdrawn'))
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX `event_participants_one` ON `event_participants` (`event_id`,`student_id`);--> statement-breakpoint
+CREATE TABLE `event_targets` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`event_id` integer NOT NULL,
+	`session_id` integer,
+	`class_id` integer,
+	FOREIGN KEY (`event_id`) REFERENCES `events`(`id`) ON UPDATE no action ON DELETE cascade,
+	FOREIGN KEY (`session_id`) REFERENCES `school_sessions`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`class_id`) REFERENCES `classes`(`id`) ON UPDATE no action ON DELETE no action,
+	CONSTRAINT "event_targets_one" CHECK(("event_targets"."session_id" is not null) + ("event_targets"."class_id" is not null) = 1)
+);
+--> statement-breakpoint
+CREATE INDEX `event_targets_event` ON `event_targets` (`event_id`);--> statement-breakpoint
+CREATE TABLE `events` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`title` text NOT NULL,
+	`description` text,
+	`type` text NOT NULL,
+	`start_at` text NOT NULL,
+	`end_at` text NOT NULL,
+	`location` text,
+	`is_published` integer DEFAULT false NOT NULL,
+	`requires_registration` integer DEFAULT false NOT NULL,
+	`requires_consent` integer DEFAULT false NOT NULL,
+	`fee_cents` integer,
+	`audience` text DEFAULT 'whole_school' NOT NULL,
+	`created_by_user_id` integer NOT NULL,
+	`created_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')) NOT NULL,
+	`updated_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')) NOT NULL,
+	FOREIGN KEY (`created_by_user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action,
+	CONSTRAINT "events_type" CHECK("events"."type" in ('trip', 'camp', 'summer_school', 'club', 'sports_day', 'community', 'parent_teacher_meeting', 'staff_meeting', 'exam', 'holiday', 'closure', 'other')),
+	CONSTRAINT "events_audience" CHECK("events"."audience" in ('whole_school', 'selected_sessions', 'selected_classes', 'staff')),
+	CONSTRAINT "events_dates" CHECK("events"."end_at" >= "events"."start_at"),
+	CONSTRAINT "events_fee" CHECK("events"."fee_cents" is null or "events"."fee_cents" >= 0)
+);
+--> statement-breakpoint
+CREATE INDEX `events_start` ON `events` (`start_at`);

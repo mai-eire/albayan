@@ -24,38 +24,50 @@ export function fileTransport(dir = ".dev/mail"): Transport {
   };
 }
 
-// Production. Resend's API is one POST; no SDK needed.
-export function resendTransport(apiKey: string, from: string): Transport {
+// EMAIL_FROM is written the way a mail client shows it, "Al-Bayan <noreply@mai.ie>".
+// Brevo wants the two halves apart.
+export function parseSender(from: string): { name?: string; email: string } {
+  const match = from.match(/^\s*(.*?)\s*<([^>]+)>\s*$/);
+  return match ? { name: match[1] || undefined, email: match[2] } : { email: from.trim() };
+}
+
+// Production. Brevo's transactional API is one POST; no SDK needed.
+export function brevoTransport(apiKey: string, from: string): Transport {
+  const sender = parseSender(from);
   return {
     async send(email) {
-      const response = await fetch("https://api.resend.com/emails", {
+      const response = await fetch("https://api.brevo.com/v3/smtp/email", {
         method: "POST",
-        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        headers: {
+          "api-key": apiKey,
+          "content-type": "application/json",
+          accept: "application/json",
+        },
         body: JSON.stringify({
-          from,
-          to: email.to,
+          sender,
+          to: [{ email: email.to }],
           subject: email.subject,
-          html: email.html,
-          text: email.text,
+          htmlContent: email.html,
+          textContent: email.text,
         }),
       });
       if (!response.ok) {
-        throw new Error(`Resend rejected the email (${response.status}): ${await response.text()}`);
+        throw new Error(`Brevo rejected the email (${response.status}): ${await response.text()}`);
       }
     },
   };
 }
 
-// EMAIL_TRANSPORT=resend needs RESEND_API_KEY and EMAIL_FROM; anything else writes files
+// EMAIL_TRANSPORT=brevo needs BREVO_API_KEY and EMAIL_FROM; anything else writes files
 // (to EMAIL_DIR, default .dev/mail).
 type EmailEnv = Record<string, string | undefined>;
 
 export function transportFromEnv(env: EmailEnv = process.env): Transport {
-  if (env.EMAIL_TRANSPORT === "resend") {
-    if (!env.RESEND_API_KEY || !env.EMAIL_FROM) {
-      throw new Error("EMAIL_TRANSPORT=resend requires RESEND_API_KEY and EMAIL_FROM");
+  if (env.EMAIL_TRANSPORT === "brevo") {
+    if (!env.BREVO_API_KEY || !env.EMAIL_FROM) {
+      throw new Error("EMAIL_TRANSPORT=brevo requires BREVO_API_KEY and EMAIL_FROM");
     }
-    return resendTransport(env.RESEND_API_KEY, env.EMAIL_FROM);
+    return brevoTransport(env.BREVO_API_KEY, env.EMAIL_FROM);
   }
   return fileTransport(env.EMAIL_DIR);
 }

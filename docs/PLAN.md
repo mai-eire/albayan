@@ -44,7 +44,7 @@ Guiding principle: **build the simplest system that makes the school's common wo
 | UI | **Mantine 9** (`@mantine/core`, `@mantine/dates`, `@mantine/hooks`) + Tabler icons | Chosen after a three-way prototype (Mantine / MUI / Tailwind+shadcn, see git history `4b6f3f8`). Broadest coverage with the least code — dates, forms, tables, modals, notifications, timeline all built in; colourful and rounded by default; first-class RTL via `DirectionProvider` for the Arabic phase; no Tailwind. |
 | Charts | **`@mantine/charts`** (Recharts underneath; admin reports only) | Same theme tokens as the rest of the UI. |
 | Validation | **Zod** | Shared between forms and server actions. |
-| Email | **Resend** | Cloudflare does not send transactional email (Email Workers only receive/route), so one external email provider is unavoidable. |
+| Email | **Brevo** | Cloudflare does not send transactional email (Email Workers only receive/route), so one external email provider is unavoidable. |
 | Files | **Cloudflare R2** via the Worker binding | Private bucket. Uploads and downloads stream through the Worker (no presigned URLs), so the same code runs against the local emulator. |
 | Scheduled jobs | Cloudflare Cron Triggers (only if a need appears, e.g. homework-due reminders) | |
 | Testing | Vitest (+ `@cloudflare/vitest-pool-workers` for D1 integration tests), Playwright | |
@@ -64,7 +64,7 @@ Fallback if D1 ever bites: Postgres on Neon reached through Cloudflare Hyperdriv
 
 ### Why not Netlify
 
-Netlify hosts Next.js well but provides neither a database nor object storage, so it would mean Netlify + Neon + R2 + Resend. Cloudflare covers hosting, DB and files in one account.
+Netlify hosts Next.js well but provides neither a database nor object storage, so it would mean Netlify + Neon + R2 + Brevo. Cloudflare covers hosting, DB and files in one account.
 
 ### Framework fallback
 
@@ -82,7 +82,7 @@ Everything visual — tokens, layout, component rules, patterns per role, copy �
 
 ## 2. High-level architecture
 
-One Next.js app running as a Cloudflare Worker, bound to one D1 database and one R2 bucket, calling Resend for email. No queues, no microservices, no event bus.
+One Next.js app running as a Cloudflare Worker, bound to one D1 database and one R2 bucket, calling Brevo for email. No queues, no microservices, no event bus.
 
 ```
 Browser ──► Cloudflare Worker (Next.js via OpenNext)
@@ -94,12 +94,12 @@ Browser ──► Cloudflare Worker (Next.js via OpenNext)
               ├── server actions    all writes (Zod → access check → write → audit → notify)
               ├── lib/access.ts     the entire authorisation layer
               ├── lib/db            Drizzle schema + per-viewer query functions
-              ├── lib/email         Resend + React Email templates
+              ├── lib/email         Brevo + React Email templates
               └── lib/storage       R2 presigned URLs
                      │
         ┌────────────┼────────────┐
         ▼            ▼            ▼
-       D1           R2         Resend
+       D1           R2         Brevo
 ```
 
 Structural rules:
@@ -118,7 +118,7 @@ Structural rules:
 |---|---|---|
 | Database | D1 | **SQLite file** on disk — D1's local mode *is* SQLite (`.wrangler/state/v3/d1/*.sqlite`), provided in-process by Miniflare through OpenNext's dev bindings. Same Drizzle code, same migrations (`wrangler d1 migrations apply --local`). Inspect with any SQLite tool. |
 | Files | R2 bucket | Miniflare's local R2 emulation, stored under `.wrangler/state/`. Same binding API, same code. |
-| Email | Resend | `EMAIL_TRANSPORT=file`: each email is written to `.dev/mail/<timestamp>-<subject>.html` and logged to the console (link included for password resets/invites). No mail server. |
+| Email | Brevo | `EMAIL_TRANSPORT=file`: each email is written to `.dev/mail/<timestamp>-<subject>.html` and logged to the console (link included for password resets/invites). No mail server. |
 | Auth | Better Auth | Same, it's a library. |
 | Cron | Cloudflare Cron Trigger | `wrangler dev --test-scheduled` or a `pnpm cron:run` script; only relevant if a cron ever exists. |
 | Seed data | — | `pnpm db:seed` fills the local SQLite with the demo school (§15). |
@@ -465,13 +465,13 @@ The suggested top-level set is a good *admin* IA but wrong for the other roles. 
 
 ## 13. Notifications
 
-- `notifications` rows + Resend emails, created by a `notify()` helper inside the causing server action, dispatched with `waitUntil`.
+- `notifications` rows + Brevo emails, created by a `notify()` helper inside the causing server action, dispatched with `waitUntil`.
 - v1 triggers: application approved/declined; new homework; new family-visible note; new resource; event published / registration confirmed; payment recorded; absence marked (per-school toggle); staff invite; student OTP issued.
 - A notification may record **what it is about** — a subject and a child — and the row then shows the subject's badge and the child's first name, so a parent of three knows which one it concerns. Those are the only two things a notification is ever about; there is no generic entity reference.
 - A recorded payment tells **every guardian of that child** what came in and what is left ("€100 received for Amira" · "Cash on Saturday 3 October. Still to pay: €50."), linking to that child's fees. A correction or a deletion does not: the family was told what the office received, and a second message about the same money would confuse more than it corrects.
 - The bell opens a popover with the unread ones and the two actions anyone wants there (mark all as read, see them all); the full list is `/{area}/notifications`.
 - One per-user "email me about updates" toggle. No digests/push/SMS.
-- Email goes through `lib/email/transport.ts` with two implementations: `resend` (production) and `file` (dev/test, writes HTML to `.dev/mail/`). Templates are React Email components rendered to HTML in both cases, so what you see locally is what gets sent.
+- Email goes through `lib/email/transport.ts` with two implementations: `brevo` (production) and `file` (dev/test, writes HTML to `.dev/mail/`). Templates are React Email components rendered to HTML in both cases, so what you see locally is what gets sent.
 
 ## 14. Audit / history
 
@@ -489,7 +489,7 @@ The suggested top-level set is a good *admin* IA but wrong for the other roles. 
 
 ## 16. Deployment
 
-- **Cloudflare Workers** (OpenNext) + **D1** + **R2** + Resend. Custom domain via Cloudflare DNS; WAF rate limiting on `/login`, `/register`, `/forgot-*`.
+- **Cloudflare Workers** (OpenNext) + **D1** + **R2** + Brevo. Custom domain via Cloudflare DNS; WAF rate limiting on `/login`, `/register`, `/forgot-*`.
 - Environments: `production` and `staging` as two Worker environments with their own D1/R2 bindings (`wrangler.toml` `[env.staging]`). Preview per PR is optional (Workers Builds supports it).
 - CI (GitHub Actions): lint, typecheck, unit + integration tests → `wrangler d1 migrations apply` → `opennextjs-cloudflare deploy`. Migrations always backward-compatible with the running build.
 - Backups: D1 Time Travel (30-day point-in-time restore) plus a weekly `wrangler d1 export` to R2 via a cron job. R2 versioning on.

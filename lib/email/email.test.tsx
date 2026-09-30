@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { sendEmail } from "./send";
 import { ActionButton, Base, FallbackLink, Paragraph } from "./templates/Base";
-import { fileTransport, transportFromEnv } from "./transport";
+import { brevoTransport, fileTransport, parseSender, transportFromEnv } from "./transport";
 
 const dir = mkdtempSync(join(tmpdir(), "albayan-mail-"));
 afterEach(() => rmSync(dir, { recursive: true, force: true }));
@@ -61,8 +61,60 @@ describe("email", () => {
     expect(await render(null)).not.toContain("<img");
   });
 
-  it("defaults to the file transport and refuses a half-configured resend", () => {
+  it("defaults to the file transport and refuses a half-configured brevo", () => {
     expect(transportFromEnv({})).toBeDefined();
-    expect(() => transportFromEnv({ EMAIL_TRANSPORT: "resend" })).toThrow(/RESEND_API_KEY/);
+    expect(() => transportFromEnv({ EMAIL_TRANSPORT: "brevo" })).toThrow(/BREVO_API_KEY/);
+    expect(() => transportFromEnv({ EMAIL_TRANSPORT: "brevo", BREVO_API_KEY: "k" })).toThrow(
+      /EMAIL_FROM/,
+    );
+  });
+
+  // EMAIL_FROM is one string the way a mail client shows it; Brevo wants the halves apart.
+  it("splits the sender into a name and an address", () => {
+    expect(parseSender("Al-Bayan <noreply@mai.ie>")).toEqual({
+      name: "Al-Bayan",
+      email: "noreply@mai.ie",
+    });
+    expect(parseSender("noreply@mai.ie")).toEqual({ email: "noreply@mai.ie" });
+    expect(parseSender("<noreply@mai.ie>")).toEqual({ email: "noreply@mai.ie" });
+  });
+
+  it("posts the email to Brevo in the shape it asks for", async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response("{}", { status: 201 }));
+    await brevoTransport("secret-key", "Al-Bayan <noreply@mai.ie>").send({
+      to: "parent@example.com",
+      subject: "Your payment",
+      html: "<p>Thanks</p>",
+      text: "Thanks",
+    });
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe("https://api.brevo.com/v3/smtp/email");
+    expect((init!.headers as Record<string, string>)["api-key"]).toBe("secret-key");
+    expect(JSON.parse(init!.body as string)).toEqual({
+      sender: { name: "Al-Bayan", email: "noreply@mai.ie" },
+      to: [{ email: "parent@example.com" }],
+      subject: "Your payment",
+      htmlContent: "<p>Thanks</p>",
+      textContent: "Thanks",
+    });
+    fetchMock.mockRestore();
+  });
+
+  // A silent failure would lose an invite or a password reset with nothing to show for it.
+  it("throws with what Brevo said when it refuses", async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response('{"message":"sender not verified"}', { status: 400 }));
+    await expect(
+      brevoTransport("k", "noreply@mai.ie").send({
+        to: "parent@example.com",
+        subject: "Hi",
+        html: "<p>Hi</p>",
+        text: "Hi",
+      }),
+    ).rejects.toThrow(/400.*sender not verified/s);
+    fetchMock.mockRestore();
   });
 });

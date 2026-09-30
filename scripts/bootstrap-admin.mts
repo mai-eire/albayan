@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { parseArgs } from "node:util";
 import { eq } from "drizzle-orm";
 import { getPlatformProxy } from "wrangler";
@@ -8,7 +9,12 @@ import { temporaryPassword } from "@/lib/passwords";
 
 // pnpm bootstrap-admin --email amina@example.com --name "Amina Khan" [--password …]
 // Creates the first admin on the local database, or promotes an existing user. Idempotent.
-// For staging/production run it with --remote after `wrangler login` (task 14).
+//
+// pnpm bootstrap-admin --email amina@example.com --remote [--env staging]
+// Promotes someone who has already registered on the deployed site. It cannot create an
+// account: making one means hashing a password the way Better Auth does, and a script that
+// copies that by hand goes quietly wrong the day Better Auth changes it. Registering through
+// the site uses the same code path the school will, which is the point of a first deploy.
 
 const { values } = parseArgs({
   options: {
@@ -16,18 +22,60 @@ const { values } = parseArgs({
     name: { type: "string" },
     password: { type: "string" },
     remote: { type: "boolean", default: false },
+    env: { type: "string" },
   },
 });
 
-if (!values.email || !values.name) {
+if (!values.email || (!values.remote && !values.name)) {
   console.error(
-    'Usage: pnpm bootstrap-admin --email <email> --name "<name>" [--password <password>]',
+    'Usage: pnpm bootstrap-admin --email <email> --name "<name>" [--password <password>]\n' +
+      "       pnpm bootstrap-admin --email <email> --remote [--env staging]",
   );
   process.exit(1);
 }
+
+// SQLite string literals escape only the quote, and `wrangler d1 execute` takes no bound
+// parameters, so this is the whole of it.
+function sqlText(value: string): string {
+  return `'${value.replaceAll("'", "''")}'`;
+}
+
+function d1(sql: string): Array<Record<string, unknown>> {
+  const args = ["exec", "wrangler", "d1", "execute", "DB"];
+  if (values.env) args.push("--env", values.env);
+  args.push("--remote", "-y", "--json", "--command", sql);
+  let out: string;
+  try {
+    out = execFileSync("pnpm", args, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+  } catch (error) {
+    const { stderr, stdout } = error as { stderr?: string; stdout?: string };
+    console.error(stderr?.trim() || stdout?.trim() || String(error));
+    process.exit(1);
+  }
+  // Wrangler prints its banner before the JSON.
+  const parsed = JSON.parse(out.slice(out.indexOf("[")));
+  return parsed[0]?.results ?? [];
+}
+
 if (values.remote) {
-  console.error("--remote is not wired up until the Cloudflare resources exist (Phase 0 task 14).");
-  process.exit(1);
+  const where = `where email = ${sqlText(values.email)}`;
+  const [found] = d1(`select id, is_admin from users ${where}`);
+  if (!found) {
+    console.error(
+      `No account for ${values.email} on the ${values.env ?? "production"} database.\n` +
+        "Register on the deployed site first, then run this again to make that account an admin.",
+    );
+    process.exit(1);
+  }
+  if (found.is_admin) {
+    console.log(`${values.email} is already an admin.`);
+  } else {
+    // Verified too: on a first deploy the email provider is usually not configured yet, and
+    // an admin who cannot receive the verification link cannot verify themselves.
+    d1(`update users set is_admin = 1, email_verified = 1 ${where}`);
+    console.log(`${values.email} is now an admin on ${values.env ?? "production"}.`);
+  }
+  process.exit(0);
 }
 
 process.env.BETTER_AUTH_URL ??= "http://localhost:3000";
@@ -50,7 +98,7 @@ if (existing) {
   const generated = !values.password;
   const password = values.password ?? temporaryPassword();
   const { user } = await auth.api.signUpEmail({
-    body: { email: values.email, name: values.name, password },
+    body: { email: values.email, name: values.name!, password },
   });
   await db
     .update(users)

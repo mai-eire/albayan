@@ -18,6 +18,8 @@
     "verify": "pnpm check && pnpm test && pnpm test:e2e",
     "db:generate": "drizzle-kit generate",
     "db:migrate:local": "wrangler d1 migrations apply albayan --local",
+    "db:migrate:staging": "wrangler d1 migrations apply DB --env staging --remote",
+    "db:migrate:production": "wrangler d1 migrations apply DB --remote",
     "db:seed": "tsx scripts/seed.mts",
     "bootstrap-admin": "tsx scripts/bootstrap-admin.mts",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",

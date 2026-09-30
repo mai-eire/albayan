@@ -8,7 +8,6 @@
   "compatibility_date": "2026-09-15",
   "compatibility_flags": ["global_fetch_strictly_public"],
   "assets": { "binding": "ASSETS", "directory": ".open-next/assets" },
-  "images": { "binding": "IMAGES" },
   "services": [
     // Self-reference used by OpenNext's cache layer; the service name must match "name".
     { "binding": "WORKER_SELF_REFERENCE", "service": "albayan" },
@@ -24,12 +23,12 @@
   // EU jurisdiction, like the databases: the files are children's work and a school logo.
   "r2_buckets": [{ "binding": "BUCKET", "bucket_name": "albayan-files", "jurisdiction": "eu" }],
   "vars": {
-    "EMAIL_TRANSPORT": "resend",
+    "EMAIL_TRANSPORT": "brevo",
     "EMAIL_FROM": "Al-Bayan <noreply@example.com>",
     "BETTER_AUTH_URL": "https://albayan.example.com",
   },
   // Secrets, set with `wrangler secret put <NAME> [--env staging]`:
-  //   BETTER_AUTH_SECRET  RESEND_API_KEY
+  //   BETTER_AUTH_SECRET  BREVO_API_KEY
   "observability": { "enabled": true },
   "upload_source_maps": true,
   "env": {
@@ -48,7 +47,7 @@
         { "binding": "BUCKET", "bucket_name": "albayan-files-staging", "jurisdiction": "eu" },
       ],
       "vars": {
-        "EMAIL_TRANSPORT": "resend",
+        "EMAIL_TRANSPORT": "brevo",
         "EMAIL_FROM": "Al-Bayan staging <noreply@example.com>",
         "BETTER_AUTH_URL": "https://albayan-staging.<account>.workers.dev",
       },

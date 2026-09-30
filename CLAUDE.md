@@ -27,7 +27,7 @@ Guiding principle: **build the simplest system that makes the school's common wo
 
 ## Stack
 
-Next.js 16 App Router on Cloudflare Workers via `@opennextjs/cloudflare` · Drizzle + D1 · Better Auth · Mantine 9 (+ `@mantine/dates`, `@mantine/charts`, Tabler icons) · Zod · Resend (prod) · Vitest + Playwright · pnpm. No Tailwind.
+Next.js 16 App Router on Cloudflare Workers via `@opennextjs/cloudflare` · Drizzle + D1 · Better Auth · Mantine 9 (+ `@mantine/dates`, `@mantine/charts`, Tabler icons) · Zod · Brevo (prod email) · Vitest + Playwright · pnpm. No Tailwind.
 
 ## Commands
 

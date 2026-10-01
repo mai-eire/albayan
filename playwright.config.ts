@@ -9,10 +9,15 @@ export default defineConfig({
   timeout: 30_000,
   // Everything here runs against `next dev`, which compiles a route the first time it is
   // asked for, and against server actions that notify a whole class. 5s is a production
-  // default; these waits are for a development server on a busy laptop.
-  expect: { timeout: 15_000 },
+  // default; these waits are for a development server on a busy laptop — and a CI runner
+  // has two cores, where the first sign-in pays for compiling the page it lands on.
+  expect: { timeout: process.env.CI ? 30_000 : 15_000 },
   // One shared dev server and one local D1: parallel specs made requests hang under load.
   workers: 1,
+  // Not for concurrency — `workers: 1` still runs one test at a time. Without this every
+  // file is one indivisible unit for `--shard`, and pages.spec.ts holds 98 of 107 tests,
+  // so three shards split 101/0/6. Per-test grouping makes it 48/37/22.
+  fullyParallel: true,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? "github" : "list",
   use: {

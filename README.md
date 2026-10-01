@@ -65,10 +65,23 @@ That marks the account verified as well, so a first deploy works before email do
 
 ### Subsequent deploys
 
-**Staging deploys itself.** Pushing to `main` runs `ci.yml` (`pnpm check`, `pnpm test`,
-`pnpm test:e2e`); only if all three pass does `deploy-staging.yml` migrate the staging
-database, deploy the Worker and fetch `/login` to prove it boots. Needs two repository
-secrets, `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
+**Staging deploys itself.** Pushing to `main` runs `ci.yml`, which is one job graph:
+
+```
+check ──┬── e2e (3 shards)
+        └── staging
+```
+
+`check` is lint, typecheck, format and the unit and integration tests — about two minutes.
+Staging waits for that and *not* for e2e, so a push is live in roughly four: the staging
+database is migrated, the Worker deployed, and `/login` fetched to prove it boots. e2e runs
+beside it in three shards and is what gates production. Needs two repository secrets,
+`CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
+
+The trade is that staging can briefly run a commit whose e2e later failed. It holds fake
+data and is not the school's site; four minutes to a working URL is worth more than the
+guarantee. Production gets the opposite treatment — nothing reaches it without e2e green
+and a person clicking.
 
 **Production is released by hand** — `deploy-production.yml`, run from the Actions tab on a
 ref you pick. It is not chained to staging: a release is a decision, and `BETTER_AUTH_URL`

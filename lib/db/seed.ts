@@ -536,7 +536,7 @@ export async function seed(db: Db, auth: Auth) {
   await bulk(
     db,
     t.events,
-    calendar.map(({ targets: _targets, ...event }, i) => ({
+    calendar.map(({ targets, ...event }, i) => ({
       id: i + 1,
       isPublished: true,
       createdByUserId: 1,

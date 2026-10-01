@@ -2,7 +2,7 @@
 
 Live document. Updated at the end of every work session, in the same commit as the work. Keep it under ~50 lines; detail belongs in the phase checklists.
 
-**Last updated:** 2026-09-29 · **Current phase:** 3 — Fees, events, reports, hardening (in progress)
+**Last updated:** 2026-10-01 · **Current phase:** 3 — Fees, events, reports, hardening (in progress)
 
 ## Phases
 
@@ -30,13 +30,15 @@ Review passes by area, feedback under `docs/feedback/<area>/`: admin 2–6, teac
 ## Blocked / undecided
 
 - **Per-class timetables (task 16)** — needs a longer discussion (agreed 2026-09-19); the proposal and questions are in [PHASE-3.md](PHASE-3.md).
-- **Deploy deferred by decision (2026-09-16)**, now Phase 3 task 11 — when ready: `wrangler login`, create D1/R2 (prod + staging), set `BETTER_AUTH_SECRET`/`RESEND_API_KEY`, fill in database ids, first staging deploy; GitHub secrets `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID`; Resend sending domain.
+- **Production deploy (task 11)** — staging is live; production needs a hostname (a custom domain, unlike staging's `workers.dev`), its own two secrets, and the GitHub secrets `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID` before pushing is a deploy trigger.
 - School timezone: defaulted to `Europe/Dublin` in Settings (editable) — confirm with the school, no longer blocking.
 - Eircode confirmed as the postal code format? — affects the postal-area report only.
 
 ## Recently done
 
 Newest first. Older work lives in the phase checklists and in [feedback/](feedback/).
+
+- 2026-10-01 — **Staging is deployed and reachable**: <https://albayan-staging.sweet-wave-5485.workers.dev>. Both secrets are set on the staging Worker, `BETTER_AUTH_URL` and `EMAIL_FROM` point at the real origin and `noreply@mai.ie`, and the Brevo sending domain was already verified, so email works — proved with one send. Sign-in and registration load against an empty database. What is left of task 11 is production and the GitHub secrets.
 
 - 2026-09-29 — **Deploy groundwork** (task 11): the Cloudflare resources exist — D1 `albayan` and `albayan-staging` in WEUR, R2 `albayan-files` and `albayan-files-staging` in the EU jurisdiction, because the rows and the files are Irish children's records. Their ids are in `wrangler.jsonc`. The **fourteen migrations were collapsed into a single `0000_schema.sql`** while both remote databases were still empty, which is the last moment that is safe; it retired the two hand-written CHECK-constraint rebuilds and fixed a drift where `notifications.student_id` never got the `ON DELETE cascade` its schema declares. The staging database has its tables. Email moved to **Brevo**, which Salah already uses. `bootstrap-admin --remote` promotes an account that registered on the site, `pnpm db:migrate:staging` and `:production` create the tables, and the README carries the runbook and the backup story. Still to do before a first deploy: the hostname, and the two secrets per environment.
 

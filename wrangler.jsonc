@@ -48,8 +48,8 @@
       ],
       "vars": {
         "EMAIL_TRANSPORT": "brevo",
-        "EMAIL_FROM": "Al-Bayan staging <noreply@example.com>",
-        "BETTER_AUTH_URL": "https://albayan-staging.<account>.workers.dev",
+        "EMAIL_FROM": "Al-Bayan staging <noreply@mai.ie>",
+        "BETTER_AUTH_URL": "https://albayan-staging.sweet-wave-5485.workers.dev",
       },
     },
   },

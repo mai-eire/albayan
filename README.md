@@ -20,6 +20,7 @@ production.
 | | Production | Staging |
 |---|---|---|
 | Worker | `albayan` | `albayan-staging` |
+| URL | not deployed yet | https://albayan-staging.sweet-wave-5485.workers.dev |
 | Database | `albayan` (WEUR) | `albayan-staging` (WEUR) |
 | Files | `albayan-files` (EU) | `albayan-files-staging` (EU) |
 
@@ -47,8 +48,11 @@ in every email are built from it.
 
 ```
 pnpm db:migrate:staging                  # create the tables (or db:migrate:production)
-pnpm deploy                              # add -- --env staging for staging
+pnpm run deploy -- --env staging         # drop the --env for production
 ```
+
+`pnpm run deploy`, not `pnpm deploy`: `deploy` is one of pnpm's own commands, and the bare
+form tries to publish a workspace package instead of running the script.
 
 Then create the first admin. The script cannot create an account remotely — it promotes one
 that already exists, because hashing a password the way Better Auth does is its business,
@@ -67,7 +71,7 @@ staging, and then wait for an approval on the `production` GitHub environment be
 the same to production. Needs repository secrets `CLOUDFLARE_API_TOKEN` and
 `CLOUDFLARE_ACCOUNT_ID`, and both environments configured with a reviewer on production.
 
-To deploy by hand instead: `pnpm deploy`.
+To deploy by hand instead: `pnpm run deploy`.
 
 ### Backups
 

@@ -24,8 +24,12 @@ const bricolage = Bricolage_Grotesque({
   variable: "--font-bricolage",
 });
 
+// Nothing here is static: every page shows the school's own name and logo, which live in
+// the database. Saying so keeps the database out of the build — Next otherwise prerenders
+// its built-in /_not-found through this layout, where there is no request and no binding.
+export const dynamic = "force-dynamic";
+
 // The tab carries the school: their own name and, once they upload one, their own logo.
-// Every route here needs a signed-in user already, so reading settings costs nothing.
 export async function generateMetadata(): Promise<Metadata> {
   const { name, logoKey } = await getSchoolSettings();
   return {

@@ -314,10 +314,10 @@ export async function seed(db: Db, auth: Auth) {
   await bulk(db, t.schoolSettings, [
     {
       id: 1,
-      name: "Al-Bayan Weekend School",
+      name: "Al-Bayan School",
       timezone: "Europe/Dublin",
       studentIdPrefix: "ALB",
-      bankAccountName: "Al-Bayan Weekend School",
+      bankAccountName: "Al-Bayan School",
       bankIban: "IE29AIBK93115212345678",
       bankBic: "AIBKIE2D",
     },

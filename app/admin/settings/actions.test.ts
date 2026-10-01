@@ -50,7 +50,7 @@ const teacher: CurrentUser = {
 };
 
 const valid = {
-  name: "Al-Bayan Weekend School",
+  name: "Al-Bayan School",
   timezone: "Europe/Dublin",
   studentIdPrefix: "alb",
   bankAccountName: "",
@@ -109,7 +109,7 @@ describe("updateSchoolSettings", () => {
       actorUserId: 1,
       action: "school_settings.update",
       entityId: "1",
-      changes: { name: ["Al-Bayan Weekend School", "Al-Bayan"] },
+      changes: { name: ["Al-Bayan School", "Al-Bayan"] },
     });
   });
 });

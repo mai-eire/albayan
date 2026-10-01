@@ -1,0 +1,39 @@
+name: Deploy production
+
+# By hand, from the Actions tab, on a ref you choose. Not chained to CI or to staging:
+# until the school is live there is nothing to release on a schedule, and when it is
+# live a release is a decision. Configure a required reviewer on the "production"
+# environment before the first one.
+on:
+  workflow_dispatch:
+
+concurrency: deploy-production
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: corepack enable
+      - uses: actions/cache@v4
+        with:
+          path: ~/.local/share/pnpm/store
+          key: pnpm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - run: pnpm install --frozen-lockfile
+      # Fail before the migration rather than after it: a Worker deployed on a
+      # placeholder origin issues cookies and emails nobody can use.
+      - name: Check production has a real origin
+        run: |
+          if grep -q 'albayan.example.com' wrangler.jsonc; then
+            echo "::error::BETTER_AUTH_URL is still a placeholder. Set the real domain in wrangler.jsonc first."
+            exit 1
+          fi
+      - run: pnpm db:migrate:production
+      - run: pnpm run deploy

@@ -30,13 +30,15 @@ Review passes by area, feedback under `docs/feedback/<area>/`: admin 2–6, teac
 ## Blocked / undecided
 
 - **Per-class timetables (task 16)** — needs a longer discussion (agreed 2026-09-19); the proposal and questions are in [PHASE-3.md](PHASE-3.md).
-- **Production deploy (task 11)** — staging is live; production needs a hostname (a custom domain, unlike staging's `workers.dev`), its own two secrets, and the GitHub secrets `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID` before pushing is a deploy trigger.
+- **Production deploy (task 11)** — staging is live and deploys itself. Production needs a hostname (a custom domain, unlike staging's `workers.dev`), the real `BETTER_AUTH_URL` and `EMAIL_FROM` in `wrangler.jsonc`, its own two secrets, and a required reviewer on the `production` GitHub environment. **Staging CD is waiting on one thing:** the repository secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`, which only Salah can add.
 - School timezone: defaulted to `Europe/Dublin` in Settings (editable) — confirm with the school, no longer blocking.
 - Eircode confirmed as the postal code format? — affects the postal-area report only.
 
 ## Recently done
 
 Newest first. Older work lives in the phase checklists and in [feedback/](feedback/).
+
+- 2026-10-01 — **Staging deploys on every push, and carries the demo school.** The seed was moved onto the staging database (109 users, 60 students, 8 classes) by exporting the local one and importing it in foreign-key order — `wrangler d1 execute --file` splits a file across transactions, so the alphabetical export put `accounts` before `users` and the first import rolled back. `deploy.yml` became `deploy-staging.yml` (push to `main` + CI green → migrate, deploy, `curl /login`) and `deploy-production.yml` (by hand, from the Actions tab, refusing to run while production's `BETTER_AUTH_URL` is a placeholder). One branch rather than a `staging`/`prod` pair — reasoning in [PHASE-3.md](PHASE-3.md). Nothing deploys until the two Cloudflare repository secrets exist.
 
 - 2026-10-01 — **Staging is deployed and reachable**: <https://albayan-staging.sweet-wave-5485.workers.dev>. Both secrets are set on the staging Worker, `BETTER_AUTH_URL` and `EMAIL_FROM` point at the real origin and `noreply@mai.ie`, and the Brevo sending domain was already verified, so email works — proved with one send. Sign-in and registration load against an empty database. What is left of task 11 is production and the GitHub secrets.
 

@@ -65,13 +65,18 @@ That marks the account verified as well, so a first deploy works before email do
 
 ### Subsequent deploys
 
-Pushing to `main` is the deploy trigger. `.github/workflows/ci.yml` runs `pnpm check`,
-`pnpm test` and `pnpm test:e2e`; only if all three pass does `deploy.yml` migrate and deploy
-staging, and then wait for an approval on the `production` GitHub environment before doing
-the same to production. Needs repository secrets `CLOUDFLARE_API_TOKEN` and
-`CLOUDFLARE_ACCOUNT_ID`, and both environments configured with a reviewer on production.
+**Staging deploys itself.** Pushing to `main` runs `ci.yml` (`pnpm check`, `pnpm test`,
+`pnpm test:e2e`); only if all three pass does `deploy-staging.yml` migrate the staging
+database, deploy the Worker and fetch `/login` to prove it boots. Needs two repository
+secrets, `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
 
-To deploy by hand instead: `pnpm run deploy`.
+**Production is released by hand** — `deploy-production.yml`, run from the Actions tab on a
+ref you pick. It is not chained to staging: a release is a decision, and `BETTER_AUTH_URL`
+is baked into every sign-in cookie and every link in every email, so deploying the wrong
+origin is not a no-op. The workflow refuses to run while that var is still a placeholder.
+Add a required reviewer on the `production` GitHub environment before the first release.
+
+To deploy either by hand from a laptop: `pnpm run deploy [-- --env staging]`.
 
 ### Backups
 

@@ -1,9 +1,9 @@
-import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { username } from "better-auth/plugins";
-import { dbFor, type Db } from "@/lib/db";
+import { bindings } from "@/lib/cloudflare";
+import { db, type Db } from "@/lib/db";
 import * as schema from "@/lib/db/schema";
 import { appOrigin } from "@/lib/app-url";
 import { sendPasswordReset, sendVerifyEmail } from "@/lib/email";
@@ -61,19 +61,23 @@ export function createAuth(db: Db, { schoolName, baseURL }: Options) {
 export type Auth = ReturnType<typeof createAuth>;
 export type SessionUser = Auth["$Infer"]["Session"]["user"];
 
-const instances = new WeakMap<D1Database, Auth>();
+const instances = new WeakMap<object, Auth>();
+
+// Stands in as the cache key when there is no binding to key on (Netlify).
+const overHttp = {};
 
 // One instance per D1 binding (one per Worker isolate in production, one in dev).
 export async function auth(): Promise<Auth> {
-  const { env } = await getCloudflareContext({ async: true });
-  let instance = instances.get(env.DB);
+  const env = await bindings();
+  const key = env?.DB ?? overHttp;
+  let instance = instances.get(key);
   if (!instance) {
-    instance = createAuth(dbFor(env.DB), {
+    instance = createAuth(await db(), {
       baseURL: await appOrigin(),
       schoolName: async () =>
         (await import("@/lib/db/queries/settings")).getSchoolSettings().then((s) => s.name),
     });
-    instances.set(env.DB, instance);
+    instances.set(key, instance);
   }
   return instance;
 }

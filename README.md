@@ -91,6 +91,83 @@ Add a required reviewer on the `production` GitHub environment before the first 
 
 To deploy either by hand from a laptop: `pnpm run deploy [-- --env staging]`.
 
+### Netlify, while the domain moves
+
+A Worker can only answer on a domain whose nameservers point at Cloudflare. Until that move
+happens, Netlify serves the same app on the domain against the **staging** database and
+bucket — not production, which holds nothing yet anyway.
+
+There are no bindings off Workers, so D1 is reached over its REST `/raw` endpoint through
+`drizzle-orm/sqlite-proxy` and R2 over its S3 API with `aws4fetch`. `lib/cloudflare.ts` is
+the only place that chooses. The Worker path is unchanged.
+
+**This is a demo on the real domain, not a launch.** Every query is an API round trip, the
+Cloudflare API allows roughly 1,200 requests per five minutes for the whole account, and one
+page render here costs ten to twelve queries. A handful of people clicking is fine; a
+registration evening is not.
+
+Build command `pnpm build`, publish `.next`, via `@netlify/plugin-nextjs` (`netlify.toml`).
+
+Secret, scoped to Functions:
+
+```
+CLOUDFLARE_D1_TOKEN        # custom API token, Account → D1 → Edit, nothing else
+R2_ACCESS_KEY_ID           # an R2 API token, created for the EU jurisdiction
+R2_SECRET_ACCESS_KEY
+BETTER_AUTH_SECRET         # a NEW one; Wrangler secrets do not reach Netlify
+BREVO_API_KEY
+```
+
+Plain variables — **not** secret, because Netlify's secrets scanning trips on values that
+also appear in the repo, and the database id is in `wrangler.jsonc`:
+
+```
+CLOUDFLARE_ACCOUNT_ID=2d41aea86e9936a72e29accd2bd05be2
+CLOUDFLARE_DATABASE_ID=141866ba-5473-4fec-8d9b-0100a2575ac5   # albayan-staging
+R2_BUCKET=albayan-files-staging
+EMAIL_TRANSPORT=brevo
+EMAIL_FROM=Al-Bayan staging <noreply@mai.ie>
+```
+
+Every one of these must be set **on the site**, with its scope including Functions. Values
+in `netlify.toml` are build-only and never reach the function runtime; neither do variables
+scoped to Builds. Netlify's own `NETLIFY=true` is reserved — it cannot be set by hand — and
+is build-only as well, so it is no use as a signal. Of Netlify's automatic variables only
+`URL`, `SITE_NAME` and `SITE_ID` are readable at runtime, and `SITE_ID` is what the app uses
+to notice it is not on a Worker. Nothing has to be set to switch the transport on.
+`DATA_TRANSPORT=http` forces it, for a host that is not Netlify.
+
+Netlify rejects a bulk paste that contains a reserved name, so a block beginning
+`NETLIFY=true` saves **nothing at all**. If the site 500s, read the message: a missing
+variable now names itself.
+
+`BETTER_AUTH_URL` is deliberately **not** set here while the domain is unsettled. Without it
+`appOrigin` derives the origin from the request instead (`lib/app-url.ts`), which is correct
+on Netlify but comes from the `Host` header — so a request carrying a forged host would put
+that host into a password-reset or invite link. Acceptable for a staging stand-in whose demo
+accounts all use the password `password`; set it before any real family has an account.
+
+Netlify applies variables on the *next* deploy, so redeploy after adding them.
+
+Nothing local can reach the token — dev, `vitest` and the e2e server always use bindings —
+because `getCloudflareContext({ async: true })` does not fail without a Worker *locally*: it
+falls back to wrangler and returns a real, local miniflare database. A deployment that
+inferred its environment from that call succeeding would come up showing a school with no
+students and silently lose every write. In a deployed function the same call fails instead,
+with `ERR_MODULE_NOT_FOUND: wrangler`, because wrangler is not in the bundle — which says
+nothing about the real mistake, so `lib/cloudflare.ts` replaces it with one that does.
+To prove the HTTP path locally, build and run it with the real values:
+
+```
+DATA_TRANSPORT=http NODE_ENV=production CLOUDFLARE_D1_TOKEN=… pnpm exec next start
+```
+
+**Removing it**, once DNS is on Cloudflare: delete `netlify.toml`, `lib/db/http.ts`, the
+`s3Store` half of `lib/storage/bucket.ts` and the choice in `lib/cloudflare.ts`, drop
+`aws4fetch` and `@netlify/plugin-nextjs`, then revoke both tokens. `D1:Edit` cannot be
+scoped to one database, so that token can write every database in the account — it should
+not outlive the stand-in.
+
 ### Backups
 
 D1 keeps **30 days of history automatically** (Time Travel). Nothing to set up, and it is

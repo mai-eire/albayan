@@ -1,0 +1,12 @@
+# Netlify stands in for the domain while DNS moves to Cloudflare; see docs/PHASE-3.md.
+# The Worker remains the real target, so this file adds a second build of the same app and
+# changes nothing about the first.
+[build]
+  command = "pnpm build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"

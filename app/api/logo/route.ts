@@ -27,6 +27,9 @@ export async function GET(request: Request) {
       etag: file.etag,
       // The URL carries the key, so a new logo is a new URL; this only caches the old one.
       "cache-control": "public, max-age=300",
+      // Netlify's CDN ignores the query string unless told which parts of it matter, and
+      // would serve one cached logo for every ?v= — exactly what the version defeats.
+      "netlify-vary": "query=v",
       "content-security-policy": guard,
       "x-content-type-options": "nosniff",
     },

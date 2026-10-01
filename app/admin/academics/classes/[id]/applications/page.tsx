@@ -1,6 +1,7 @@
 import {
   Card,
   Table,
+  TableScrollContainer,
   TableTbody,
   TableTd,
   TableTh,
@@ -70,46 +71,48 @@ export default async function ClassApplicationsPage({ params }: Props) {
           Nobody is waiting for {cls.name}.
         </Text>
       ) : (
-        <Table>
-          <TableThead>
-            <TableTr>
-              <TableTh>Child</TableTh>
-              <TableTh ta="end">Age</TableTh>
-              <TableTh>Guardian</TableTh>
-              <TableTh>Applied</TableTh>
-              <TableTh />
-            </TableTr>
-          </TableThead>
-          <TableTbody>
-            {applications.map((a) => (
-              <TableTr key={a.id}>
-                <TableTd>
-                  <AppLink href={`/admin/students/${a.id}`} fw={500}>
-                    {a.firstName} {a.lastName}
-                  </AppLink>
-                </TableTd>
-                <TableTd ta="end">{ageOn(a.dateOfBirth, today)}</TableTd>
-                <TableTd>{a.guardianName}</TableTd>
-                <TableTd>
-                  <DateText date={a.appliedAt} />
-                </TableTd>
-                <TableTd ta="end">
-                  {full.find((f) => f.id === a.id) && (
-                    <OfferPlaceButton
-                      application={full.find((f) => f.id === a.id)!}
-                      classes={choices}
-                      family={families.get(a.id) ?? []}
-                      standardFeeCents={year?.standardFeeCents ?? 0}
-                      today={today}
-                      size="xs"
-                      variant="light"
-                    />
-                  )}
-                </TableTd>
+        <TableScrollContainer minWidth={0} type="native">
+          <Table>
+            <TableThead>
+              <TableTr>
+                <TableTh>Child</TableTh>
+                <TableTh ta="end">Age</TableTh>
+                <TableTh>Guardian</TableTh>
+                <TableTh>Applied</TableTh>
+                <TableTh />
               </TableTr>
-            ))}
-          </TableTbody>
-        </Table>
+            </TableThead>
+            <TableTbody>
+              {applications.map((a) => (
+                <TableTr key={a.id}>
+                  <TableTd>
+                    <AppLink href={`/admin/students/${a.id}`} fw={500}>
+                      {a.firstName} {a.lastName}
+                    </AppLink>
+                  </TableTd>
+                  <TableTd ta="end">{ageOn(a.dateOfBirth, today)}</TableTd>
+                  <TableTd>{a.guardianName}</TableTd>
+                  <TableTd>
+                    <DateText date={a.appliedAt} />
+                  </TableTd>
+                  <TableTd ta="end">
+                    {full.find((f) => f.id === a.id) && (
+                      <OfferPlaceButton
+                        application={full.find((f) => f.id === a.id)!}
+                        classes={choices}
+                        family={families.get(a.id) ?? []}
+                        standardFeeCents={year?.standardFeeCents ?? 0}
+                        today={today}
+                        size="xs"
+                        variant="light"
+                      />
+                    )}
+                  </TableTd>
+                </TableTr>
+              ))}
+            </TableTbody>
+          </Table>
+        </TableScrollContainer>
       )}
     </Card>
   );

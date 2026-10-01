@@ -1,4 +1,13 @@
-import { Table, TableTbody, TableTd, TableTh, TableThead, TableTr, Text } from "@mantine/core";
+import {
+  Table,
+  TableScrollContainer,
+  TableTbody,
+  TableTd,
+  TableTh,
+  TableThead,
+  TableTr,
+  Text,
+} from "@mantine/core";
 import { MoneyText } from "@/components/MoneyText";
 import { Nothing } from "@/components/Nothing";
 import type { PaymentRow } from "@/lib/db/queries/fees";
@@ -18,36 +27,38 @@ export function PaymentHistory({
   timezone: string;
 }) {
   return (
-    <Table>
-      <TableThead>
-        <TableTr>
-          <TableTh>Paid on</TableTh>
-          {showChild && <TableTh>Child</TableTh>}
-          <TableTh ta="end">Amount</TableTh>
-          <TableTh>How</TableTh>
-          <TableTh>Reference</TableTh>
-        </TableTr>
-      </TableThead>
-      <TableTbody>
-        {payments.map((p) => (
-          <TableTr key={p.id}>
-            <TableTd>{formatDate(p.paidOn, timezone, true)}</TableTd>
-            {showChild && <TableTd>{p.studentName}</TableTd>}
-            <TableTd ta="end">
-              <MoneyText cents={p.amountCents} fw={500} />
-            </TableTd>
-            <TableTd>{methodLabels[p.method]}</TableTd>
-            <TableTd>
-              {p.reference ?? <Nothing>none</Nothing>}
-              {p.note && (
-                <Text size="sm" c="dimmed">
-                  {p.note}
-                </Text>
-              )}
-            </TableTd>
+    <TableScrollContainer minWidth={0} type="native">
+      <Table>
+        <TableThead>
+          <TableTr>
+            <TableTh>Paid on</TableTh>
+            {showChild && <TableTh>Child</TableTh>}
+            <TableTh ta="end">Amount</TableTh>
+            <TableTh>How</TableTh>
+            <TableTh>Reference</TableTh>
           </TableTr>
-        ))}
-      </TableTbody>
-    </Table>
+        </TableThead>
+        <TableTbody>
+          {payments.map((p) => (
+            <TableTr key={p.id}>
+              <TableTd>{formatDate(p.paidOn, timezone, true)}</TableTd>
+              {showChild && <TableTd>{p.studentName}</TableTd>}
+              <TableTd ta="end">
+                <MoneyText cents={p.amountCents} fw={500} />
+              </TableTd>
+              <TableTd>{methodLabels[p.method]}</TableTd>
+              <TableTd>
+                {p.reference ?? <Nothing>none</Nothing>}
+                {p.note && (
+                  <Text size="sm" c="dimmed">
+                    {p.note}
+                  </Text>
+                )}
+              </TableTd>
+            </TableTr>
+          ))}
+        </TableTbody>
+      </Table>
+    </TableScrollContainer>
   );
 }

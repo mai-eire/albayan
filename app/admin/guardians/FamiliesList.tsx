@@ -19,6 +19,7 @@ import {
   type ClassOption,
   type FamilyRow,
 } from "./filters";
+import { FilterBar } from "@/components/FilterBar";
 
 type Key = "family" | "children";
 
@@ -44,7 +45,7 @@ export function FamiliesList({ guardians, sessions, classes, teachers }: Props) 
   );
   return (
     <>
-      <Group gap="sm" wrap="wrap">
+      <FilterBar>
         <TextInput
           aria-label="Search"
           placeholder="Parent, child, email or phone"
@@ -86,82 +87,88 @@ export function FamiliesList({ guardians, sessions, classes, teachers }: Props) 
         <Text size="sm" c="dimmed" ms="auto">
           {shown.length} {shown.length === 1 ? "family" : "families"}
         </Text>
-      </Group>
+      </FilterBar>
       {shown.length === 0 ? (
         <EmptyState
           icon={<IconUsersGroup size={20} stroke={1.75} />}
           message="No families match. Try clearing a filter."
         />
       ) : (
-        <Table>
-          <Table.Thead>
-            <Table.Tr>
-              <SortableTh label="Family" sortKey="family" sort={sort} onSort={toggle} />
-              <Table.Th>Guardians</Table.Th>
-              <Table.Th>Contact</Table.Th>
-              <SortableTh label="Children" sortKey="children" sort={sort} onSort={toggle} />
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {sorted.map((f) => (
-              <Table.Tr key={f.key}>
-                <Table.Td fw={500}>{f.name}</Table.Td>
-                <Table.Td>
-                  <Stack gap={2}>
-                    {f.guardians.map((g) => (
-                      <Text key={g.id} size="sm">
-                        <AppLink href={`/admin/guardians/${g.id}`} fw={500}>
-                          {g.name}
-                        </AppLink>
-                        {g.relationship && (
-                          <Text component="span" c="dimmed">
-                            {" "}
-                            ·{" "}
-                            {relationshipLabels[g.relationship as keyof typeof relationshipLabels]}
-                          </Text>
-                        )}
-                      </Text>
-                    ))}
-                  </Stack>
-                </Table.Td>
-                <Table.Td>
-                  <Stack gap={2}>
-                    {f.guardians.map((g) => (
-                      <Text key={g.id} size="sm" c="dimmed">
-                        {g.email}
-                        {g.phone && ` · ${g.phone}`}
-                      </Text>
-                    ))}
-                  </Stack>
-                </Table.Td>
-                <Table.Td>
-                  {f.children.length === 0 ? (
-                    <Nothing>no children</Nothing>
-                  ) : (
+        <Table.ScrollContainer minWidth={0} type="native">
+          <Table>
+            <Table.Thead>
+              <Table.Tr>
+                <SortableTh label="Family" sortKey="family" sort={sort} onSort={toggle} />
+                <Table.Th>Guardians</Table.Th>
+                <Table.Th>Contact</Table.Th>
+                <SortableTh label="Children" sortKey="children" sort={sort} onSort={toggle} />
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {sorted.map((f) => (
+                <Table.Tr key={f.key}>
+                  <Table.Td fw={500}>{f.name}</Table.Td>
+                  <Table.Td>
                     <Stack gap={2}>
-                      {f.children.map((c) => (
-                        <Group key={c.id} gap="xs" wrap="nowrap">
-                          <Text size="sm">
-                            <AppLink href={`/admin/students/${c.id}`}>{c.firstName}</AppLink>
-                            {c.className && (
-                              <Text component="span" c="dimmed">
-                                {" "}
-                                · {c.className} · {c.sessionName}
-                              </Text>
-                            )}
-                          </Text>
-                          {c.status !== "active" && (
-                            <StatusBadge domain="application" value={c.status} size="xs" />
+                      {f.guardians.map((g) => (
+                        <Text key={g.id} size="sm">
+                          <AppLink href={`/admin/guardians/${g.id}`} fw={500}>
+                            {g.name}
+                          </AppLink>
+                          {g.relationship && (
+                            <Text component="span" c="dimmed">
+                              {" "}
+                              ·{" "}
+                              {
+                                relationshipLabels[
+                                  g.relationship as keyof typeof relationshipLabels
+                                ]
+                              }
+                            </Text>
                           )}
-                        </Group>
+                        </Text>
                       ))}
                     </Stack>
-                  )}
-                </Table.Td>
-              </Table.Tr>
-            ))}
-          </Table.Tbody>
-        </Table>
+                  </Table.Td>
+                  <Table.Td>
+                    <Stack gap={2}>
+                      {f.guardians.map((g) => (
+                        <Text key={g.id} size="sm" c="dimmed">
+                          {g.email}
+                          {g.phone && ` · ${g.phone}`}
+                        </Text>
+                      ))}
+                    </Stack>
+                  </Table.Td>
+                  <Table.Td>
+                    {f.children.length === 0 ? (
+                      <Nothing>no children</Nothing>
+                    ) : (
+                      <Stack gap={2}>
+                        {f.children.map((c) => (
+                          <Group key={c.id} gap="xs" wrap="nowrap">
+                            <Text size="sm">
+                              <AppLink href={`/admin/students/${c.id}`}>{c.firstName}</AppLink>
+                              {c.className && (
+                                <Text component="span" c="dimmed">
+                                  {" "}
+                                  · {c.className} · {c.sessionName}
+                                </Text>
+                              )}
+                            </Text>
+                            {c.status !== "active" && (
+                              <StatusBadge domain="application" value={c.status} size="xs" />
+                            )}
+                          </Group>
+                        ))}
+                      </Stack>
+                    )}
+                  </Table.Td>
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
+        </Table.ScrollContainer>
       )}
     </>
   );

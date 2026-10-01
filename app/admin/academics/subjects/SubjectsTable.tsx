@@ -30,56 +30,58 @@ export function SubjectsTable({ subjects }: { subjects: Subject[] }) {
 
   return (
     <>
-      <Table>
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th>Subject</Table.Th>
-            <Table.Th>Code</Table.Th>
-            <Table.Th>Status</Table.Th>
-            <Table.Th />
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {subjects.map((subject) => (
-            <Table.Tr key={subject.id}>
-              <Table.Td>
-                <SubjectBadge subjectId={subject.id} name={subject.name} size="md" />
-              </Table.Td>
-              <Table.Td>
-                <Text size="sm" c="dimmed">
-                  {subject.id}
-                </Text>
-              </Table.Td>
-              <Table.Td>
-                <StatusBadge
-                  domain="application"
-                  value={subject.isActive ? "active" : "inactive"}
-                />
-              </Table.Td>
-              <Table.Td ta="end">
-                <Menu shadow="md" position="bottom-end">
-                  <Menu.Target>
-                    <Button
-                      variant="subtle"
-                      color="gray"
-                      size="xs"
-                      aria-label={`Actions for ${subject.name}`}
-                    >
-                      <IconDots size={16} stroke={1.75} />
-                    </Button>
-                  </Menu.Target>
-                  <Menu.Dropdown>
-                    <Menu.Item onClick={() => setRenaming(subject)}>Rename</Menu.Item>
-                    <Menu.Item onClick={() => toggle(subject)}>
-                      {subject.isActive ? "Deactivate" : "Reactivate"}
-                    </Menu.Item>
-                  </Menu.Dropdown>
-                </Menu>
-              </Table.Td>
+      <Table.ScrollContainer minWidth={0} type="native">
+        <Table>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Subject</Table.Th>
+              <Table.Th>Code</Table.Th>
+              <Table.Th>Status</Table.Th>
+              <Table.Th />
             </Table.Tr>
-          ))}
-        </Table.Tbody>
-      </Table>
+          </Table.Thead>
+          <Table.Tbody>
+            {subjects.map((subject) => (
+              <Table.Tr key={subject.id}>
+                <Table.Td>
+                  <SubjectBadge subjectId={subject.id} name={subject.name} size="md" />
+                </Table.Td>
+                <Table.Td>
+                  <Text size="sm" c="dimmed">
+                    {subject.id}
+                  </Text>
+                </Table.Td>
+                <Table.Td>
+                  <StatusBadge
+                    domain="application"
+                    value={subject.isActive ? "active" : "inactive"}
+                  />
+                </Table.Td>
+                <Table.Td ta="end">
+                  <Menu shadow="md" position="bottom-end">
+                    <Menu.Target>
+                      <Button
+                        variant="subtle"
+                        color="gray"
+                        size="xs"
+                        aria-label={`Actions for ${subject.name}`}
+                      >
+                        <IconDots size={16} stroke={1.75} />
+                      </Button>
+                    </Menu.Target>
+                    <Menu.Dropdown>
+                      <Menu.Item onClick={() => setRenaming(subject)}>Rename</Menu.Item>
+                      <Menu.Item onClick={() => toggle(subject)}>
+                        {subject.isActive ? "Deactivate" : "Reactivate"}
+                      </Menu.Item>
+                    </Menu.Dropdown>
+                  </Menu>
+                </Table.Td>
+              </Table.Tr>
+            ))}
+          </Table.Tbody>
+        </Table>
+      </Table.ScrollContainer>
       <Modal opened={renaming !== null} onClose={() => setRenaming(null)} title="Rename subject">
         {renaming && <SubjectForm existing={renaming} onDone={() => setRenaming(null)} />}
       </Modal>

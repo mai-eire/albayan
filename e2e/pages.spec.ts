@@ -161,6 +161,43 @@ test("every page.tsx is in the sweep", () => {
   expect(missing, "add these to e2e/pages.spec.ts").toEqual([]);
 });
 
+const phone = { width: 390, height: 844 };
+const desktop = { width: 1280, height: 720 };
+
+// The outermost elements that stick out past the right edge, each followed down to the
+// element that is too wide.
+function widerThanScreen(page: Page) {
+  return page.evaluate(() => {
+    const edge = document.documentElement.clientWidth;
+    if (document.documentElement.scrollWidth <= edge) return [];
+    const out: string[] = [];
+    for (const el of document.querySelectorAll("body *")) {
+      if (el.getBoundingClientRect().right <= edge + 1) continue;
+      const parent = el.parentElement;
+      if (parent && parent !== document.body && parent.getBoundingClientRect().right > edge + 1)
+        continue;
+      // Inside a box that scrolls on its own it is reachable; clipped by a card it is not.
+      let a = parent;
+      while (
+        a &&
+        a !== document.body &&
+        !["auto", "scroll"].includes(getComputedStyle(a).overflowX)
+      )
+        a = a.parentElement;
+      if (a && a !== document.body) continue;
+      // Down to the element that is actually too wide: "div.Stack > div.Group > p.Text".
+      const chain: string[] = [];
+      for (let e: Element | undefined = el; e;) {
+        const cls = [...e.classList].find((c) => c.startsWith("mantine-")) ?? e.classList[0];
+        chain.push(`${e.tagName.toLowerCase()}${cls ? `.${cls.replace("mantine-", "")}` : ""}`);
+        e = [...e.children].find((c) => c.getBoundingClientRect().right > edge + 1);
+      }
+      out.push(chain.join(" > "));
+    }
+    return out.slice(0, 5);
+  });
+}
+
 async function signIn(page: Page, identifier: string) {
   await page.goto("/login");
   await page.getByLabel("Email or student ID").fill(identifier);
@@ -195,6 +232,14 @@ for (const [area, list] of Object.entries(routes)) {
         expect(response?.status(), `responded ${response?.status()}`).toBeLessThan(500);
         await page.waitForLoadState("networkidle");
         expect(problems).toEqual([]);
+        // On a phone nothing may be wider than the screen: one wide element widens the
+        // whole layout, and the navbar, header and modals size themselves to it.
+        // Polled: the shell slides its sidebar away over a moment after the resize.
+        await page.setViewportSize(phone);
+        await expect
+          .poll(() => widerThanScreen(page), { message: "wider than a phone" })
+          .toEqual([]);
+        await page.setViewportSize(desktop);
       });
     }
   });

@@ -56,63 +56,68 @@ export function HomeworkTable({
 
   return (
     <>
-      <Table>
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th>Homework</Table.Th>
-            <Table.Th>Class</Table.Th>
-            <Table.Th>Due</Table.Th>
-            <Table.Th>Status</Table.Th>
-            <Table.Th />
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {rows.map((row) => (
-            <Table.Tr key={row.id}>
-              <Table.Td>
-                <Text fw={500}>{row.title}</Text>
-              </Table.Td>
-              <Table.Td>
-                {row.className} <SubjectBadge subjectId={row.subjectId} name={row.subjectName} />
-              </Table.Td>
-              <Table.Td>
-                <StatusBadge domain="homework" value={homeworkStatus(row.dueDate, today)} />
-                <Text size="sm" c="dimmed">
-                  {dueLabel(row.dueDate, today, timezone)}
-                </Text>
-              </Table.Td>
-              <Table.Td>
-                <StatusBadge domain="publication" value={row.publishedAt ? "published" : "draft"} />
-              </Table.Td>
-              <Table.Td ta="end">
-                <Menu shadow="md" position="bottom-end">
-                  <Menu.Target>
-                    <Button
-                      variant="subtle"
-                      color="gray"
-                      size="xs"
-                      aria-label={`Actions for ${row.title}`}
-                    >
-                      <IconDots size={16} stroke={1.75} />
-                    </Button>
-                  </Menu.Target>
-                  <Menu.Dropdown>
-                    <Menu.Item onClick={() => setEditing(row)}>Edit</Menu.Item>
-                    {row.publishedAt ? (
-                      <Menu.Item onClick={() => setPublished(row, false)}>Unpublish</Menu.Item>
-                    ) : (
-                      <Menu.Item onClick={() => setPublished(row, true)}>Publish</Menu.Item>
-                    )}
-                    <Menu.Item color="clay" onClick={() => remove(row)}>
-                      Delete
-                    </Menu.Item>
-                  </Menu.Dropdown>
-                </Menu>
-              </Table.Td>
+      <Table.ScrollContainer minWidth={0} type="native">
+        <Table>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Homework</Table.Th>
+              <Table.Th>Class</Table.Th>
+              <Table.Th>Due</Table.Th>
+              <Table.Th>Status</Table.Th>
+              <Table.Th />
             </Table.Tr>
-          ))}
-        </Table.Tbody>
-      </Table>
+          </Table.Thead>
+          <Table.Tbody>
+            {rows.map((row) => (
+              <Table.Tr key={row.id}>
+                <Table.Td>
+                  <Text fw={500}>{row.title}</Text>
+                </Table.Td>
+                <Table.Td>
+                  {row.className} <SubjectBadge subjectId={row.subjectId} name={row.subjectName} />
+                </Table.Td>
+                <Table.Td>
+                  <StatusBadge domain="homework" value={homeworkStatus(row.dueDate, today)} />
+                  <Text size="sm" c="dimmed">
+                    {dueLabel(row.dueDate, today, timezone)}
+                  </Text>
+                </Table.Td>
+                <Table.Td>
+                  <StatusBadge
+                    domain="publication"
+                    value={row.publishedAt ? "published" : "draft"}
+                  />
+                </Table.Td>
+                <Table.Td ta="end">
+                  <Menu shadow="md" position="bottom-end">
+                    <Menu.Target>
+                      <Button
+                        variant="subtle"
+                        color="gray"
+                        size="xs"
+                        aria-label={`Actions for ${row.title}`}
+                      >
+                        <IconDots size={16} stroke={1.75} />
+                      </Button>
+                    </Menu.Target>
+                    <Menu.Dropdown>
+                      <Menu.Item onClick={() => setEditing(row)}>Edit</Menu.Item>
+                      {row.publishedAt ? (
+                        <Menu.Item onClick={() => setPublished(row, false)}>Unpublish</Menu.Item>
+                      ) : (
+                        <Menu.Item onClick={() => setPublished(row, true)}>Publish</Menu.Item>
+                      )}
+                      <Menu.Item color="clay" onClick={() => remove(row)}>
+                        Delete
+                      </Menu.Item>
+                    </Menu.Dropdown>
+                  </Menu>
+                </Table.Td>
+              </Table.Tr>
+            ))}
+          </Table.Tbody>
+        </Table>
+      </Table.ScrollContainer>
       <Modal
         opened={editing !== null}
         onClose={() => setEditing(null)}

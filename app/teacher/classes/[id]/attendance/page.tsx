@@ -3,6 +3,7 @@ import {
   Group,
   Stack,
   Table,
+  TableScrollContainer,
   TableTbody,
   TableTd,
   TableTh,
@@ -94,37 +95,39 @@ export default async function ClassAttendancePage({ params }: Props) {
               )}
             </Group>
           </CardTitle>
-          <Table>
-            <TableThead>
-              <TableTr>
-                <TableTh>Name</TableTh>
-                <TableTh ta="end">Present</TableTh>
-                <TableTh ta="end">Late</TableTh>
-                <TableTh ta="end">Absent</TableTh>
-                <TableTh ta="end">Excused</TableTh>
-              </TableTr>
-            </TableThead>
-            <TableTbody>
-              {cls.roster.map((s) => {
-                const a = byStudent.get(s.id);
-                return (
-                  <TableTr key={s.id}>
-                    <TableTd>
-                      <AppLink href={`/teacher/students/${s.id}/attendance`} fw={500}>
-                        {s.firstName} {s.lastName}
-                      </AppLink>
-                    </TableTd>
-                    <TableTd ta="end">{a?.present ?? 0}</TableTd>
-                    <TableTd ta="end">{a?.late ?? 0}</TableTd>
-                    <TableTd ta="end" c={a?.absent ? "clay" : undefined}>
-                      {a?.absent ?? 0}
-                    </TableTd>
-                    <TableTd ta="end">{a?.excused ?? 0}</TableTd>
-                  </TableTr>
-                );
-              })}
-            </TableTbody>
-          </Table>
+          <TableScrollContainer minWidth={0} type="native">
+            <Table>
+              <TableThead>
+                <TableTr>
+                  <TableTh>Name</TableTh>
+                  <TableTh ta="end">Present</TableTh>
+                  <TableTh ta="end">Late</TableTh>
+                  <TableTh ta="end">Absent</TableTh>
+                  <TableTh ta="end">Excused</TableTh>
+                </TableTr>
+              </TableThead>
+              <TableTbody>
+                {cls.roster.map((s) => {
+                  const a = byStudent.get(s.id);
+                  return (
+                    <TableTr key={s.id}>
+                      <TableTd>
+                        <AppLink href={`/teacher/students/${s.id}/attendance`} fw={500}>
+                          {s.firstName} {s.lastName}
+                        </AppLink>
+                      </TableTd>
+                      <TableTd ta="end">{a?.present ?? 0}</TableTd>
+                      <TableTd ta="end">{a?.late ?? 0}</TableTd>
+                      <TableTd ta="end" c={a?.absent ? "clay" : undefined}>
+                        {a?.absent ?? 0}
+                      </TableTd>
+                      <TableTd ta="end">{a?.excused ?? 0}</TableTd>
+                    </TableTr>
+                  );
+                })}
+              </TableTbody>
+            </Table>
+          </TableScrollContainer>
         </Card>
       )}
     </Stack>

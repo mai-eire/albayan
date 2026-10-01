@@ -2,6 +2,7 @@ import {
   Card,
   Stack,
   Table,
+  TableScrollContainer,
   TableTbody,
   TableTd,
   TableTh,
@@ -66,44 +67,46 @@ export default async function FamilyFeesPage() {
               { label: "Paid", value: formatEuros(paid) },
             ]}
           />
-          <Table mt="lg">
-            <TableThead>
-              <TableTr>
-                <TableTh>Child</TableTh>
-                <TableTh>Class</TableTh>
-                <TableTh ta="end">Fee</TableTh>
-                <TableTh ta="end">Paid</TableTh>
-                <TableTh ta="end">Still to pay</TableTh>
-                <TableTh>Status</TableTh>
-              </TableTr>
-            </TableThead>
-            <TableTbody>
-              {children.map(({ enrolment: e, ...a }) => (
-                <TableTr key={e.studentId}>
-                  <TableTd>
-                    <AppLink href={`/family/${e.studentId}/fees`} fw={500}>
-                      {e.firstName}
-                    </AppLink>
-                  </TableTd>
-                  <TableTd>
-                    {e.className} · {e.sessionName}
-                  </TableTd>
-                  <TableTd ta="end">
-                    <MoneyText cents={a.feeCents} />
-                  </TableTd>
-                  <TableTd ta="end">
-                    <MoneyText cents={a.paidCents} />
-                  </TableTd>
-                  <TableTd ta="end">
-                    <MoneyText cents={a.balanceCents} fw={500} />
-                  </TableTd>
-                  <TableTd>
-                    <StatusBadge domain="fee" value={a.status} />
-                  </TableTd>
+          <TableScrollContainer minWidth={0} type="native">
+            <Table mt="lg">
+              <TableThead>
+                <TableTr>
+                  <TableTh>Child</TableTh>
+                  <TableTh>Class</TableTh>
+                  <TableTh ta="end">Fee</TableTh>
+                  <TableTh ta="end">Paid</TableTh>
+                  <TableTh ta="end">Still to pay</TableTh>
+                  <TableTh>Status</TableTh>
                 </TableTr>
-              ))}
-            </TableTbody>
-          </Table>
+              </TableThead>
+              <TableTbody>
+                {children.map(({ enrolment: e, ...a }) => (
+                  <TableTr key={e.studentId}>
+                    <TableTd>
+                      <AppLink href={`/family/${e.studentId}/fees`} fw={500}>
+                        {e.firstName}
+                      </AppLink>
+                    </TableTd>
+                    <TableTd>
+                      {e.className} · {e.sessionName}
+                    </TableTd>
+                    <TableTd ta="end">
+                      <MoneyText cents={a.feeCents} />
+                    </TableTd>
+                    <TableTd ta="end">
+                      <MoneyText cents={a.paidCents} />
+                    </TableTd>
+                    <TableTd ta="end">
+                      <MoneyText cents={a.balanceCents} fw={500} />
+                    </TableTd>
+                    <TableTd>
+                      <StatusBadge domain="fee" value={a.status} />
+                    </TableTd>
+                  </TableTr>
+                ))}
+              </TableTbody>
+            </Table>
+          </TableScrollContainer>
         </Card>
       )}
       <Card>

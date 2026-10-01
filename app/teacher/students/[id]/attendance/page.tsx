@@ -1,6 +1,7 @@
 import {
   Card,
   Table,
+  TableScrollContainer,
   TableTbody,
   TableTd,
   TableTh,
@@ -48,28 +49,30 @@ export default async function TeacherStudentAttendancePage({ params }: Props) {
               { label: "Excused", value: n("excused") },
             ]}
           />
-          <Table mt="lg">
-            <TableThead>
-              <TableTr>
-                <TableTh>Date</TableTh>
-                <TableTh>Session</TableTh>
-                <TableTh>Attendance</TableTh>
-                <TableTh>Note</TableTh>
-              </TableTr>
-            </TableThead>
-            <TableTbody>
-              {rows.map((a) => (
-                <TableTr key={a.date}>
-                  <TableTd>{formatDate(a.date, timezone, true)}</TableTd>
-                  <TableTd>{a.sessionName}</TableTd>
-                  <TableTd>
-                    <StatusBadge domain="attendance" value={a.status} />
-                  </TableTd>
-                  <TableTd>{a.note ?? <Nothing>no note</Nothing>}</TableTd>
+          <TableScrollContainer minWidth={0} type="native">
+            <Table mt="lg">
+              <TableThead>
+                <TableTr>
+                  <TableTh>Date</TableTh>
+                  <TableTh>Session</TableTh>
+                  <TableTh>Attendance</TableTh>
+                  <TableTh>Note</TableTh>
                 </TableTr>
-              ))}
-            </TableTbody>
-          </Table>
+              </TableThead>
+              <TableTbody>
+                {rows.map((a) => (
+                  <TableTr key={a.date}>
+                    <TableTd>{formatDate(a.date, timezone, true)}</TableTd>
+                    <TableTd>{a.sessionName}</TableTd>
+                    <TableTd>
+                      <StatusBadge domain="attendance" value={a.status} />
+                    </TableTd>
+                    <TableTd>{a.note ?? <Nothing>no note</Nothing>}</TableTd>
+                  </TableTr>
+                ))}
+              </TableTbody>
+            </Table>
+          </TableScrollContainer>
         </>
       )}
     </Card>

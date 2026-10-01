@@ -2,6 +2,7 @@ import {
   Badge,
   Card,
   Table,
+  TableScrollContainer,
   TableTbody,
   TableTd,
   TableTh,
@@ -45,56 +46,62 @@ export default async function StaffClassesPage({ params }: Props) {
           No classes this year.
         </Text>
       ) : (
-        <Table>
-          <TableThead>
-            <TableTr>
-              <TableTh>Class</TableTh>
-              <TableTh>Session</TableTh>
-              <TableTh>Teaches</TableTh>
-              <TableTh ta="end">Registers</TableTh>
-            </TableTr>
-          </TableThead>
-          <TableTbody>
-            {person.classes.map((c) => {
-              const r = registers.byClass(c.id);
-              return (
-                <TableTr key={c.id}>
-                  <TableTd>
-                    <AppLink href={`/admin/academics/classes/${c.id}`} fw={500}>
-                      {c.name}
-                    </AppLink>
-                  </TableTd>
-                  <TableTd>
-                    {c.sessionName} {c.startTime}–{c.endTime}
-                  </TableTd>
-                  <TableTd>
-                    {c.subjects.join(", ")}
-                    {c.isClassTeacher && (
-                      <Badge variant="outline" color="gray" ms={c.subjects.length ? "xs" : 0}>
-                        Class teacher
-                      </Badge>
-                    )}
-                  </TableTd>
-                  <TableTd ta="end" className={tabular.tabular}>
-                    {r.due ? (
-                      <>
-                        <Text component="span" fw={500} c={r.taken < r.due ? "saffron" : undefined}>
-                          {r.taken}
-                        </Text>
-                        <Text component="span" c="dimmed">
-                          {" "}
-                          / {r.due}
-                        </Text>
-                      </>
-                    ) : (
-                      <Nothing>none yet</Nothing>
-                    )}
-                  </TableTd>
-                </TableTr>
-              );
-            })}
-          </TableTbody>
-        </Table>
+        <TableScrollContainer minWidth={0} type="native">
+          <Table>
+            <TableThead>
+              <TableTr>
+                <TableTh>Class</TableTh>
+                <TableTh>Session</TableTh>
+                <TableTh>Teaches</TableTh>
+                <TableTh ta="end">Registers</TableTh>
+              </TableTr>
+            </TableThead>
+            <TableTbody>
+              {person.classes.map((c) => {
+                const r = registers.byClass(c.id);
+                return (
+                  <TableTr key={c.id}>
+                    <TableTd>
+                      <AppLink href={`/admin/academics/classes/${c.id}`} fw={500}>
+                        {c.name}
+                      </AppLink>
+                    </TableTd>
+                    <TableTd>
+                      {c.sessionName} {c.startTime}–{c.endTime}
+                    </TableTd>
+                    <TableTd>
+                      {c.subjects.join(", ")}
+                      {c.isClassTeacher && (
+                        <Badge variant="outline" color="gray" ms={c.subjects.length ? "xs" : 0}>
+                          Class teacher
+                        </Badge>
+                      )}
+                    </TableTd>
+                    <TableTd ta="end" className={tabular.tabular}>
+                      {r.due ? (
+                        <>
+                          <Text
+                            component="span"
+                            fw={500}
+                            c={r.taken < r.due ? "saffron" : undefined}
+                          >
+                            {r.taken}
+                          </Text>
+                          <Text component="span" c="dimmed">
+                            {" "}
+                            / {r.due}
+                          </Text>
+                        </>
+                      ) : (
+                        <Nothing>none yet</Nothing>
+                      )}
+                    </TableTd>
+                  </TableTr>
+                );
+              })}
+            </TableTbody>
+          </Table>
+        </TableScrollContainer>
       )}
     </Card>
   );

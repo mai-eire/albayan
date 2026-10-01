@@ -49,7 +49,6 @@ export function FeesList({ accounts, years, year, sessions, classes, targets, to
   });
   return (
     <>
-      <FeesFilters years={years} year={year} sessions={sessions} classes={classes} />
       {scope.length > 0 && (
         <Card>
           <Figures
@@ -78,6 +77,7 @@ export function FeesList({ accounts, years, year, sessions, classes, targets, to
           />
         </Card>
       )}
+      <FeesFilters years={years} year={year} sessions={sessions} classes={classes} />
       {rows.length === 0 ? (
         <EmptyState
           icon={<IconBuildingBank size={20} stroke={1.75} />}

@@ -52,44 +52,46 @@ export function FamilyPayments({ year, accounts, targets, payments, today, timez
               { label: "Paid", value: formatEuros(paid) },
             ]}
           />
-          <Table mt="lg">
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Child</Table.Th>
-                <Table.Th>Class</Table.Th>
-                <Table.Th ta="end">Fee</Table.Th>
-                <Table.Th ta="end">Paid</Table.Th>
-                <Table.Th ta="end">Balance</Table.Th>
-                <Table.Th>Status</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {accounts.map(({ enrolment: e, ...a }) => (
-                <Table.Tr key={e.studentId}>
-                  <Table.Td>
-                    <AppLink href={`/admin/students/${e.studentId}/fees`} fw={500}>
-                      {e.firstName} {e.lastName}
-                    </AppLink>
-                  </Table.Td>
-                  <Table.Td>
-                    {e.className} · {e.sessionName}
-                  </Table.Td>
-                  <Table.Td ta="end">
-                    <MoneyText cents={a.feeCents} />
-                  </Table.Td>
-                  <Table.Td ta="end">
-                    <MoneyText cents={a.paidCents} />
-                  </Table.Td>
-                  <Table.Td ta="end">
-                    <MoneyText cents={a.balanceCents} fw={500} />
-                  </Table.Td>
-                  <Table.Td>
-                    <StatusBadge domain="fee" value={a.status} />
-                  </Table.Td>
+          <Table.ScrollContainer minWidth={0} type="native">
+            <Table mt="lg">
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>Child</Table.Th>
+                  <Table.Th>Class</Table.Th>
+                  <Table.Th ta="end">Fee</Table.Th>
+                  <Table.Th ta="end">Paid</Table.Th>
+                  <Table.Th ta="end">Balance</Table.Th>
+                  <Table.Th>Status</Table.Th>
                 </Table.Tr>
-              ))}
-            </Table.Tbody>
-          </Table>
+              </Table.Thead>
+              <Table.Tbody>
+                {accounts.map(({ enrolment: e, ...a }) => (
+                  <Table.Tr key={e.studentId}>
+                    <Table.Td>
+                      <AppLink href={`/admin/students/${e.studentId}/fees`} fw={500}>
+                        {e.firstName} {e.lastName}
+                      </AppLink>
+                    </Table.Td>
+                    <Table.Td>
+                      {e.className} · {e.sessionName}
+                    </Table.Td>
+                    <Table.Td ta="end">
+                      <MoneyText cents={a.feeCents} />
+                    </Table.Td>
+                    <Table.Td ta="end">
+                      <MoneyText cents={a.paidCents} />
+                    </Table.Td>
+                    <Table.Td ta="end">
+                      <MoneyText cents={a.balanceCents} fw={500} />
+                    </Table.Td>
+                    <Table.Td>
+                      <StatusBadge domain="fee" value={a.status} />
+                    </Table.Td>
+                  </Table.Tr>
+                ))}
+              </Table.Tbody>
+            </Table>
+          </Table.ScrollContainer>
         </Card>
       )}
       <Card>

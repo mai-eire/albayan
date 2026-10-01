@@ -5,6 +5,7 @@ import {
   GridCol,
   Group,
   Table,
+  TableScrollContainer,
   TableTbody,
   TableTd,
   TableTh,
@@ -48,43 +49,45 @@ export default async function TeacherClassPage({ params }: Props) {
               Nobody has been placed in this class yet.
             </Text>
           ) : (
-            <Table>
-              <TableThead>
-                <TableTr>
-                  <TableTh>Name</TableTh>
-                  <TableTh>Age</TableTh>
-                  <TableTh>Arabic</TableTh>
-                  <TableTh />
-                </TableTr>
-              </TableThead>
-              <TableTbody>
-                {cls.roster.map((s) => (
-                  <TableTr key={s.id}>
-                    <TableTd style={{ whiteSpace: "nowrap" }}>
-                      <AppLink href={`/teacher/students/${s.id}`} fw={500}>
-                        {s.firstName} {s.lastName}
-                      </AppLink>
-                    </TableTd>
-                    <TableTd>{ageOn(s.dateOfBirth, today)}</TableTd>
-                    <TableTd>{proficiencyLabels[s.arabicProficiency]}</TableTd>
-                    <TableTd style={{ whiteSpace: "nowrap" }}>
-                      <Group gap={4} justify="flex-end" wrap="nowrap">
-                        {s.hasAllergies && (
-                          <Badge color="clay" size="xs">
-                            Allergies
-                          </Badge>
-                        )}
-                        {s.hasMedicalNotes && (
-                          <Badge color="saffron" size="xs">
-                            Medical
-                          </Badge>
-                        )}
-                      </Group>
-                    </TableTd>
+            <TableScrollContainer minWidth={0} type="native">
+              <Table>
+                <TableThead>
+                  <TableTr>
+                    <TableTh>Name</TableTh>
+                    <TableTh>Age</TableTh>
+                    <TableTh>Arabic</TableTh>
+                    <TableTh />
                   </TableTr>
-                ))}
-              </TableTbody>
-            </Table>
+                </TableThead>
+                <TableTbody>
+                  {cls.roster.map((s) => (
+                    <TableTr key={s.id}>
+                      <TableTd style={{ whiteSpace: "nowrap" }}>
+                        <AppLink href={`/teacher/students/${s.id}`} fw={500}>
+                          {s.firstName} {s.lastName}
+                        </AppLink>
+                      </TableTd>
+                      <TableTd>{ageOn(s.dateOfBirth, today)}</TableTd>
+                      <TableTd>{proficiencyLabels[s.arabicProficiency]}</TableTd>
+                      <TableTd style={{ whiteSpace: "nowrap" }}>
+                        <Group gap={4} justify="flex-end" wrap="nowrap">
+                          {s.hasAllergies && (
+                            <Badge color="clay" size="xs">
+                              Allergies
+                            </Badge>
+                          )}
+                          {s.hasMedicalNotes && (
+                            <Badge color="saffron" size="xs">
+                              Medical
+                            </Badge>
+                          )}
+                        </Group>
+                      </TableTd>
+                    </TableTr>
+                  ))}
+                </TableTbody>
+              </Table>
+            </TableScrollContainer>
           )}
         </Card>
       </GridCol>

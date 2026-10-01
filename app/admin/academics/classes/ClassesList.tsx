@@ -1,6 +1,6 @@
 "use client";
 
-import { Group, Select, Table, TextInput } from "@mantine/core";
+import { Select, Table, TextInput } from "@mantine/core";
 import { useDebouncedCallback } from "@mantine/hooks";
 import { IconSearch, IconUsers } from "@tabler/icons-react";
 import { AppLink } from "@/components/AppLink";
@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { Places } from "@/components/Places";
 import { useUrlFilters } from "@/components/useUrlFilters";
 import type { ClassRow } from "@/lib/db/queries/academics";
+import { FilterBar } from "@/components/FilterBar";
 
 type Props = {
   classes: ClassRow[];
@@ -33,7 +34,7 @@ export function ClassesList({ classes, sessions, teachers, emptyMessage }: Props
   return (
     <>
       {classes.length > 0 && (
-        <Group gap="sm" wrap="wrap">
+        <FilterBar>
           <TextInput
             aria-label="Search"
             placeholder="Class name"
@@ -61,7 +62,7 @@ export function ClassesList({ classes, sessions, teachers, emptyMessage }: Props
             onChange={(v) => set({ teacher: v })}
             w={200}
           />
-        </Group>
+        </FilterBar>
       )}
       {shown.length === 0 ? (
         <EmptyState
@@ -69,36 +70,38 @@ export function ClassesList({ classes, sessions, teachers, emptyMessage }: Props
           message={classes.length ? "No classes match these filters." : emptyMessage}
         />
       ) : (
-        <Table>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Class</Table.Th>
-              <Table.Th>Session</Table.Th>
-              <Table.Th>Class teacher</Table.Th>
-              <Table.Th>Room</Table.Th>
-              <Table.Th ta="end">Students</Table.Th>
-              <Table.Th ta="end">Applications</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {shown.map((c) => (
-              <Table.Tr key={c.id}>
-                <Table.Td>
-                  <AppLink href={`/admin/academics/classes/${c.id}`} fw={600}>
-                    {c.name}
-                  </AppLink>
-                </Table.Td>
-                <Table.Td>{c.sessionName}</Table.Td>
-                <Table.Td>{c.classTeacherName ?? <Nothing>no teacher</Nothing>}</Table.Td>
-                <Table.Td>{c.room ?? <Nothing>no room</Nothing>}</Table.Td>
-                <Table.Td ta="end">
-                  <Places count={c.studentCount} capacity={c.capacity} />
-                </Table.Td>
-                <Table.Td ta="end">{c.applicationCount}</Table.Td>
+        <Table.ScrollContainer minWidth={0} type="native">
+          <Table>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>Class</Table.Th>
+                <Table.Th>Session</Table.Th>
+                <Table.Th>Class teacher</Table.Th>
+                <Table.Th>Room</Table.Th>
+                <Table.Th ta="end">Students</Table.Th>
+                <Table.Th ta="end">Applications</Table.Th>
               </Table.Tr>
-            ))}
-          </Table.Tbody>
-        </Table>
+            </Table.Thead>
+            <Table.Tbody>
+              {shown.map((c) => (
+                <Table.Tr key={c.id}>
+                  <Table.Td>
+                    <AppLink href={`/admin/academics/classes/${c.id}`} fw={600}>
+                      {c.name}
+                    </AppLink>
+                  </Table.Td>
+                  <Table.Td>{c.sessionName}</Table.Td>
+                  <Table.Td>{c.classTeacherName ?? <Nothing>no teacher</Nothing>}</Table.Td>
+                  <Table.Td>{c.room ?? <Nothing>no room</Nothing>}</Table.Td>
+                  <Table.Td ta="end">
+                    <Places count={c.studentCount} capacity={c.capacity} />
+                  </Table.Td>
+                  <Table.Td ta="end">{c.applicationCount}</Table.Td>
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
+        </Table.ScrollContainer>
       )}
     </>
   );

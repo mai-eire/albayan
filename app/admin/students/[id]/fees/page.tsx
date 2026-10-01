@@ -3,6 +3,7 @@ import {
   Group,
   Stack,
   Table,
+  TableScrollContainer,
   TableTbody,
   TableTd,
   TableTh,
@@ -128,43 +129,45 @@ export default async function StudentFeesPage({ params }: Props) {
           >
             Also in this family
           </CardTitle>
-          <Table>
-            <TableThead>
-              <TableTr>
-                <TableTh>Child</TableTh>
-                <TableTh ta="end">Fee</TableTh>
-                <TableTh ta="end">Paid</TableTh>
-                <TableTh ta="end">Balance</TableTh>
-                <TableTh>Status</TableTh>
-              </TableTr>
-            </TableThead>
-            <TableTbody>
-              {family.map((s) => (
-                <TableTr key={s.id}>
-                  <TableTd>
-                    <AppLink href={`/admin/students/${s.id}/fees`} fw={500}>
-                      {s.firstName} {s.lastName}
-                    </AppLink>
-                    <Text size="xs" c="dimmed">
-                      {[s.className, s.sessionName].filter(Boolean).join(" · ")}
-                    </Text>
-                  </TableTd>
-                  <TableTd ta="end" className={tabular.tabular}>
-                    <MoneyText cents={s.account.feeCents} />
-                  </TableTd>
-                  <TableTd ta="end" className={tabular.tabular}>
-                    <MoneyText cents={s.account.paidCents} />
-                  </TableTd>
-                  <TableTd ta="end" className={tabular.tabular}>
-                    <MoneyText cents={Math.max(0, s.account.balanceCents)} />
-                  </TableTd>
-                  <TableTd>
-                    <StatusBadge domain="fee" value={s.account.status} />
-                  </TableTd>
+          <TableScrollContainer minWidth={0} type="native">
+            <Table>
+              <TableThead>
+                <TableTr>
+                  <TableTh>Child</TableTh>
+                  <TableTh ta="end">Fee</TableTh>
+                  <TableTh ta="end">Paid</TableTh>
+                  <TableTh ta="end">Balance</TableTh>
+                  <TableTh>Status</TableTh>
                 </TableTr>
-              ))}
-            </TableTbody>
-          </Table>
+              </TableThead>
+              <TableTbody>
+                {family.map((s) => (
+                  <TableTr key={s.id}>
+                    <TableTd>
+                      <AppLink href={`/admin/students/${s.id}/fees`} fw={500}>
+                        {s.firstName} {s.lastName}
+                      </AppLink>
+                      <Text size="xs" c="dimmed">
+                        {[s.className, s.sessionName].filter(Boolean).join(" · ")}
+                      </Text>
+                    </TableTd>
+                    <TableTd ta="end" className={tabular.tabular}>
+                      <MoneyText cents={s.account.feeCents} />
+                    </TableTd>
+                    <TableTd ta="end" className={tabular.tabular}>
+                      <MoneyText cents={s.account.paidCents} />
+                    </TableTd>
+                    <TableTd ta="end" className={tabular.tabular}>
+                      <MoneyText cents={Math.max(0, s.account.balanceCents)} />
+                    </TableTd>
+                    <TableTd>
+                      <StatusBadge domain="fee" value={s.account.status} />
+                    </TableTd>
+                  </TableTr>
+                ))}
+              </TableTbody>
+            </Table>
+          </TableScrollContainer>
         </Card>
       )}
     </Stack>

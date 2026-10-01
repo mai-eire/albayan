@@ -81,60 +81,64 @@ export function RosterCard({
           Nobody is placed in this class yet. Approving an application puts a child here.
         </Text>
       ) : (
-        <Table>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Student</Table.Th>
-              <Table.Th ta="end">Age</Table.Th>
-              <Table.Th ta="end">Present</Table.Th>
-              <Table.Th ta="end">Late</Table.Th>
-              <Table.Th ta="end">Absent</Table.Th>
-              <Table.Th ta="end">Excused</Table.Th>
-              <Table.Th />
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {roster.map((s) => {
-              const a = counts.get(s.studentId);
-              return (
-                <Table.Tr key={s.enrolmentId}>
-                  <Table.Td>
-                    <AppLink href={`/admin/students/${s.studentId}`} fw={500}>
-                      {s.firstName} {s.lastName}
-                    </AppLink>
-                    <Text size="sm" c="dimmed">
-                      {s.studentCode}
-                    </Text>
-                  </Table.Td>
-                  <Table.Td ta="end">{ageOn(s.dateOfBirth, today)}</Table.Td>
-                  {cell(a?.present, "tile")}
-                  {cell(a?.late, "saffron")}
-                  {cell(a?.absent, "clay")}
-                  {cell(a?.excused)}
-                  <Table.Td ta="end">
-                    {otherClasses.length > 0 && (
-                      <Menu shadow="md" position="bottom-end">
-                        <Menu.Target>
-                          <Button
-                            variant="subtle"
-                            color="gray"
-                            size="xs"
-                            aria-label={`Actions for ${s.firstName}`}
-                          >
-                            <IconDots size={16} stroke={1.75} />
-                          </Button>
-                        </Menu.Target>
-                        <Menu.Dropdown>
-                          <Menu.Item onClick={() => setMoving(s)}>Move to another class</Menu.Item>
-                        </Menu.Dropdown>
-                      </Menu>
-                    )}
-                  </Table.Td>
-                </Table.Tr>
-              );
-            })}
-          </Table.Tbody>
-        </Table>
+        <Table.ScrollContainer minWidth={0} type="native">
+          <Table>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>Student</Table.Th>
+                <Table.Th ta="end">Age</Table.Th>
+                <Table.Th ta="end">Present</Table.Th>
+                <Table.Th ta="end">Late</Table.Th>
+                <Table.Th ta="end">Absent</Table.Th>
+                <Table.Th ta="end">Excused</Table.Th>
+                <Table.Th />
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {roster.map((s) => {
+                const a = counts.get(s.studentId);
+                return (
+                  <Table.Tr key={s.enrolmentId}>
+                    <Table.Td>
+                      <AppLink href={`/admin/students/${s.studentId}`} fw={500}>
+                        {s.firstName} {s.lastName}
+                      </AppLink>
+                      <Text size="sm" c="dimmed">
+                        {s.studentCode}
+                      </Text>
+                    </Table.Td>
+                    <Table.Td ta="end">{ageOn(s.dateOfBirth, today)}</Table.Td>
+                    {cell(a?.present, "tile")}
+                    {cell(a?.late, "saffron")}
+                    {cell(a?.absent, "clay")}
+                    {cell(a?.excused)}
+                    <Table.Td ta="end">
+                      {otherClasses.length > 0 && (
+                        <Menu shadow="md" position="bottom-end">
+                          <Menu.Target>
+                            <Button
+                              variant="subtle"
+                              color="gray"
+                              size="xs"
+                              aria-label={`Actions for ${s.firstName}`}
+                            >
+                              <IconDots size={16} stroke={1.75} />
+                            </Button>
+                          </Menu.Target>
+                          <Menu.Dropdown>
+                            <Menu.Item onClick={() => setMoving(s)}>
+                              Move to another class
+                            </Menu.Item>
+                          </Menu.Dropdown>
+                        </Menu>
+                      )}
+                    </Table.Td>
+                  </Table.Tr>
+                );
+              })}
+            </Table.Tbody>
+          </Table>
+        </Table.ScrollContainer>
       )}
       <MoveStudentModal
         student={moving && { enrolmentId: moving.enrolmentId, firstName: moving.firstName }}

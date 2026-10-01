@@ -2,6 +2,7 @@ import {
   Badge,
   Stack,
   Table,
+  TableScrollContainer,
   TableTbody,
   TableTd,
   TableTh,
@@ -32,46 +33,48 @@ export default async function TeacherClassesPage() {
           message="You haven't been given a class yet. The office sets these up."
         />
       ) : (
-        <Table>
-          <TableThead>
-            <TableTr>
-              <TableTh>Class</TableTh>
-              <TableTh>Session</TableTh>
-              <TableTh>You teach</TableTh>
-              <TableTh ta="end">Students</TableTh>
-            </TableTr>
-          </TableThead>
-          <TableTbody>
-            {rows.map((c) => (
-              <TableTr key={c.id}>
-                <TableTd>
-                  <AppLink href={`/teacher/classes/${c.id}`} fw={500}>
-                    {c.name}
-                  </AppLink>
-                  {c.room && (
-                    <Text size="sm" c="dimmed">
-                      {c.room}
-                    </Text>
-                  )}
-                </TableTd>
-                <TableTd>
-                  {c.sessionName} {c.startTime}
-                </TableTd>
-                <TableTd>
-                  {c.subjects.join(", ")}
-                  {c.isClassTeacher && (
-                    <Badge variant="outline" color="gray" ms="xs">
-                      Class teacher
-                    </Badge>
-                  )}
-                </TableTd>
-                <TableTd ta="end">
-                  <Places count={c.studentCount} capacity={c.capacity} />
-                </TableTd>
+        <TableScrollContainer minWidth={0} type="native">
+          <Table>
+            <TableThead>
+              <TableTr>
+                <TableTh>Class</TableTh>
+                <TableTh>Session</TableTh>
+                <TableTh>You teach</TableTh>
+                <TableTh ta="end">Students</TableTh>
               </TableTr>
-            ))}
-          </TableTbody>
-        </Table>
+            </TableThead>
+            <TableTbody>
+              {rows.map((c) => (
+                <TableTr key={c.id}>
+                  <TableTd>
+                    <AppLink href={`/teacher/classes/${c.id}`} fw={500}>
+                      {c.name}
+                    </AppLink>
+                    {c.room && (
+                      <Text size="sm" c="dimmed">
+                        {c.room}
+                      </Text>
+                    )}
+                  </TableTd>
+                  <TableTd>
+                    {c.sessionName} {c.startTime}
+                  </TableTd>
+                  <TableTd>
+                    {c.subjects.join(", ")}
+                    {c.isClassTeacher && (
+                      <Badge variant="outline" color="gray" ms="xs">
+                        Class teacher
+                      </Badge>
+                    )}
+                  </TableTd>
+                  <TableTd ta="end">
+                    <Places count={c.studentCount} capacity={c.capacity} />
+                  </TableTd>
+                </TableTr>
+              ))}
+            </TableTbody>
+          </Table>
+        </TableScrollContainer>
       )}
     </Stack>
   );

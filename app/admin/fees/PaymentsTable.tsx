@@ -48,68 +48,70 @@ export function PaymentsTable({ payments, showChild, target, today, timezone }: 
 
   return (
     <>
-      <Table>
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th>Paid on</Table.Th>
-            {showChild && <Table.Th>Child</Table.Th>}
-            <Table.Th ta="end">Amount</Table.Th>
-            <Table.Th>How</Table.Th>
-            <Table.Th>Paid by</Table.Th>
-            <Table.Th>Reference</Table.Th>
-            {target && <Table.Th />}
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {payments.map((p) => (
-            <Table.Tr key={p.id}>
-              <Table.Td>{formatDate(p.paidOn)}</Table.Td>
-              {showChild && (
-                <Table.Td>
-                  <AppLink href={`/admin/students/${p.studentId}/fees`} fw={500}>
-                    {p.studentName}
-                  </AppLink>
-                </Table.Td>
-              )}
-              <Table.Td ta="end">
-                <MoneyText cents={p.amountCents} fw={500} />
-              </Table.Td>
-              <Table.Td>{methodLabels[p.method]}</Table.Td>
-              <Table.Td>{p.paidByName ?? <Nothing>not recorded</Nothing>}</Table.Td>
-              <Table.Td>
-                {p.reference ?? <Nothing>none</Nothing>}
-                {p.note && (
-                  <Text size="sm" c="dimmed">
-                    {p.note}
-                  </Text>
-                )}
-              </Table.Td>
-              {target && (
-                <Table.Td ta="end">
-                  <Menu shadow="md" position="bottom-end">
-                    <Menu.Target>
-                      <Button
-                        variant="subtle"
-                        color="gray"
-                        size="xs"
-                        aria-label={`Actions for the payment on ${formatDate(p.paidOn)}`}
-                      >
-                        <IconDots size={16} stroke={1.75} />
-                      </Button>
-                    </Menu.Target>
-                    <Menu.Dropdown>
-                      <Menu.Item onClick={() => setEditing(p)}>Edit payment</Menu.Item>
-                      <Menu.Item color="clay" onClick={() => remove(p)}>
-                        Delete payment
-                      </Menu.Item>
-                    </Menu.Dropdown>
-                  </Menu>
-                </Table.Td>
-              )}
+      <Table.ScrollContainer minWidth={0} type="native">
+        <Table>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Paid on</Table.Th>
+              {showChild && <Table.Th>Child</Table.Th>}
+              <Table.Th ta="end">Amount</Table.Th>
+              <Table.Th>How</Table.Th>
+              <Table.Th>Paid by</Table.Th>
+              <Table.Th>Reference</Table.Th>
+              {target && <Table.Th />}
             </Table.Tr>
-          ))}
-        </Table.Tbody>
-      </Table>
+          </Table.Thead>
+          <Table.Tbody>
+            {payments.map((p) => (
+              <Table.Tr key={p.id}>
+                <Table.Td>{formatDate(p.paidOn)}</Table.Td>
+                {showChild && (
+                  <Table.Td>
+                    <AppLink href={`/admin/students/${p.studentId}/fees`} fw={500}>
+                      {p.studentName}
+                    </AppLink>
+                  </Table.Td>
+                )}
+                <Table.Td ta="end">
+                  <MoneyText cents={p.amountCents} fw={500} />
+                </Table.Td>
+                <Table.Td>{methodLabels[p.method]}</Table.Td>
+                <Table.Td>{p.paidByName ?? <Nothing>not recorded</Nothing>}</Table.Td>
+                <Table.Td>
+                  {p.reference ?? <Nothing>none</Nothing>}
+                  {p.note && (
+                    <Text size="sm" c="dimmed">
+                      {p.note}
+                    </Text>
+                  )}
+                </Table.Td>
+                {target && (
+                  <Table.Td ta="end">
+                    <Menu shadow="md" position="bottom-end">
+                      <Menu.Target>
+                        <Button
+                          variant="subtle"
+                          color="gray"
+                          size="xs"
+                          aria-label={`Actions for the payment on ${formatDate(p.paidOn)}`}
+                        >
+                          <IconDots size={16} stroke={1.75} />
+                        </Button>
+                      </Menu.Target>
+                      <Menu.Dropdown>
+                        <Menu.Item onClick={() => setEditing(p)}>Edit payment</Menu.Item>
+                        <Menu.Item color="clay" onClick={() => remove(p)}>
+                          Delete payment
+                        </Menu.Item>
+                      </Menu.Dropdown>
+                    </Menu>
+                  </Table.Td>
+                )}
+              </Table.Tr>
+            ))}
+          </Table.Tbody>
+        </Table>
+      </Table.ScrollContainer>
       {target && editing && (
         <PaymentModal
           key={editing.id}

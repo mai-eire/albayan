@@ -1,6 +1,7 @@
 import {
   Badge,
   Table,
+  TableScrollContainer,
   TableTbody,
   TableTd,
   TableTh,
@@ -27,41 +28,43 @@ export async function YearsTable({ years }: { years: YearRow[] }) {
   }
   const { timezone } = await getSchoolSettings();
   return (
-    <Table>
-      <TableThead>
-        <TableTr>
-          <TableTh>Year</TableTh>
-          <TableTh>Dates</TableTh>
-          <TableTh>Terms</TableTh>
-          <TableTh ta="end">Standard fee</TableTh>
-        </TableTr>
-      </TableThead>
-      <TableTbody>
-        {years.map((year) => (
-          <TableTr key={year.id}>
-            <TableTd>
-              <AppLink href={`/admin/academics/years/${year.id}`} fw={600}>
-                {year.id}
-              </AppLink>
-              {year.isCurrent && (
-                <Badge ms="sm" color="tile">
-                  Current
-                </Badge>
-              )}
-            </TableTd>
-            <TableTd>
-              <Text size="sm">
-                {formatDate(year.startDate, timezone, true)} –{" "}
-                {formatDate(year.endDate, timezone, true)}
-              </Text>
-            </TableTd>
-            <TableTd>{year.termCount}</TableTd>
-            <TableTd ta="end">
-              <MoneyText cents={year.standardFeeCents} />
-            </TableTd>
+    <TableScrollContainer minWidth={0} type="native">
+      <Table>
+        <TableThead>
+          <TableTr>
+            <TableTh>Year</TableTh>
+            <TableTh>Dates</TableTh>
+            <TableTh>Terms</TableTh>
+            <TableTh ta="end">Standard fee</TableTh>
           </TableTr>
-        ))}
-      </TableTbody>
-    </Table>
+        </TableThead>
+        <TableTbody>
+          {years.map((year) => (
+            <TableTr key={year.id}>
+              <TableTd>
+                <AppLink href={`/admin/academics/years/${year.id}`} fw={600}>
+                  {year.id}
+                </AppLink>
+                {year.isCurrent && (
+                  <Badge ms="sm" color="tile">
+                    Current
+                  </Badge>
+                )}
+              </TableTd>
+              <TableTd>
+                <Text size="sm">
+                  {formatDate(year.startDate, timezone, true)} –{" "}
+                  {formatDate(year.endDate, timezone, true)}
+                </Text>
+              </TableTd>
+              <TableTd>{year.termCount}</TableTd>
+              <TableTd ta="end">
+                <MoneyText cents={year.standardFeeCents} />
+              </TableTd>
+            </TableTr>
+          ))}
+        </TableTbody>
+      </Table>
+    </TableScrollContainer>
   );
 }

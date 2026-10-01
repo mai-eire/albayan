@@ -4,6 +4,7 @@ import {
   SimpleGrid,
   Stack,
   Table,
+  TableScrollContainer,
   TableTbody,
   TableTd,
   TableTh,
@@ -154,32 +155,34 @@ export default async function StudentClassPage({ params }: Props) {
           ]}
         />
         {recent.length > 0 && (
-          <Table mt="lg">
-            <TableThead>
-              <TableTr>
-                <TableTh>Date</TableTh>
-                <TableTh>Session</TableTh>
-                <TableTh>Status</TableTh>
-                <TableTh>Note</TableTh>
-              </TableTr>
-            </TableThead>
-            <TableTbody>
-              {recent.map((a) => (
-                <TableTr key={a.date}>
-                  <TableTd>
-                    <AppLink href={`/admin/attendance/${e.classId}?date=${a.date}`}>
-                      {formatDate(a.date, timezone)}
-                    </AppLink>
-                  </TableTd>
-                  <TableTd>{a.sessionName}</TableTd>
-                  <TableTd>
-                    <StatusBadge domain="attendance" value={a.status} />
-                  </TableTd>
-                  <TableTd>{a.note ?? ""}</TableTd>
+          <TableScrollContainer minWidth={0} type="native">
+            <Table mt="lg">
+              <TableThead>
+                <TableTr>
+                  <TableTh>Date</TableTh>
+                  <TableTh>Session</TableTh>
+                  <TableTh>Status</TableTh>
+                  <TableTh>Note</TableTh>
                 </TableTr>
-              ))}
-            </TableTbody>
-          </Table>
+              </TableThead>
+              <TableTbody>
+                {recent.map((a) => (
+                  <TableTr key={a.date}>
+                    <TableTd>
+                      <AppLink href={`/admin/attendance/${e.classId}?date=${a.date}`}>
+                        {formatDate(a.date, timezone)}
+                      </AppLink>
+                    </TableTd>
+                    <TableTd>{a.sessionName}</TableTd>
+                    <TableTd>
+                      <StatusBadge domain="attendance" value={a.status} />
+                    </TableTd>
+                    <TableTd>{a.note ?? ""}</TableTd>
+                  </TableTr>
+                ))}
+              </TableTbody>
+            </Table>
+          </TableScrollContainer>
         )}
       </Card>
       {cls && (

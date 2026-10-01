@@ -9,6 +9,7 @@ import {
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useRef } from "react";
 
 // A tab whose href is `base` itself rather than a segment under it.
 export const baseTab = "_base";
@@ -38,9 +39,18 @@ type Tab = {
 export function LinkTabs({ base, tabs }: { base: string; tabs: Tab[] }) {
   const rest = usePathname().slice(base.length).split("/")[1] ?? "";
   const current = tabs.find((t) => t.value === rest)?.value ?? baseTab;
+  // On a phone the list scrolls sideways (globals.css); keep the current tab in view.
+  const list = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const box = list.current;
+    const tab = box?.querySelector("[data-active]")?.getBoundingClientRect();
+    if (!box || !tab) return;
+    const { left, width } = box.getBoundingClientRect();
+    box.scrollLeft += tab.left - left - (width - tab.width) / 2;
+  }, [current]);
   return (
     <Tabs value={current}>
-      <Tabs.List>
+      <Tabs.List ref={list}>
         {tabs.map((tab) => {
           const mark = tab.mark ? marks[tab.mark.kind] : null;
           return (

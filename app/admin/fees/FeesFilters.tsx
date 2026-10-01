@@ -1,12 +1,13 @@
 "use client";
 
-import { Group, Select, TextInput } from "@mantine/core";
+import { Select, TextInput } from "@mantine/core";
 import { useDebouncedCallback } from "@mantine/hooks";
 import { IconSearch } from "@tabler/icons-react";
 import { usePathname, useRouter } from "next/navigation";
 import { ClassFilter, type ClassFilterOption } from "@/components/ClassFilter";
 import { useUrlFilters } from "@/components/useUrlFilters";
 import { parseFeeFilters } from "./filters";
+import { FilterBar } from "@/components/FilterBar";
 
 type Props = {
   years: { id: string; isCurrent: boolean }[];
@@ -25,7 +26,7 @@ export function FeesFilters({ years, year, sessions, classes }: Props) {
   const search = useDebouncedCallback((q: string) => set({ q }), 300);
 
   return (
-    <Group gap="sm" wrap="wrap">
+    <FilterBar>
       <TextInput
         aria-label="Search"
         placeholder="Student, ID or guardian"
@@ -69,6 +70,6 @@ export function FeesFilters({ years, year, sessions, classes }: Props) {
         onChange={(v) => v && router.push(`${pathname}?year=${v}`)}
         w={170}
       />
-    </Group>
+    </FilterBar>
   );
 }

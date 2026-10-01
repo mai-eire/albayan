@@ -48,91 +48,93 @@ export function FeesTable({ rows, targets, today }: Props) {
   );
   return (
     <>
-      <Table>
-        <Table.Thead>
-          <Table.Tr>
-            {th("Student", "student")}
-            {th("Class", "class")}
-            {th("Guardian", "guardian")}
-            {th("Fee", "fee", "end")}
-            {th("Paid", "paid", "end")}
-            {th("Balance", "balance", "end")}
-            <Table.Th>Status</Table.Th>
-            {/* Hugs its icon: w={1} leaves the rest of the width to the columns that read. */}
-            <Table.Th w={1} />
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {sorted.map(({ enrolment: e, ...a }) => {
-            const target = targets.find((t) => t.enrolmentId === e.id);
-            return (
-              <Table.Tr key={e.studentId}>
-                <Table.Td>
-                  <AppLink href={`/admin/students/${e.studentId}/fees`} fw={500}>
-                    {e.firstName} {e.lastName}
-                  </AppLink>
-                  <Text size="xs" c="dimmed">
-                    {e.studentCode}
-                  </Text>
-                </Table.Td>
-                <Table.Td>
-                  {e.className} · {e.sessionName}
-                </Table.Td>
-                <Table.Td>
-                  {e.guardianId ? (
-                    <AppLink href={`/admin/guardians/${e.guardianId}/payments`}>
-                      {e.guardianName}
+      <Table.ScrollContainer minWidth={0} type="native">
+        <Table>
+          <Table.Thead>
+            <Table.Tr>
+              {th("Student", "student")}
+              {th("Class", "class")}
+              {th("Guardian", "guardian")}
+              {th("Fee", "fee", "end")}
+              {th("Paid", "paid", "end")}
+              {th("Balance", "balance", "end")}
+              <Table.Th>Status</Table.Th>
+              {/* Hugs its icon: w={1} leaves the rest of the width to the columns that read. */}
+              <Table.Th w={1} />
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {sorted.map(({ enrolment: e, ...a }) => {
+              const target = targets.find((t) => t.enrolmentId === e.id);
+              return (
+                <Table.Tr key={e.studentId}>
+                  <Table.Td>
+                    <AppLink href={`/admin/students/${e.studentId}/fees`} fw={500}>
+                      {e.firstName} {e.lastName}
                     </AppLink>
-                  ) : (
-                    <Nothing>no guardian</Nothing>
-                  )}
-                </Table.Td>
-                <Table.Td ta="end">
-                  <MoneyText cents={a.feeCents} />
-                  {e.feeNote && (
                     <Text size="xs" c="dimmed">
-                      {e.feeNote}
+                      {e.studentCode}
                     </Text>
-                  )}
-                </Table.Td>
-                <Table.Td ta="end">
-                  <MoneyText cents={a.paidCents} />
-                </Table.Td>
-                <Table.Td ta="end">
-                  {a.balanceCents < 0 ? (
-                    <MoneyText cents={-a.balanceCents} fw={500} c="tile" />
-                  ) : (
-                    <MoneyText cents={a.balanceCents} fw={500} />
-                  )}
-                  {a.balanceCents < 0 && (
-                    <Text size="xs" c="tile">
-                      In credit
-                    </Text>
-                  )}
-                </Table.Td>
-                <Table.Td>
-                  <StatusBadge domain="fee" value={a.status} />
-                </Table.Td>
-                <Table.Td ta="end">
-                  {/* Only a place that is still running can take a payment. */}
-                  {target && (
-                    <Tooltip label={`Record a payment for ${e.firstName}`}>
-                      <ActionIcon
-                        variant="subtle"
-                        color="gray"
-                        aria-label={`Record a payment for ${e.firstName} ${e.lastName}`}
-                        onClick={() => setPayFor(target)}
-                      >
-                        <IconPlus size={16} stroke={1.75} />
-                      </ActionIcon>
-                    </Tooltip>
-                  )}
-                </Table.Td>
-              </Table.Tr>
-            );
-          })}
-        </Table.Tbody>
-      </Table>
+                  </Table.Td>
+                  <Table.Td>
+                    {e.className} · {e.sessionName}
+                  </Table.Td>
+                  <Table.Td>
+                    {e.guardianId ? (
+                      <AppLink href={`/admin/guardians/${e.guardianId}/payments`}>
+                        {e.guardianName}
+                      </AppLink>
+                    ) : (
+                      <Nothing>no guardian</Nothing>
+                    )}
+                  </Table.Td>
+                  <Table.Td ta="end">
+                    <MoneyText cents={a.feeCents} />
+                    {e.feeNote && (
+                      <Text size="xs" c="dimmed">
+                        {e.feeNote}
+                      </Text>
+                    )}
+                  </Table.Td>
+                  <Table.Td ta="end">
+                    <MoneyText cents={a.paidCents} />
+                  </Table.Td>
+                  <Table.Td ta="end">
+                    {a.balanceCents < 0 ? (
+                      <MoneyText cents={-a.balanceCents} fw={500} c="tile" />
+                    ) : (
+                      <MoneyText cents={a.balanceCents} fw={500} />
+                    )}
+                    {a.balanceCents < 0 && (
+                      <Text size="xs" c="tile">
+                        In credit
+                      </Text>
+                    )}
+                  </Table.Td>
+                  <Table.Td>
+                    <StatusBadge domain="fee" value={a.status} />
+                  </Table.Td>
+                  <Table.Td ta="end">
+                    {/* Only a place that is still running can take a payment. */}
+                    {target && (
+                      <Tooltip label={`Record a payment for ${e.firstName}`}>
+                        <ActionIcon
+                          variant="subtle"
+                          color="gray"
+                          aria-label={`Record a payment for ${e.firstName} ${e.lastName}`}
+                          onClick={() => setPayFor(target)}
+                        >
+                          <IconPlus size={16} stroke={1.75} />
+                        </ActionIcon>
+                      </Tooltip>
+                    )}
+                  </Table.Td>
+                </Table.Tr>
+              );
+            })}
+          </Table.Tbody>
+        </Table>
+      </Table.ScrollContainer>
       {payFor && (
         <PaymentModal
           key={payFor.enrolmentId}

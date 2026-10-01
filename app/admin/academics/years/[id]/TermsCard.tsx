@@ -62,40 +62,42 @@ export function TermsCard({ yearId, terms }: { yearId: string; terms: Term[] }) 
           No terms yet. Most schools have three.
         </Text>
       ) : (
-        <Table>
-          <Table.Tbody>
-            {terms.map((term) => (
-              <Table.Tr key={term.id}>
-                <Table.Td fw={500}>{term.name}</Table.Td>
-                <Table.Td>
-                  <Text size="sm">
-                    {term.startDate} – {term.endDate}
-                  </Text>
-                </Table.Td>
-                <Table.Td ta="end">
-                  <Group gap="xs" justify="flex-end" wrap="nowrap">
-                    <ActionIcon
-                      variant="subtle"
-                      color="gray"
-                      aria-label={`Edit ${term.name}`}
-                      onClick={() => setEditing(term)}
-                    >
-                      <IconPencil size={16} stroke={1.75} />
-                    </ActionIcon>
-                    <ActionIcon
-                      variant="subtle"
-                      color="clay"
-                      aria-label={`Delete ${term.name}`}
-                      onClick={() => remove(term)}
-                    >
-                      <IconTrash size={16} stroke={1.75} />
-                    </ActionIcon>
-                  </Group>
-                </Table.Td>
-              </Table.Tr>
-            ))}
-          </Table.Tbody>
-        </Table>
+        <Table.ScrollContainer minWidth={0} type="native">
+          <Table>
+            <Table.Tbody>
+              {terms.map((term) => (
+                <Table.Tr key={term.id}>
+                  <Table.Td fw={500}>{term.name}</Table.Td>
+                  <Table.Td>
+                    <Text size="sm">
+                      {term.startDate} – {term.endDate}
+                    </Text>
+                  </Table.Td>
+                  <Table.Td ta="end">
+                    <Group gap="xs" justify="flex-end" wrap="nowrap">
+                      <ActionIcon
+                        variant="subtle"
+                        color="gray"
+                        aria-label={`Edit ${term.name}`}
+                        onClick={() => setEditing(term)}
+                      >
+                        <IconPencil size={16} stroke={1.75} />
+                      </ActionIcon>
+                      <ActionIcon
+                        variant="subtle"
+                        color="clay"
+                        aria-label={`Delete ${term.name}`}
+                        onClick={() => remove(term)}
+                      >
+                        <IconTrash size={16} stroke={1.75} />
+                      </ActionIcon>
+                    </Group>
+                  </Table.Td>
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
+        </Table.ScrollContainer>
       )}
       <Modal
         opened={editing !== null}

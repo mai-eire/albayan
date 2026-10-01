@@ -80,31 +80,33 @@ export function TeachersCard({ cls, teachers }: { cls: ClassDetail; teachers: Te
               in the same session — they would be in two rooms at once.
             </Alert>
           )}
-          <Table>
-            <Table.Tbody>
-              {unique.map((subject) => (
-                <Table.Tr key={subject.id}>
-                  <Table.Td w="40%">
-                    <SubjectBadge subjectId={subject.id} name={subject.name} size="md" />
-                  </Table.Td>
-                  <Table.Td>
-                    <Select
-                      aria-label={`Teacher for ${subject.name}`}
-                      data={options}
-                      placeholder="Not assigned"
-                      clearable
-                      searchable
-                      value={chosen[subject.id] ? String(chosen[subject.id]) : null}
-                      onChange={(v) => {
-                        setChosen({ ...chosen, [subject.id]: v ? Number(v) : null });
-                        setDirty(true);
-                      }}
-                    />
-                  </Table.Td>
-                </Table.Tr>
-              ))}
-            </Table.Tbody>
-          </Table>
+          <Table.ScrollContainer minWidth={0} type="native">
+            <Table>
+              <Table.Tbody>
+                {unique.map((subject) => (
+                  <Table.Tr key={subject.id}>
+                    <Table.Td w="40%">
+                      <SubjectBadge subjectId={subject.id} name={subject.name} size="md" />
+                    </Table.Td>
+                    <Table.Td>
+                      <Select
+                        aria-label={`Teacher for ${subject.name}`}
+                        data={options}
+                        placeholder="Not assigned"
+                        clearable
+                        searchable
+                        value={chosen[subject.id] ? String(chosen[subject.id]) : null}
+                        onChange={(v) => {
+                          setChosen({ ...chosen, [subject.id]: v ? Number(v) : null });
+                          setDirty(true);
+                        }}
+                      />
+                    </Table.Td>
+                  </Table.Tr>
+                ))}
+              </Table.Tbody>
+            </Table>
+          </Table.ScrollContainer>
           <FormError message={error} />
           <Group justify="flex-end">
             <Button onClick={save} loading={saving} disabled={!dirty}>

@@ -34,3 +34,39 @@ button[data-weekend]:not([data-selected]):not([data-disabled]):not([data-outside
 [data-mantine-color-scheme="light"] .mantine-Table-table {
   --table-hover-color: var(--mantine-color-gray-2);
 }
+
+/* Phones (docs/MOBILE.md). Nothing below changes a desktop. */
+
+/* A table scrolls sideways inside its own box (every table sits in a native
+   Table.ScrollContainer), so on a phone its rows stay one line each rather than squeezing
+   every cell into a column of single words. */
+@mixin smaller-than $mantine-breakpoint-sm {
+  .mantine-TableScrollContainer-scrollContainer :is(.mantine-Table-th, .mantine-Table-td) {
+    white-space: nowrap;
+  }
+}
+
+/* Paired fields (`Group grow`, DESIGN §4.7) stack on a phone instead of halving each
+   input's width. */
+@mixin smaller-than $mantine-breakpoint-xs {
+  .mantine-Group-root[data-grow] {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .mantine-Group-root[data-grow] > * {
+    max-width: 100%;
+  }
+}
+
+/* Tabs that do not fit scroll sideways rather than wrapping onto a second row; LinkTabs
+   brings the current one into view. */
+@mixin smaller-than $mantine-breakpoint-sm {
+  .mantine-Tabs-list {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .mantine-Tabs-tab {
+    flex: none;
+  }
+}

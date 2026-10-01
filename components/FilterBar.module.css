@@ -1,0 +1,30 @@
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-sm);
+}
+
+@mixin smaller-than $mantine-breakpoint-xs {
+  .bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Each filter carries its desktop width as an inline style (`w={150}`); here the grid
+     sizes it. */
+  .bar > * {
+    width: auto !important;
+    min-width: 0;
+  }
+
+  /* Not :first-child — a filter with a responsive width brings a <style> ahead of it. */
+  .bar > div:first-of-type {
+    grid-column: 1 / -1;
+  }
+
+  /* The count at the end lines up with the inputs' end edge. */
+  .bar > p:last-child {
+    justify-self: end;
+  }
+}

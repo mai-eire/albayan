@@ -1,6 +1,6 @@
 "use client";
 
-import { Group, Select, Table, Text, TextInput } from "@mantine/core";
+import { Select, Table, Text, TextInput } from "@mantine/core";
 import { useDebouncedCallback } from "@mantine/hooks";
 import { useState } from "react";
 import { AppLink } from "@/components/AppLink";
@@ -12,6 +12,7 @@ import { useUrlFilters } from "@/components/useUrlFilters";
 import tabular from "@/components/tabular.module.css";
 import type { TermRegisterRow } from "@/lib/db/queries/attendance";
 import { isTaken, PresentCell, RegisterCell } from "./RegisterCells";
+import { FilterBar } from "./FilterBar";
 
 export type RegisterFilter = "date" | "session" | "class" | "teacher" | "register";
 
@@ -81,7 +82,7 @@ export function RegistersTable({
   );
   return (
     <>
-      <Group gap="sm" wrap="wrap">
+      <FilterBar>
         {filters.includes("date") && (
           <TextInput
             aria-label="Date"
@@ -142,42 +143,44 @@ export function RegistersTable({
         <Text size="sm" c="dimmed" ms="auto">
           {shown.length} {shown.length === 1 ? "register" : "registers"}
         </Text>
-      </Group>
-      <Table>
-        <Table.Thead>
-          <Table.Tr>
-            <SortableTh label="Date" sortKey="date" sort={sort} onSort={toggle} />
-            <Table.Th>Session</Table.Th>
-            {showClass && <Table.Th>Class</Table.Th>}
-            {showClass && showTeacher && <Table.Th>Teacher</Table.Th>}
-            <Table.Th ta="end">Present</Table.Th>
-            <Table.Th>Register</Table.Th>
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {sorted.map((r) => {
-            const href = `${hrefBase}/${r.classId}?date=${r.date}`;
-            return (
-              <LinkRow key={`${r.date}-${r.classId}`} href={href}>
-                <Table.Td className={tabular.tabular}>
-                  <AppLink href={href} fw={500}>
-                    {sortableDate(r.date)}
-                  </AppLink>
-                </Table.Td>
-                <Table.Td>
-                  {r.sessionName} ({r.startTime}–{r.endTime})
-                </Table.Td>
-                {showClass && <Table.Td>{r.className}</Table.Td>}
-                {showClass && showTeacher && (
-                  <Table.Td>{r.teacherName ?? <Nothing>no teacher</Nothing>}</Table.Td>
-                )}
-                <PresentCell r={r} outOf={showClass} />
-                <RegisterCell r={r} />
-              </LinkRow>
-            );
-          })}
-        </Table.Tbody>
-      </Table>
+      </FilterBar>
+      <Table.ScrollContainer minWidth={0} type="native">
+        <Table>
+          <Table.Thead>
+            <Table.Tr>
+              <SortableTh label="Date" sortKey="date" sort={sort} onSort={toggle} />
+              <Table.Th>Session</Table.Th>
+              {showClass && <Table.Th>Class</Table.Th>}
+              {showClass && showTeacher && <Table.Th>Teacher</Table.Th>}
+              <Table.Th ta="end">Present</Table.Th>
+              <Table.Th>Register</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {sorted.map((r) => {
+              const href = `${hrefBase}/${r.classId}?date=${r.date}`;
+              return (
+                <LinkRow key={`${r.date}-${r.classId}`} href={href}>
+                  <Table.Td className={tabular.tabular}>
+                    <AppLink href={href} fw={500}>
+                      {sortableDate(r.date)}
+                    </AppLink>
+                  </Table.Td>
+                  <Table.Td>
+                    {r.sessionName} ({r.startTime}–{r.endTime})
+                  </Table.Td>
+                  {showClass && <Table.Td>{r.className}</Table.Td>}
+                  {showClass && showTeacher && (
+                    <Table.Td>{r.teacherName ?? <Nothing>no teacher</Nothing>}</Table.Td>
+                  )}
+                  <PresentCell r={r} outOf={showClass} />
+                  <RegisterCell r={r} />
+                </LinkRow>
+              );
+            })}
+          </Table.Tbody>
+        </Table>
+      </Table.ScrollContainer>
     </>
   );
 }

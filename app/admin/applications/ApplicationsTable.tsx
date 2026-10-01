@@ -37,6 +37,7 @@ import type { ClassChoice } from "@/app/admin/academics/classes/ClassPicker";
 import type { FamilyMember } from "@/lib/db/queries/families";
 import { declineApplication } from "./actions";
 import { OfferPlaceModal } from "./OfferPlaceModal";
+import { FilterBar } from "@/components/FilterBar";
 
 type Props = {
   applications: Application[];
@@ -100,7 +101,7 @@ export function ApplicationsTable({
 
   return (
     <>
-      <Group gap="sm" wrap="wrap">
+      <FilterBar>
         <TextInput
           aria-label="Search"
           placeholder="Child or guardian"
@@ -143,76 +144,78 @@ export function ApplicationsTable({
         <Text size="sm" c="dimmed" ms="auto">
           {shown.length} {shown.length === 1 ? "application" : "applications"}
         </Text>
-      </Group>
+      </FilterBar>
       {shown.length === 0 && (
         <EmptyState
           icon={<IconInbox size={20} stroke={1.75} />}
           message="No applications match. Try clearing a filter."
         />
       )}
-      <Table highlightOnHover display={shown.length ? undefined : "none"}>
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th>Child</Table.Th>
-            <Table.Th>School year</Table.Th>
-            <Table.Th>Arabic</Table.Th>
-            <Table.Th>Prefers</Table.Th>
-            <Table.Th>Guardian</Table.Th>
-            <Table.Th>Applied</Table.Th>
-            <Table.Th style={{ whiteSpace: "nowrap" }}>Outcome</Table.Th>
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {shown.map((a) => (
-            <Table.Tr
-              key={a.id}
-              // The row opens the application; the guardian's link goes to their page.
-              onClick={(e) => {
-                if ((e.target as HTMLElement).closest("a")) return;
-                setOpen(a);
-              }}
-              style={{ cursor: "pointer" }}
-            >
-              <Table.Td>
-                <Text fw={500}>
-                  {a.firstName} {a.lastName}
-                </Text>
-                <Text size="sm" c="dimmed">
-                  {ageOn(a.dateOfBirth, today)} · {a.gender === "male" ? "boy" : "girl"}
-                  {a.siblings.length > 0 && ` · sibling of ${a.siblings.join(", ")}`}
-                </Text>
-              </Table.Td>
-              <Table.Td>
-                {schoolYearLabel(a.schoolYearGroup, a.isHomeschooled) ?? (
-                  <Nothing>not given</Nothing>
-                )}
-              </Table.Td>
-              <Table.Td>{proficiencyLabels[a.arabicProficiency]}</Table.Td>
-              <Table.Td>
-                {a.preferredSessionName ?? <Nothing>no preference</Nothing>}
-                {a.preferredSessionName && (
-                  <Text size="sm" c="dimmed" component="span">
-                    {" "}
-                    · {a.preferredClassName ?? "any class"}
-                  </Text>
-                )}
-              </Table.Td>
-              <Table.Td>
-                <AppLink href={`/admin/guardians/${a.guardian.id}`}>{a.guardian.name}</AppLink>
-                <Text size="sm" c="dimmed">
-                  {relationshipLabels[a.guardian.relationship as keyof typeof relationshipLabels]}
-                </Text>
-              </Table.Td>
-              <Table.Td style={{ whiteSpace: "nowrap" }}>
-                {dayjs(a.appliedAt).format("D MMM")}
-              </Table.Td>
-              <Table.Td style={{ whiteSpace: "nowrap" }}>
-                <Outcome application={a} />
-              </Table.Td>
+      <Table.ScrollContainer minWidth={0} type="native">
+        <Table highlightOnHover display={shown.length ? undefined : "none"}>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Child</Table.Th>
+              <Table.Th>School year</Table.Th>
+              <Table.Th>Arabic</Table.Th>
+              <Table.Th>Prefers</Table.Th>
+              <Table.Th>Guardian</Table.Th>
+              <Table.Th>Applied</Table.Th>
+              <Table.Th style={{ whiteSpace: "nowrap" }}>Outcome</Table.Th>
             </Table.Tr>
-          ))}
-        </Table.Tbody>
-      </Table>
+          </Table.Thead>
+          <Table.Tbody>
+            {shown.map((a) => (
+              <Table.Tr
+                key={a.id}
+                // The row opens the application; the guardian's link goes to their page.
+                onClick={(e) => {
+                  if ((e.target as HTMLElement).closest("a")) return;
+                  setOpen(a);
+                }}
+                style={{ cursor: "pointer" }}
+              >
+                <Table.Td>
+                  <Text fw={500}>
+                    {a.firstName} {a.lastName}
+                  </Text>
+                  <Text size="sm" c="dimmed">
+                    {ageOn(a.dateOfBirth, today)} · {a.gender === "male" ? "boy" : "girl"}
+                    {a.siblings.length > 0 && ` · sibling of ${a.siblings.join(", ")}`}
+                  </Text>
+                </Table.Td>
+                <Table.Td>
+                  {schoolYearLabel(a.schoolYearGroup, a.isHomeschooled) ?? (
+                    <Nothing>not given</Nothing>
+                  )}
+                </Table.Td>
+                <Table.Td>{proficiencyLabels[a.arabicProficiency]}</Table.Td>
+                <Table.Td>
+                  {a.preferredSessionName ?? <Nothing>no preference</Nothing>}
+                  {a.preferredSessionName && (
+                    <Text size="sm" c="dimmed" component="span">
+                      {" "}
+                      · {a.preferredClassName ?? "any class"}
+                    </Text>
+                  )}
+                </Table.Td>
+                <Table.Td>
+                  <AppLink href={`/admin/guardians/${a.guardian.id}`}>{a.guardian.name}</AppLink>
+                  <Text size="sm" c="dimmed">
+                    {relationshipLabels[a.guardian.relationship as keyof typeof relationshipLabels]}
+                  </Text>
+                </Table.Td>
+                <Table.Td style={{ whiteSpace: "nowrap" }}>
+                  {dayjs(a.appliedAt).format("D MMM")}
+                </Table.Td>
+                <Table.Td style={{ whiteSpace: "nowrap" }}>
+                  <Outcome application={a} />
+                </Table.Td>
+              </Table.Tr>
+            ))}
+          </Table.Tbody>
+        </Table>
+      </Table.ScrollContainer>
 
       <Drawer
         opened={open !== null}
